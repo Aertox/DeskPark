@@ -1,5 +1,5 @@
-import type { ClientMessage, RoomSnapshot, ServerMessage } from '@park/protocol';
-import { PROTOCOL_VERSION } from '@park/protocol';
+import type { ChatMessage, ClientMessage, RoomSnapshot, ServerMessage } from '@park/protocol';
+import { CHAT_HISTORY, PROTOCOL_VERSION } from '@park/protocol';
 import { useSyncExternalStore } from 'react';
 import { serverUrl } from './platform';
 import { profile } from './store';
@@ -25,6 +25,8 @@ export interface OnlineState {
   clockOffset: number;
   error: { message: string; code?: string; at: number } | null;
   emotes: Emote[];
+  /** 当前房间的聊天记录 */
+  chat: ChatMessage[];
 }
 
 const initial: OnlineState = {
@@ -36,6 +38,7 @@ const initial: OnlineState = {
   clockOffset: 0,
   error: null,
   emotes: [],
+  chat: [],
 };
 
 /** 联机客户端：自动重连（指数退避）、离线消息排队、状态可订阅。 */
@@ -161,10 +164,26 @@ class OnlineClient {
         this.patch({ playerId: m.playerId });
         break;
       case 'room': {
-        const sameMatch = this.state.game && this.state.room?.code === m.room.code;
-        this.patch({ room: m.room, you: m.you, game: sameMatch ? this.state.game : null });
+        const sameRoom = this.state.room?.code === m.room.code;
+        const sameMatch = this.state.game && sameRoom;
+        this.patch({
+          room: m.room,
+          you: m.you,
+          game: sameMatch ? this.state.game : null,
+          chat: sameRoom ? this.state.chat : [],
+        });
         break;
       }
+      case 'chat': {
+        if (this.state.room && this.state.room.code !== m.code) break;
+        if (this.state.chat.some((x) => x.id === m.message.id)) break;
+        this.patch({ chat: [...this.state.chat, m.message].slice(-CHAT_HISTORY) });
+        break;
+      }
+      case 'chatHistory':
+        if (this.state.room && this.state.room.code !== m.code) break;
+        this.patch({ chat: m.messages });
+        break;
       case 'game':
         if (
           this.state.game &&
@@ -175,7 +194,7 @@ class OnlineClient {
         this.patch({ game: m, clockOffset: m.serverTime - Date.now() });
         break;
       case 'left':
-        this.patch({ room: null, you: null, game: null });
+        this.patch({ room: null, you: null, game: null, chat: [] });
         break;
       case 'error':
         this.patch({ error: { message: m.message, code: m.code, at: Date.now() } });

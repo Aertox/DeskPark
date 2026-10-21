@@ -1,5 +1,5 @@
 import type { ClientMessage, ServerMessage } from '@park/protocol';
-import { AVATARS, PROTOCOL_VERSION } from '@park/protocol';
+import { AVATARS, CHAT_MAX_LENGTH, PROTOCOL_VERSION } from '@park/protocol';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
 import { startServer } from '../src/server';
@@ -161,5 +161,63 @@ describe('联机服务器', () => {
     );
     expect(later.version).toBeGreaterThan(first.version);
     d.close();
+  });
+
+  it('房间聊天：广播、系统消息、历史记录、文本清理与限流', async () => {
+    const a = new TestClient();
+    const b = new TestClient();
+    await Promise.all([a.opened, b.opened]);
+    a.send({
+      t: 'hello',
+      token: 'token-chat-aaaaaaaaaaaa',
+      name: '阿甲',
+      avatar: 'cute-frog',
+      v: PROTOCOL_VERSION,
+    });
+    b.send({ t: 'hello', token: 'token-chat-bbbbbbbbbbbb', name: '阿乙', v: PROTOCOL_VERSION });
+    a.send({ t: 'create', gameId: 'guandan' });
+    const { room } = await a.wait('room');
+    await a.wait('chatHistory', (m) => m.messages.length === 0);
+    b.send({ t: 'join', code: room.code });
+    const joined = await a.wait('chat', (m) => m.message.kind === 'system');
+    expect(joined.message.text).toContain('阿乙 加入了房间');
+
+    a.send({ t: 'chat', text: '  大家好\u0007   一起\n来玩  ' });
+    const got = await b.wait('chat', (m) => m.message.kind === 'user');
+    expect(got.message.text).toBe('大家好 一起 来玩');
+    expect(got.message.name).toBe('阿甲');
+    expect(got.message.avatar).toBe('cute-frog');
+    expect(got.message.seat).toBe(0);
+
+    // 超长消息按字符截断
+    await new Promise((r) => setTimeout(r, 550));
+    a.send({ t: 'chat', text: '哈'.repeat(300) });
+    const long = await b.wait(
+      'chat',
+      (m) => m.message.kind === 'user' && m.message.text.startsWith('哈'),
+    );
+    expect([...long.message.text]).toHaveLength(CHAT_MAX_LENGTH);
+
+    // 限流：连续刷屏会被拒绝
+    for (let i = 0; i < 4; i++) a.send({ t: 'chat', text: `刷屏${i}` });
+    const err = await a.wait('error', (m) => m.message.includes('太快'));
+    expect(err).toBeTruthy();
+
+    // 后加入的人收到历史记录
+    const c = new TestClient();
+    await c.opened;
+    c.send({ t: 'hello', token: 'token-chat-cccccccccccc', name: '阿丙', v: PROTOCOL_VERSION });
+    c.send({ t: 'join', code: room.code });
+    const hist = await c.wait('chatHistory', (m) =>
+      m.messages.some((x) => x.text === '大家好 一起 来玩'),
+    );
+    expect(hist.code).toBe(room.code);
+
+    b.send({ t: 'leave' });
+    const left = await a.wait('chat', (m) => m.message.text.includes('阿乙 离开了房间'));
+    expect(left.message.kind).toBe('system');
+    a.close();
+    c.close();
+    b.close();
   });
 });

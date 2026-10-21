@@ -1,6 +1,7 @@
 import { getGame } from '@park/engine';
 import { Bot, Check, ChevronLeft, Copy, Crown, Link2, Plus, UserMinus, X } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
+import { ChatPanel } from '../components/Chat';
 import { Avatar } from '../components/Seat';
 import { Button, IconButton } from '../components/ui';
 import { getGameUI } from '../games';
@@ -203,6 +204,20 @@ function WaitingRoom() {
             </div>
           );
         })}
+      </section>
+
+      <section className="room__chat">
+        <h3>
+          房间聊天<small>{net.chat.filter((m) => m.kind === 'user').length} 条消息</small>
+        </h3>
+        <div className="room__chatbox">
+          <ChatPanel
+            messages={net.chat}
+            myId={net.playerId}
+            onSend={(text) => online.send({ t: 'chat', text })}
+            placeholder="和房间里的人打个招呼…"
+          />
+        </div>
       </section>
 
       <section className="room__options">

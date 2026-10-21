@@ -155,6 +155,28 @@
   color: var(--ink-3);
 }
 
+.room__chat {
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+.room__chat h3 {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 14px 20px 10px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--line);
+}
+.room__chat h3 small {
+  font-weight: 400;
+  color: var(--ink-3);
+}
+.room__chatbox {
+  height: 300px;
+}
 .room__options {
   padding: 6px 20px;
   border-radius: var(--radius-lg);

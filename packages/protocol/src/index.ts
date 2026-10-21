@@ -33,6 +33,45 @@ export interface RoomSnapshot {
   matchNo: number;
 }
 
+/** 房间聊天消息（服务器分配 id 与时间） */
+export interface ChatMessage {
+  id: number;
+  kind: 'user' | 'system';
+  text: string;
+  at: number;
+  name?: string;
+  avatar?: string;
+  playerId?: string;
+  /** 发言者座位；观战者为 null */
+  seat?: number | null;
+}
+
+export const CHAT_MAX_LENGTH = 100;
+export const CHAT_HISTORY = 60;
+
+/** 快捷语 */
+export const QUICK_PHRASES = [
+  '快点出牌吧～',
+  '好牌！',
+  '厉害厉害',
+  '合作愉快',
+  '不好意思，刚才网卡了',
+  '手气不错',
+  '再来一局？',
+  '我先走一步啦',
+] as const;
+
+/** 清理聊天文本：去掉控制字符、合并空白、按字符截断 */
+export function cleanChatText(input: unknown): string {
+  if (typeof input !== 'string') return '';
+  const s = input
+    // eslint-disable-next-line no-control-regex -- 有意去掉控制字符
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return [...s].slice(0, CHAT_MAX_LENGTH).join('');
+}
+
 export type ClientMessage =
   | { t: 'hello'; token: string; name: string; avatar?: string; v: number }
   | { t: 'create'; gameId: string; options?: Record<string, unknown>; seats?: number }
@@ -46,6 +85,7 @@ export type ClientMessage =
   | { t: 'act'; action: unknown }
   | { t: 'auto'; on: boolean }
   | { t: 'emote'; emote: string }
+  | { t: 'chat'; text: string }
   | { t: 'ping' };
 
 export type ServerMessage =
@@ -67,6 +107,8 @@ export type ServerMessage =
   | { t: 'left' }
   | { t: 'error'; message: string; code?: string }
   | { t: 'emote'; seat: number; emote: string; name: string }
+  | { t: 'chat'; code: string; message: ChatMessage }
+  | { t: 'chatHistory'; code: string; messages: ChatMessage[] }
   | { t: 'pong'; serverTime: number };
 
 export const EMOTES = ['👍', '😄', '😮', '😤', '🎉', '🙏'] as const;

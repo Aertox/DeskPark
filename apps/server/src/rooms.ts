@@ -1,8 +1,16 @@
 import type { AnyGame, TableSeat } from '@park/engine';
 import { Table, getGame, normalizeOptions } from '@park/engine';
-import type { ClientMessage, RoomSnapshot, SeatInfo, ServerMessage } from '@park/protocol';
+import type {
+  ChatMessage,
+  ClientMessage,
+  RoomSnapshot,
+  SeatInfo,
+  ServerMessage,
+} from '@park/protocol';
 import {
   AVATARS,
+  CHAT_HISTORY,
+  cleanChatText,
   PROTOCOL_VERSION,
   ROOM_CODE_ALPHABET,
   ROOM_CODE_LENGTH,
@@ -20,6 +28,8 @@ export interface Client {
   send: ((msg: ServerMessage) => void) | null;
   roomCode: string | null;
   lastSeen: number;
+  /** 最近的发言时间，用于限流 */
+  chatTimes?: number[];
 }
 
 interface SeatState extends SeatInfo {
@@ -71,6 +81,8 @@ class Room {
   status: RoomSnapshot['status'] = 'waiting';
   matchNo = 0;
   lastActive = Date.now();
+  chat: ChatMessage[] = [];
+  private chatSeq = 0;
   private unsubscribe: (() => void) | null = null;
 
   constructor(
@@ -112,6 +124,25 @@ class Room {
       spectators: this.spectators.size,
       matchNo: this.matchNo,
     };
+  }
+
+  postChat(msg: Omit<ChatMessage, 'id' | 'at'>): void {
+    const message: ChatMessage = { ...msg, id: ++this.chatSeq, at: Date.now() };
+    this.chat.push(message);
+    if (this.chat.length > CHAT_HISTORY) this.chat.shift();
+    for (const id of this.memberIds()) {
+      this.hub.clientById(id)?.send?.({ t: 'chat', code: this.code, message });
+    }
+  }
+
+  system(text: string): void {
+    this.postChat({ kind: 'system', text });
+  }
+
+  sendChatHistory(clientId: string): void {
+    this.hub
+      .clientById(clientId)
+      ?.send?.({ t: 'chatHistory', code: this.code, messages: this.chat });
   }
 
   broadcastRoom(): void {
@@ -303,6 +334,7 @@ export class Hub {
       }
       room.broadcastRoom();
       room.sendGame(client.id);
+      room.sendChatHistory(client.id);
     } else {
       client.roomCode = null;
     }
@@ -346,6 +378,7 @@ export class Hub {
         c.roomCode = code;
         this.config.log?.('[room] created', code, def.meta.id, 'by', c.name);
         r.broadcastRoom();
+        r.sendChatHistory(c.id);
         return;
       }
       case 'join': {
@@ -354,7 +387,8 @@ export class Hub {
         if (!r) return this.error(c, `房间 ${code || ''} 不存在或已解散`);
         if (room && room !== r) this.leave(c, room);
         c.roomCode = code;
-        if (r.seatOf(c.id) === null && !r.spectators.has(c.id)) {
+        const isNew = r.seatOf(c.id) === null && !r.spectators.has(c.id);
+        if (isNew) {
           const empty = r.status === 'waiting' ? r.seats.findIndex((s) => s.kind === 'empty') : -1;
           if (empty >= 0) r.seats[empty] = humanSeat(c);
           else r.spectators.add(c.id);
@@ -362,6 +396,8 @@ export class Hub {
         r.lastActive = Date.now();
         r.broadcastRoom();
         r.sendGame(c.id);
+        if (isNew) r.system(`${c.name} 加入了房间${r.seatOf(c.id) === null ? '（观战）' : ''}`);
+        r.sendChatHistory(c.id);
         return;
       }
       case 'leave': {
@@ -460,6 +496,21 @@ export class Hub {
         room.broadcastRoom();
         return;
       }
+      case 'chat': {
+        const text = cleanChatText(msg.text);
+        if (!text) return;
+        const now = Date.now();
+        const times = (c.chatTimes ?? []).filter((t) => now - t < 8000);
+        if (times.length >= 6 || (times.length && now - times[times.length - 1] < 500)) {
+          c.chatTimes = times;
+          return this.error(c, '发言太快了，歇一会儿吧');
+        }
+        times.push(now);
+        c.chatTimes = times;
+        room.lastActive = now;
+        room.postChat({ kind: 'user', text, name: c.name, avatar: c.avatar, playerId: c.id, seat });
+        return;
+      }
       case 'emote': {
         if (seat === null) return;
         const emote = String(msg.emote).slice(0, 8);
@@ -484,14 +535,22 @@ export class Hub {
       }
     }
     c.roomCode = null;
+    let newHost: Client | undefined;
     if (room.hostId === c.id) {
       const next = room.memberIds()[0];
-      if (next) room.hostId = next;
+      if (next) {
+        room.hostId = next;
+        newHost = this.clientById(next);
+      }
     }
     if (room.memberIds().length === 0) {
       this.removeRoom(room);
     } else {
       room.broadcastRoom();
+      room.system(
+        `${c.name} 离开了房间${seat !== null && room.status === 'playing' ? '，由电脑接替' : ''}`,
+      );
+      if (newHost) room.system(`${newHost.name} 成为新房主`);
     }
   }
 

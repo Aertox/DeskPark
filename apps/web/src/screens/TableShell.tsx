@@ -3,6 +3,7 @@ import {
   BookOpen,
   Bot,
   ChevronLeft,
+  MessageCircle,
   Palette,
   Smile,
   Volume2,
@@ -11,6 +12,8 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { ChatPanel } from '../components/Chat';
+import { PixelAvatar } from '../components/pixel/PixelAvatar';
 import { Button, IconButton, Sheet } from '../components/ui';
 import type { GameController } from '../lib/controller';
 import { online, useOnline } from '../lib/online';
@@ -48,7 +51,24 @@ export function TableShell({
   const [look, setLook] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [emoteOpen, setEmoteOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const net = useOnline();
+  const online_ = ctl.mode === 'online';
+  const lastChatId = net.chat.at(-1)?.id ?? 0;
+  const [seenChat, setSeenChat] = useState(lastChatId);
+  useEffect(() => {
+    if (chatOpen) setSeenChat(lastChatId);
+  }, [chatOpen, lastChatId]);
+  const incoming = online_
+    ? net.chat.filter((m) => m.kind === 'user' && m.id > seenChat && m.playerId !== net.playerId)
+    : [];
+  // 新消息提示音
+  const chatSound = useRef(lastChatId);
+  useEffect(() => {
+    if (lastChatId > chatSound.current && incoming.length) playSound('select');
+    chatSound.current = lastChatId;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastChatId]);
 
   // 动作音效
   const lastKey = useRef('');
@@ -82,7 +102,15 @@ export function TableShell({
           </div>
         </div>
         <div className="table__top-right">
-          {ctl.mode === 'online' && ctl.seat !== null && (
+          {online_ && (
+            <IconButton label="聊天" onClick={() => setChatOpen((x) => !x)} active={chatOpen}>
+              <MessageCircle size={19} />
+              {!chatOpen && incoming.length > 0 && (
+                <span className="badge num">{incoming.length > 9 ? '9+' : incoming.length}</span>
+              )}
+            </IconButton>
+          )}
+          {online_ && ctl.seat !== null && (
             <IconButton label="表情" onClick={() => setEmoteOpen((x) => !x)} active={emoteOpen}>
               <Smile size={19} />
             </IconButton>
@@ -148,6 +176,37 @@ export function TableShell({
       </div>
 
       <main className="board">{children}</main>
+
+      {online_ && !chatOpen && incoming.length > 0 && (
+        <div className="chat-peek">
+          {incoming.slice(-3).map((m) => (
+            <div key={m.id} className="chat-peek__item" onClick={() => setChatOpen(true)}>
+              <PixelAvatar avatar={m.avatar} name={m.name ?? '?'} size={24} />
+              <b>{m.name}</b>
+              <span>{m.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {online_ && chatOpen && (
+        <aside className="chat-drawer" aria-label="房间聊天">
+          <div className="chat-drawer__head">
+            <span>
+              房间聊天<small>{net.room?.code}</small>
+            </span>
+            <IconButton label="收起" onClick={() => setChatOpen(false)}>
+              <ChevronLeft size={18} style={{ rotate: '180deg' }} />
+            </IconButton>
+          </div>
+          <ChatPanel
+            tone="felt"
+            messages={net.chat}
+            myId={net.playerId}
+            autoFocus
+            onSend={(text) => online.send({ t: 'chat', text })}
+          />
+        </aside>
+      )}
 
       <Sheet
         open={rules}
