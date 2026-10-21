@@ -169,6 +169,7 @@ function finishRound(state: DdzState, winner: Seat): void {
 export const doudizhu: GameDefinition<DdzState, DdzAction, DdzView, DdzOptions> = {
   meta: {
     id: 'doudizhu',
+    category: 'poker',
     name: '斗地主',
     nameEn: 'Dou Dizhu',
     tagline: '一人地主，两人农民，先出完者胜',

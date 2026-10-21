@@ -29,6 +29,9 @@ const LAST_SOUND: Record<string, Parameters<typeof playSound>[0]> = {
   raise: 'chip',
   allin: 'chip',
   return: 'play',
+  discard: 'play',
+  exchange: 'deal',
+  que: 'select',
 };
 
 export function TableShell({

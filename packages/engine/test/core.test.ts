@@ -14,7 +14,7 @@ describe('基础设施', () => {
 
   it('注册表包含内置玩法，并能规范化设置', () => {
     const ids = listGames().map((g) => g.meta.id);
-    expect(ids).toEqual(['doudizhu', 'guandan', 'texas', 'highcard']);
+    expect(ids).toEqual(['doudizhu', 'guandan', 'texas', 'sichuan', 'highcard']);
     const ddz = listGames()[0];
     expect(normalizeOptions(ddz, { baseScore: 999, rounds: 3 })).toEqual({
       baseScore: 1,

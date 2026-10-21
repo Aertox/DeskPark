@@ -363,6 +363,7 @@ function award(state: TxState, showdown: boolean): void {
 export const texas: GameDefinition<TxState, TxAction, TxView, TxOptions> = {
   meta: {
     id: 'texas',
+    category: 'poker',
     name: '德州扑克',
     nameEn: "Texas Hold'em",
     tagline: '两张底牌，五张公共牌，组成最大的五张',

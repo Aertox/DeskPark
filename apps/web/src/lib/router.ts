@@ -2,13 +2,17 @@ import { useSyncExternalStore } from 'react';
 
 /** 基于 hash 的极简路由，兼容静态托管与 App WebView。 */
 export type Route =
-  { name: 'home' } | { name: 'play'; gameId: string } | { name: 'room'; code: string };
+  | { name: 'home' }
+  | { name: 'play'; gameId: string }
+  | { name: 'room'; code: string }
+  | { name: 'gallery' };
 
 function parse(hash: string): Route {
   const path = hash.replace(/^#/, '');
   const parts = path.split('/').filter(Boolean);
   if (parts[0] === 'play' && parts[1]) return { name: 'play', gameId: parts[1] };
   if (parts[0] === 'room' && parts[1]) return { name: 'room', code: parts[1].toUpperCase() };
+  if (parts[0] === 'gallery' && import.meta.env.DEV) return { name: 'gallery' };
   return { name: 'home' };
 }
 

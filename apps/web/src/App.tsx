@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { ToastHost, toast } from './components/ui';
 import { useOnline } from './lib/online';
 import { useRoute } from './lib/router';
@@ -6,6 +6,8 @@ import { settings } from './lib/store';
 import { Home } from './screens/Home';
 import { LocalGame } from './screens/LocalGame';
 import { OnlineRoom } from './screens/OnlineRoom';
+
+const Gallery = import.meta.env.DEV ? lazy(() => import('./screens/Gallery')) : null;
 
 function useThemeSync() {
   const s = settings.use();
@@ -45,6 +47,11 @@ export function App() {
       {route.name === 'home' && <Home />}
       {route.name === 'play' && <LocalGame key={route.gameId} gameId={route.gameId} />}
       {route.name === 'room' && <OnlineRoom key={route.code} code={route.code} />}
+      {route.name === 'gallery' && Gallery && (
+        <Suspense fallback={null}>
+          <Gallery />
+        </Suspense>
+      )}
       <ToastHost />
     </>
   );

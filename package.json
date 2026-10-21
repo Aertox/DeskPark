@@ -1,8 +1,8 @@
 {
-  "name": "card-park",
+  "name": "desk-park",
   "version": "0.1.0",
   "private": true,
-  "description": "牌苑 Card Park — 简洁优雅的网页卡牌游戏平台：斗地主、掼蛋、德州扑克，支持单人与多人联机，可扩展自定义玩法。",
+  "description": "闲亭 DeskPark — 简洁优雅的网页桌游平台：扑克、麻将与更多桌面游戏，支持单人与多人联机，可扩展自定义玩法。",
   "license": "MIT",
   "type": "module",
   "workspaces": [

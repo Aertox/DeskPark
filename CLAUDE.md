@@ -1,4 +1,4 @@
-# 牌苑 Card Park — 开发备忘
+# 闲亭 DeskPark — 开发备忘
 
 - 单仓库（npm workspaces）：`packages/engine`（纯 TS 规则与 AI，禁止 DOM/Node API）、`packages/protocol`、`apps/server`（ws 联机，服务端权威）、`apps/web`（React + Vite）。
 - 提交前：`npm run check`（lint + typecheck + test）；格式：`npm run format`。

@@ -1,11 +1,11 @@
 <div align="center">
 
-# 牌苑 · Card Park
+# 闲亭 · DeskPark
 
-**简洁优雅的网页卡牌游戏平台** —— 斗地主、掼蛋、德州扑克，单人练习或与好友联机。<br/>
+**简洁优雅的网页桌游平台** —— 斗地主、掼蛋、德州扑克、四川麻将（血战到底），单人练习或与好友联机。<br/>
 打开网页即玩，规则引擎与界面分离，可扩展自定义卡牌玩法，并为移植 App 预留了结构。
 
-[![CI](https://github.com/solitern/card-park/actions/workflows/ci.yml/badge.svg)](https://github.com/solitern/card-park/actions/workflows/ci.yml)
+[![CI](https://github.com/solitern/DeskPark/actions/workflows/ci.yml/badge.svg)](https://github.com/solitern/DeskPark/actions/workflows/ci.yml)
 
 <img src="docs/screenshots/lobby.jpg" alt="大厅" width="860" />
 
@@ -69,8 +69,8 @@ PORT=8787 npm start
 或使用 Docker：
 
 ```bash
-docker build -t card-park .
-docker run -p 8787:8787 card-park
+docker build -t desk-park .
+docker run -p 8787:8787 desk-park
 ```
 
 环境变量：`PORT`（默认 8787）、`TURN_TIMEOUT_MS`（联机每步时限，默认 30000）、`STATIC_DIR`（网页目录）。

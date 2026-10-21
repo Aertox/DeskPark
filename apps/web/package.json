@@ -2,7 +2,7 @@
   "name": "@park/web",
   "version": "0.1.0",
   "private": true,
-  "description": "牌苑 Web 客户端（React + Vite）",
+  "description": "闲亭 Web 客户端（React + Vite）",
   "type": "module",
   "scripts": {
     "dev": "vite",

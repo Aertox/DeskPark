@@ -19,7 +19,7 @@
 把现有网页原样打包为 iOS / Android 原生应用，界面与逻辑 100% 复用。
 
 1. 安装：`npm i -w @park/web @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android`
-2. 初始化：`npx cap init 牌苑 com.example.cardpark --web-dir apps/web/dist`
+2. 初始化：`npx cap init 闲亭 com.example.deskpark --web-dir apps/web/dist`
 3. 构建时指定线上服务器：`VITE_SERVER_URL=wss://你的域名/ws npm run build -w @park/web`
 4. `npx cap add ios && npx cap add android && npx cap sync`
 5. 在 `platform.ts` 中替换实现：
@@ -27,7 +27,7 @@
    - 震动 → `@capacitor/haptics`（出牌、轮到你时轻触反馈）
    - 剪贴板 / 分享房间 → `@capacitor/clipboard`、`@capacitor/share`
 6. 原生配置：锁定横屏（或允许旋转）、状态栏沉浸、启动图、App 图标。
-7. 深链接：`cardpark://room/ABCD` 直接进入房间（使用 `@capacitor/app` 监听 `appUrlOpen` 后调用 `navigate`）。
+7. 深链接：`deskpark://room/ABCD` 直接进入房间（使用 `@capacitor/app` 监听 `appUrlOpen` 后调用 `navigate`）。
 
 注意：网页中 hash 路由在 WebView 中天然可用；单人模式完全离线可玩。
 

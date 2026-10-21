@@ -49,7 +49,7 @@ export const PlayingCard = memo(function PlayingCard({
     return (
       <div className={cls} style={s} {...rest}>
         <div className="pcard__back">
-          <span className="pcard__emblem">苑</span>
+          <span className="pcard__emblem">亭</span>
         </div>
       </div>
     );

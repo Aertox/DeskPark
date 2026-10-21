@@ -14,6 +14,8 @@ export interface GameUI {
   tint: [string, string];
   /** 大厅卡片上展示的几张牌 */
   showcase: Card[];
+  /** 麻将类玩法：大厅卡片上展示的麻将牌 */
+  tiles?: { id: number; suit: 'wan' | 'tiao' | 'tong'; rank: number }[];
   /** 人数说明 */
   people: string;
   /** 额外标签 */
@@ -46,6 +48,18 @@ export const GAME_UIS: GameUI[] = [
     tint: ['#2f6b55', '#163c30'],
     showcase: [c(1, 'S', 14), c(2, 'H', 14), c(3, 'S', 13)],
     people: '2–8 人',
+  },
+  {
+    id: 'sichuan',
+    Board: lazy(() => import('./sichuan/SichuanBoard')),
+    tint: ['#3d7a6a', '#1f4a40'],
+    showcase: [],
+    tiles: [
+      { id: 1, suit: 'wan', rank: 8 },
+      { id: 2, suit: 'tong', rank: 1 },
+      { id: 3, suit: 'tiao', rank: 1 },
+    ],
+    people: '4 人 · 血战到底',
   },
   {
     id: 'highcard',

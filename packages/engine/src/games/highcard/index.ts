@@ -70,6 +70,7 @@ function deal(state: HcState): void {
 export const highcard: GameDefinition<HcState, HcAction, HcView, HcOptions> = {
   meta: {
     id: 'highcard',
+    category: 'casual',
     name: '比大小',
     nameEn: 'High Card',
     tagline: '同时出牌，点大者得分 · 自定义玩法示例',

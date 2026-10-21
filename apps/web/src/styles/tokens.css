@@ -1,5 +1,5 @@
 /*
- * 牌苑设计令牌（Design Tokens）
+ * 闲亭设计令牌（Design Tokens）
  * 所有颜色、字号、圆角、阴影都在这里定义；移植 App 时可直接对照 src/lib/tokens.ts。
  */
 :root {

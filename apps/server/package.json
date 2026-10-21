@@ -2,7 +2,7 @@
   "name": "@park/server",
   "version": "0.1.0",
   "private": true,
-  "description": "牌苑联机服务器：房间管理 + 服务端权威的对局运行（WebSocket）",
+  "description": "闲亭联机服务器：房间管理 + 服务端权威的对局运行（WebSocket）",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/main.ts",

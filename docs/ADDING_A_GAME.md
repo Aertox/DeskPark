@@ -1,6 +1,6 @@
 # 新增 / 自定义一个卡牌玩法
 
-牌苑的每个玩法都是一个插件：**一份规则定义（引擎）+ 一个牌桌界面（Web）**。
+闲亭的每个玩法都是一个插件：**一份规则定义（引擎）+ 一个牌桌界面（Web）**。
 规则写好后，单人模式、联机房间、设置表单、电脑玩家、测试工具会自动可用。
 
 下面以内置示例「比大小」为例（源码：`packages/engine/src/games/highcard/index.ts` 与 `apps/web/src/games/highcard/HighcardBoard.tsx`）。

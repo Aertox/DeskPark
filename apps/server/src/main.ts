@@ -14,7 +14,7 @@ const server = startServer({
 });
 
 server.ready.then((p) => {
-  console.log(`🃏 牌苑服务器已启动  http://localhost:${p}   (WebSocket: /ws)`);
+  console.log(`🏯 闲亭服务器已启动  http://localhost:${p}   (WebSocket: /ws)`);
   console.log(`   静态资源目录: ${server.staticDir}`);
 });
 

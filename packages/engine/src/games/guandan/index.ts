@@ -228,6 +228,7 @@ function finishRound(state: GdState): void {
 export const guandan: GameDefinition<GdState, GdAction, GdView, GdOptions> = {
   meta: {
     id: 'guandan',
+    category: 'poker',
     name: '掼蛋',
     nameEn: 'Guandan',
     tagline: '两副牌四人组队，打过 A 者胜',
