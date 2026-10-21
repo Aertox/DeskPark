@@ -35,6 +35,8 @@ export interface ScOptions {
   jingoudiao: boolean;
   /** 盘数，0 为不限 */
   rounds: number;
+  /** 每人初始筹码，0 为不启用；启用后有人输光（≤ 0）即结束整场 */
+  chips: number;
 }
 
 export type ScAction =
@@ -722,8 +724,9 @@ function endRound(state: ScState, reason: 'three' | 'wall'): void {
     wins: wins.map((w) => ({ seat: w.seat, fan: w.score.fanRaw })),
   });
   state.ready = [false, false, false, false];
-  state.phase =
-    state.options.rounds > 0 && state.round >= state.options.rounds ? 'matchOver' : 'roundOver';
+  const roundsDone = state.options.rounds > 0 && state.round >= state.options.rounds;
+  const busted = (state.options.chips ?? 0) > 0 && state.scores.some((x) => x <= 0);
+  state.phase = roundsDone || busted ? 'matchOver' : 'roundOver';
 }
 
 // ---------------------------------------------------------------------------
@@ -820,7 +823,7 @@ export const sichuan: GameDefinition<ScState, ScAction, ScView, ScOptions> = {
       '流局查账：三门花色未打缺的是花猪，向其他人各赔 5 番封顶分；未听牌的向听牌者按其最大番赔付（查大叫）；未听牌者退还杠分（退税）。',
     ],
   },
-  defaultOptions: { baseScore: 1, exchange: true, jingoudiao: false, rounds: 8 },
+  defaultOptions: { baseScore: 1, exchange: true, jingoudiao: false, rounds: 8, chips: 0 },
   optionFields: [
     {
       key: 'baseScore',
@@ -841,6 +844,18 @@ export const sichuan: GameDefinition<ScState, ScAction, ScView, ScOptions> = {
         { value: 8, label: '8 盘' },
         { value: 16, label: '16 盘' },
         { value: 0, label: '不限' },
+      ],
+    },
+    {
+      key: 'chips',
+      label: '筹码',
+      hint: '每人初始筹码，有人输光即结束',
+      type: 'select',
+      choices: [
+        { value: 0, label: '不用' },
+        { value: 100, label: '100' },
+        { value: 200, label: '200' },
+        { value: 500, label: '500' },
       ],
     },
     { key: 'exchange', label: '换三张', type: 'toggle' },
@@ -872,7 +887,7 @@ export const sichuan: GameDefinition<ScState, ScAction, ScView, ScOptions> = {
       ledger: [],
       groups: 0,
       firstGroup: null,
-      scores: [0, 0, 0, 0],
+      scores: [0, 1, 2, 3].map(() => Math.max(0, options.chips ?? 0)),
       ready: [false, false, false, false],
       result: null,
       history: [],

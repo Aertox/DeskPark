@@ -215,7 +215,7 @@ export default function DoudizhuBoard({ ctl }: { ctl: Ctl }) {
             bubble={bidBubble(me)}
             bubbleSide="right"
             layout="row"
-            size={40}
+            size={54}
           />
         </div>
         {myTurn && v.phase === 'bidding' && (

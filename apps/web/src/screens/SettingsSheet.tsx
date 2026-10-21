@@ -4,7 +4,8 @@ import { Avatar } from '../components/Seat';
 import type { AvatarTheme } from '../components/pixel/characters';
 import { CHARACTERS, THEME_NAME, getCharacter } from '../components/pixel/characters';
 import { PixelAvatar } from '../components/pixel/PixelAvatar';
-import { profile, settings } from '../lib/store';
+import { useCharacters } from '../lib/characters';
+import { profile, setAvatar, settings } from '../lib/store';
 import type { FeltTheme } from '../lib/store';
 
 export const FELTS: { value: FeltTheme; label: string; color: string }[] = [
@@ -51,7 +52,7 @@ export function AvatarPicker() {
               <button
                 key={c.id}
                 className={p.avatar === c.id ? 'is-on' : ''}
-                onClick={() => profile.set({ avatar: c.id })}
+                onClick={() => setAvatar({ mode: 'pixel', pixel: c.id })}
                 aria-label={c.name}
                 title={c.name}
               >
@@ -61,6 +62,72 @@ export function AvatarPicker() {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** 虚拟角色选择：来自图片角色库 */
+export function CharacterPicker() {
+  const p = profile.use();
+  const list = useCharacters();
+  const groups = [...new Set(list.map((c) => c.group ?? '角色'))];
+  return (
+    <div className="avatar-picker">
+      {groups.map((g) => (
+        <div key={g} className="avatar-picker__group">
+          <span className="avatar-picker__title">{g}</span>
+          <div className="avatar-picker__grid">
+            {list
+              .filter((c) => (c.group ?? '角色') === g)
+              .map((c) => (
+                <button
+                  key={c.id}
+                  className={`is-vc ${p.avatar === `vc:${c.id}` ? 'is-on' : ''}`}
+                  onClick={() => setAvatar({ mode: 'character', character: c.id })}
+                  aria-label={c.name}
+                  title={c.name}
+                >
+                  <PixelAvatar avatar={`vc:${c.id}`} name={c.name} size={58} />
+                  <span>{c.name}</span>
+                </button>
+              ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AvatarSection() {
+  const p = profile.use();
+  const list = useCharacters();
+  const mode = list.length && p.avatarMode === 'character' ? 'character' : 'pixel';
+  const current =
+    mode === 'character'
+      ? list.find((c) => `vc:${c.id}` === p.avatar)?.name
+      : getCharacter(p.avatar)?.name;
+  return (
+    <div className="field field--stack">
+      <div className="field__label">
+        <span>形象</span>
+        <small>{current ?? ''}</small>
+      </div>
+      {list.length > 0 && (
+        <Segmented
+          value={mode}
+          onChange={(m) =>
+            setAvatar({
+              mode: m,
+              character: m === 'character' ? (p.character ?? list[0].id) : undefined,
+            })
+          }
+          options={[
+            { value: 'pixel', label: '像素头像' },
+            { value: 'character', label: '虚拟角色' },
+          ]}
+        />
+      )}
+      {mode === 'character' ? <CharacterPicker /> : <AvatarPicker />}
     </div>
   );
 }
@@ -82,13 +149,7 @@ export function SettingsSheet({
           <Field label="昵称" hint="联机时其他玩家看到的名字">
             <NameEditor />
           </Field>
-          <div className="field field--stack">
-            <div className="field__label">
-              <span>形象</span>
-              <small>{getCharacter(profile.get().avatar)?.name ?? ''}</small>
-            </div>
-            <AvatarPicker />
-          </div>
+          <AvatarSection />
         </>
       )}
       <Field label="桌布">

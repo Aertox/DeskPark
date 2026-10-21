@@ -1,4 +1,5 @@
-import { EMOTES } from '@park/protocol';
+import type { ChatMessage } from '@park/protocol';
+import { EMOTES, cleanChatText } from '@park/protocol';
 import {
   BookOpen,
   Bot,
@@ -37,6 +38,8 @@ const LAST_SOUND: Record<string, Parameters<typeof playSound>[0]> = {
   que: 'select',
 };
 
+const LOCAL_ID = 'local-me';
+
 export function TableShell({
   ctl,
   title,
@@ -54,7 +57,31 @@ export function TableShell({
   const [chatOpen, setChatOpen] = useState(false);
   const net = useOnline();
   const online_ = ctl.mode === 'online';
-  const lastChatId = net.chat.at(-1)?.id ?? 0;
+  // 人机局：聊天只在本地记录，电脑不发言
+  const [localChat, setLocalChat] = useState<ChatMessage[]>([]);
+  const chatMessages = online_ ? net.chat : localChat;
+  const myChatId = online_ ? net.playerId : LOCAL_ID;
+  const sendChat = (text: string) => {
+    if (online_) {
+      online.send({ t: 'chat', text });
+      return;
+    }
+    const me = ctl.players[ctl.seat ?? 0];
+    setLocalChat((list) => [
+      ...list,
+      {
+        id: (list.at(-1)?.id ?? 0) + 1,
+        kind: 'user',
+        text: cleanChatText(text),
+        at: Date.now(),
+        name: me?.name,
+        avatar: me?.avatar,
+        playerId: LOCAL_ID,
+        seat: ctl.seat,
+      },
+    ]);
+  };
+  const lastChatId = chatMessages.at(-1)?.id ?? 0;
   const [seenChat, setSeenChat] = useState(lastChatId);
   useEffect(() => {
     if (chatOpen) setSeenChat(lastChatId);
@@ -102,7 +129,7 @@ export function TableShell({
           </div>
         </div>
         <div className="table__top-right">
-          {online_ && (
+          {(online_ || ctl.seat !== null) && (
             <IconButton label="聊天" onClick={() => setChatOpen((x) => !x)} active={chatOpen}>
               <MessageCircle size={19} />
               {!chatOpen && incoming.length > 0 && (
@@ -188,11 +215,12 @@ export function TableShell({
           ))}
         </div>
       )}
-      {online_ && chatOpen && (
+      {chatOpen && (
         <aside className="chat-drawer" aria-label="房间聊天">
           <div className="chat-drawer__head">
             <span>
-              房间聊天<small>{net.room?.code}</small>
+              {online_ ? '房间聊天' : '聊天'}
+              <small>{online_ ? net.room?.code : '人机局'}</small>
             </span>
             <IconButton label="收起" onClick={() => setChatOpen(false)}>
               <ChevronLeft size={18} style={{ rotate: '180deg' }} />
@@ -200,10 +228,11 @@ export function TableShell({
           </div>
           <ChatPanel
             tone="felt"
-            messages={net.chat}
-            myId={net.playerId}
+            messages={chatMessages}
+            myId={myChatId}
             autoFocus
-            onSend={(text) => online.send({ t: 'chat', text })}
+            onSend={sendChat}
+            placeholder={online_ ? undefined : '人机局：电脑不会回复，只有你可以发言'}
           />
         </aside>
       )}

@@ -155,6 +155,14 @@ export const AVATARS = [
 
 export type AvatarId = (typeof AVATARS)[number]['id'];
 
-export function isAvatarId(id: unknown): id is AvatarId {
-  return typeof id === 'string' && AVATARS.some((a) => a.id === id);
+/** 虚拟角色（图片角色库）使用 `vc:<id>` 作为形象 id */
+export const CHARACTER_PREFIX = 'vc:';
+export const CHARACTER_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,39}$/;
+
+export function isAvatarId(id: unknown): id is string {
+  if (typeof id !== 'string') return false;
+  if (AVATARS.some((a) => a.id === id)) return true;
+  return (
+    id.startsWith(CHARACTER_PREFIX) && CHARACTER_ID_PATTERN.test(id.slice(CHARACTER_PREFIX.length))
+  );
 }

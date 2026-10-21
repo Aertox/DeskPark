@@ -27,5 +27,8 @@ describe('像素形象', () => {
     expect(isAvatarId('hero-pig')).toBe(true);
     expect(isAvatarId('nope')).toBe(false);
     expect(isAvatarId(undefined)).toBe(false);
+    expect(isAvatarId('vc:sword-girl')).toBe(true);
+    expect(isAvatarId('vc:Bad Id')).toBe(false);
+    expect(isAvatarId('vc:../etc')).toBe(false);
   });
 });

@@ -195,7 +195,7 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
                   active={v.turn === s}
                   deadline={ctl.deadlines[s]}
                   dim={p.folded || p.out}
-                  size={compact ? 32 : 40}
+                  size={50}
                   layout="row"
                   tag={winners.has(s) && result ? '赢' : undefined}
                   sub={p.out ? '出局' : <span className="num">{formatChips(p.stack)}</span>}
@@ -237,8 +237,8 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
                 <div
                   className="tx__bet"
                   style={{
-                    left: `calc(${x}% - ${Math.cos(a) * (compact ? 70 : 96)}px)`,
-                    top: `calc(${y}% - ${Math.sin(a) * (compact ? 34 : 50)}px)`,
+                    left: `calc(${x}% - ${Math.cos(a) * (compact ? 112 : 140)}px)`,
+                    top: `calc(${y}% - ${Math.sin(a) * (compact ? 40 : 58) + (below ? -1 : 1) * (compact ? 14 : 10)}px)`,
                   }}
                 >
                   <Chips amount={p.bet} />
@@ -262,7 +262,7 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
               active={myTurn}
               deadline={ctl.deadlines[me]}
               dim={mine.folded && !mine.out}
-              size={40}
+              size={52}
               layout="row"
               tag={winners.has(me) && result ? '赢' : undefined}
               sub={mine.out ? '已出局' : <span className="num">{formatChips(mine.stack)}</span>}

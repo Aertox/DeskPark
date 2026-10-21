@@ -2,6 +2,7 @@ import { Bot, WifiOff } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import type { PlayerInfo } from '../lib/controller';
+import { useCompact } from '../lib/media';
 import { PixelAvatar } from './pixel/PixelAvatar';
 
 export function Avatar({
@@ -61,12 +62,15 @@ export function Seat({
   bubble,
   bubbleSide = 'top',
   dim,
-  size = 46,
+  size = 60,
   layout = 'column',
   className = '',
   style,
   children,
 }: SeatProps) {
+  const compact = useCompact();
+  // 横屏手机等矮屏幕上自动缩小
+  const px = compact ? Math.round(size * 0.7) : size;
   const cd = useCountdown(active ? deadline : undefined);
   const ringStyle = cd ? ({ '--p': cd.ratio } as CSSProperties) : undefined;
   return (
@@ -76,7 +80,7 @@ export function Seat({
     >
       <div className="seat__avatar" style={ringStyle}>
         {cd && <span className={`seat__ring ${cd.seconds <= 5 ? 'is-urgent' : ''}`} />}
-        <Avatar name={player.name} avatar={player.avatar} size={size} />
+        <Avatar name={player.name} avatar={player.avatar} size={px} />
         {tag && <span className={`seat__tag tone-${tagTone}`}>{tag}</span>}
         {(player.isBot || player.auto) && (
           <span className="seat__badge" title={player.isBot ? '电脑' : '托管中'}>

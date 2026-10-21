@@ -251,7 +251,7 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
           player={ctl.players[s]}
           active={v.turn === s && !v.window && v.phase === 'play' && !p.won}
           deadline={ctl.deadlines[s]}
-          size={38}
+          size={54}
           layout={where === 'top' ? 'row' : 'column'}
           tag={s === v.dealer ? '庄' : undefined}
           sub={
@@ -313,6 +313,11 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
         <span className="chip">
           底分 <b className="num">{v.options.baseScore}</b>
         </span>
+        {(v.options.chips ?? 0) > 0 && (
+          <span className="chip is-gold">
+            筹码 <b className="num">{v.options.chips}</b>
+          </span>
+        )}
         {v.exchangeDir && v.phase === 'exchange' && (
           <span className="chip is-gold">
             <b>{DIR_TEXT[v.exchangeDir]}</b>
@@ -371,7 +376,7 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
             player={ctl.players[me]}
             active={myTurn}
             deadline={ctl.deadlines[me]}
-            size={36}
+            size={48}
             layout="row"
             tag={me === v.dealer ? '庄' : undefined}
             sub={<span className="num">{scoreOf(me)}</span>}
@@ -547,6 +552,8 @@ function RoundResult({
 }) {
   const r = v.result!;
   const matchOver = v.phase === 'matchOver';
+  const chipMode = (v.options.chips ?? 0) > 0;
+  const broke = chipMode ? [0, 1, 2, 3].filter((s) => v.scores[s] <= 0) : [];
   const readyCount = v.ready.filter(Boolean).length;
   const myWin = r.wins.find((w) => w.seat === me);
   const order = matchOver ? [0, 1, 2, 3].sort((a, b) => v.scores[b] - v.scores[a]) : [0, 1, 2, 3];
@@ -616,8 +623,10 @@ function RoundResult({
           {title}
         </div>
         <div className="result__sub">
-          第 {r.round} 盘 · {r.reason === 'three' ? '三家胡牌' : '牌墙摸完'} · 下一盘{' '}
-          {ctl.players[r.nextDealer].name} 坐庄
+          第 {r.round} 盘 · {r.reason === 'three' ? '三家胡牌' : '牌墙摸完'}
+          {matchOver && broke.length > 0
+            ? ` · ${broke.map((s) => ctl.players[s].name).join('、')} 筹码输光，本场结束`
+            : ` · 下一盘 ${ctl.players[r.nextDealer].name} 坐庄`}
         </div>
         <table className="result__table">
           <thead>
@@ -625,7 +634,7 @@ function RoundResult({
               <th>玩家</th>
               <th>本盘</th>
               <th className="num">得分</th>
-              <th className="num">总分</th>
+              <th className="num">{chipMode ? '筹码' : '总分'}</th>
             </tr>
           </thead>
           <tbody>

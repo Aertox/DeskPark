@@ -196,7 +196,7 @@ export default function GuandanBoard({ ctl }: { ctl: Ctl }) {
             deadline={ctl.deadlines[me]}
             tag={placeOf(me)}
             layout="row"
-            size={40}
+            size={52}
             sub={<CountChip n={v.handCounts[me]} warnAt={0} />}
           />
         </div>

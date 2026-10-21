@@ -1,5 +1,5 @@
 import type { Card } from '@park/engine';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CardRow } from '../../components/Hand';
 import { playSound } from '../../lib/sound';
 import { vibrate } from '../../lib/platform';
@@ -85,15 +85,4 @@ export function useHintCycle<T>(candidates: T[], resetKey: unknown) {
   };
 }
 
-const COMPACT_QUERY = '(max-height: 500px)';
-/** 横屏手机等矮屏幕 */
-export function useCompact(): boolean {
-  return useSyncExternalStore(
-    (cb) => {
-      const m = window.matchMedia(COMPACT_QUERY);
-      m.addEventListener('change', cb);
-      return () => m.removeEventListener('change', cb);
-    },
-    () => window.matchMedia(COMPACT_QUERY).matches,
-  );
-}
+export { useCompact } from '../../lib/media';

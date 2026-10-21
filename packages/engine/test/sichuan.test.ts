@@ -428,7 +428,13 @@ describe('川麻 · 整局模拟', () => {
       const rng = new Rng(seed * 7);
       let s = sichuan.setup({
         players: [0, 1, 2, 3].map((i) => ({ name: `P${i}`, isBot: true })),
-        options: { baseScore: 1, exchange: seed % 3 !== 0, jingoudiao: seed % 2 === 0, rounds: 3 },
+        options: {
+          baseScore: 1,
+          exchange: seed % 3 !== 0,
+          jingoudiao: seed % 2 === 0,
+          rounds: 3,
+          chips: 0,
+        },
         seed,
       });
       let steps = 0;
@@ -455,5 +461,26 @@ describe('川麻 · 整局模拟', () => {
     const { state } = simulate(sichuan, 4, { ...sichuan.defaultOptions, rounds: 4 }, 2026, 20000);
     expect(state.phase).toBe('matchOver');
     expect(state.history).toHaveLength(4);
+  });
+
+  it('筹码模式：有人输光即结束整场', () => {
+    for (let seed = 1; seed <= 6; seed++) {
+      const { state } = simulate(
+        sichuan,
+        4,
+        { ...sichuan.defaultOptions, rounds: 0, chips: 20 },
+        seed,
+        200000,
+      );
+      expect(state.phase).toBe('matchOver');
+      expect(state.scores.some((x) => x <= 0)).toBe(true);
+      expect(state.scores.reduce((a, b) => a + b, 0)).toBe(80);
+      // 结束前的每一盘结束时都还没有人输光
+      let running = [20, 20, 20, 20];
+      state.history.slice(0, -1).forEach((h) => {
+        running = running.map((x, i) => x + h.deltas[i]);
+        expect(running.every((x) => x > 0)).toBe(true);
+      });
+    }
   });
 });
