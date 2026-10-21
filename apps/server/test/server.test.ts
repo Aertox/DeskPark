@@ -1,5 +1,5 @@
 import type { ClientMessage, ServerMessage } from '@park/protocol';
-import { PROTOCOL_VERSION } from '@park/protocol';
+import { AVATARS, PROTOCOL_VERSION } from '@park/protocol';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
 import { startServer } from '../src/server';
@@ -76,7 +76,13 @@ describe('联机服务器', () => {
     const a = new TestClient();
     const b = new TestClient();
     await Promise.all([a.opened, b.opened]);
-    a.send({ t: 'hello', token: 'token-aaaaaaaaaaaaaaaa', name: '甲', v: PROTOCOL_VERSION });
+    a.send({
+      t: 'hello',
+      token: 'token-aaaaaaaaaaaaaaaa',
+      name: '甲',
+      avatar: 'hero-pig',
+      v: PROTOCOL_VERSION,
+    });
     b.send({ t: 'hello', token: 'token-bbbbbbbbbbbbbbbb', name: '乙', v: PROTOCOL_VERSION });
     await a.wait('welcome');
     await b.wait('welcome');
@@ -95,7 +101,11 @@ describe('联机服务器', () => {
     expect(joined.you.seat).toBe(1);
 
     a.send({ t: 'bot', seat: 2, add: true });
-    await a.wait('room', (m) => m.room.seats[2].kind === 'bot');
+    const withBot = await a.wait('room', (m) => m.room.seats[2].kind === 'bot');
+    // 电脑拿到一个形象，名字取自该形象；房主的形象同步给了其他人
+    const bot = withBot.room.seats[2];
+    expect(AVATARS.find((x) => x.id === bot.avatar)?.botName).toBe(bot.name);
+    expect(withBot.room.seats[0].avatar).toBe('hero-pig');
 
     b.send({ t: 'start' });
     await b.wait('error', (m) => m.message.includes('房主'));

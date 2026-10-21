@@ -167,7 +167,7 @@ function WaitingRoom() {
                 </>
               ) : (
                 <>
-                  <Avatar name={s.name ?? '?'} size={40} />
+                  <Avatar name={s.name ?? '?'} avatar={s.avatar} size={40} />
                   <div className="rseat__who">
                     <strong>
                       {s.name}

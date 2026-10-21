@@ -83,9 +83,15 @@ class OnlineClient {
     this.ws = ws;
     ws.onopen = () => {
       this.retry = 0;
-      const { name, token } = profile.get();
+      const { name, token, avatar } = profile.get();
       ws.send(
-        JSON.stringify({ t: 'hello', token, name, v: PROTOCOL_VERSION } satisfies ClientMessage),
+        JSON.stringify({
+          t: 'hello',
+          token,
+          name,
+          avatar,
+          v: PROTOCOL_VERSION,
+        } satisfies ClientMessage),
       );
       const pending = this.queue;
       this.queue = [];
@@ -197,12 +203,13 @@ export function useOnline(): OnlineState {
   return useSyncExternalStore(online.subscribe, online.getState, online.getState);
 }
 
-// 改名后同步给服务器
-let lastName = profile.get().name;
+// 改名 / 换形象后同步给服务器
+let last = `${profile.get().name}|${profile.get().avatar}`;
 profile.subscribe(() => {
-  const { name } = profile.get();
-  if (name !== lastName) {
-    lastName = name;
-    if (online.getState().status === 'open') online.send({ t: 'rename', name });
+  const { name, avatar } = profile.get();
+  const key = `${name}|${avatar}`;
+  if (key !== last) {
+    last = key;
+    if (online.getState().status === 'open') online.send({ t: 'rename', name, avatar });
   }
 });

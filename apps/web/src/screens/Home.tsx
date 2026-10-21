@@ -138,7 +138,7 @@ export function Home() {
         </div>
         <div className="home__me">
           <button className="me-chip" onClick={() => setSettingsOpen(true)} aria-label="修改昵称">
-            <Avatar name={p.name} size={28} />
+            <Avatar name={p.name} avatar={p.avatar} size={28} />
             <span>{p.name}</span>
           </button>
           <IconButton label="设置" onClick={() => setSettingsOpen(true)}>

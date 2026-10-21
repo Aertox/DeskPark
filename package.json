@@ -20,7 +20,7 @@
     "start": "npm run start -w @park/server",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p packages/engine --noEmit && tsc -p packages/engine/test --noEmit && tsc -p packages/protocol --noEmit && tsc -p apps/server --noEmit && tsc -p apps/web --noEmit",
+    "typecheck": "tsc -p packages/engine --noEmit && tsc -p packages/engine/test --noEmit && tsc -p packages/protocol --noEmit && tsc -p packages/protocol/test --noEmit && tsc -p apps/server --noEmit && tsc -p apps/web --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

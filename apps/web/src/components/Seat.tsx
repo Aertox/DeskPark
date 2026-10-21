@@ -2,25 +2,20 @@ import { Bot, WifiOff } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import type { PlayerInfo } from '../lib/controller';
-import { avatarColor, initial } from '../lib/format';
+import { PixelAvatar } from './pixel/PixelAvatar';
 
 export function Avatar({
   name,
+  avatar,
   size = 44,
   className = '',
 }: {
   name: string;
+  avatar?: string | null;
   size?: number;
   className?: string;
 }) {
-  return (
-    <span
-      className={`avatar ${className}`}
-      style={{ width: size, height: size, background: avatarColor(name), fontSize: size * 0.42 }}
-    >
-      {initial(name)}
-    </span>
-  );
+  return <PixelAvatar name={name} avatar={avatar} size={size} className={className} />;
 }
 
 /** 倒计时剩余比例（0~1） */
@@ -81,7 +76,7 @@ export function Seat({
     >
       <div className="seat__avatar" style={ringStyle}>
         {cd && <span className={`seat__ring ${cd.seconds <= 5 ? 'is-urgent' : ''}`} />}
-        <Avatar name={player.name} size={size} />
+        <Avatar name={player.name} avatar={player.avatar} size={size} />
         {tag && <span className={`seat__tag tone-${tagTone}`}>{tag}</span>}
         {(player.isBot || player.auto) && (
           <span className="seat__badge" title={player.isBot ? '电脑' : '托管中'}>

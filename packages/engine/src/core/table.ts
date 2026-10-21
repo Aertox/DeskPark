@@ -7,6 +7,8 @@ import { SYSTEM_SEAT } from './types';
 export interface TableSeat {
   name: string;
   isBot: boolean;
+  /** 形象 id（界面用的元数据，规则不关心） */
+  avatar?: string;
   /** 托管：由电脑代打 */
   auto?: boolean;
   /** 联机时玩家是否在线，离线视同托管 */

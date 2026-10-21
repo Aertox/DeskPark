@@ -2,9 +2,11 @@ import type { AnyGame, TableSeat } from '@park/engine';
 import { Table, getGame, normalizeOptions } from '@park/engine';
 import type { ClientMessage, RoomSnapshot, SeatInfo, ServerMessage } from '@park/protocol';
 import {
+  AVATARS,
   PROTOCOL_VERSION,
   ROOM_CODE_ALPHABET,
   ROOM_CODE_LENGTH,
+  isAvatarId,
   normalizeRoomCode,
 } from '@park/protocol';
 import { randomBytes } from 'node:crypto';
@@ -14,6 +16,7 @@ export interface Client {
   id: string;
   token: string;
   name: string;
+  avatar?: string;
   send: ((msg: ServerMessage) => void) | null;
   roomCode: string | null;
   lastSeen: number;
@@ -39,7 +42,18 @@ export const DEFAULT_CONFIG: ServerConfig = {
   roomIdleMs: 15 * 60_000,
 };
 
-const BOT_NAMES = ['小白', '阿福', '团子', '豆包', '芝麻', '可乐', '年糕', '布丁'];
+function humanSeat(c: Client): SeatState {
+  return { kind: 'human', playerId: c.id, name: c.name, avatar: c.avatar, connected: true };
+}
+
+/** 电脑座位：挑一个房间里还没人用的形象，名字取自形象 */
+function botSeat(seats: SeatInfo[]): SeatState {
+  const used = new Set(seats.map((x) => x.avatar));
+  const free = AVATARS.filter((a) => !used.has(a.id));
+  const pool = free.length ? free : AVATARS;
+  const a = pool[Math.floor(Math.random() * pool.length)];
+  return { kind: 'bot', name: a.botName, avatar: a.id };
+}
 
 function randomId(bytes = 9): string {
   return randomBytes(bytes).toString('base64url');
@@ -87,9 +101,10 @@ class Room {
       options: this.options,
       hostId: this.hostId,
       status: this.status,
-      seats: this.seats.map(({ kind, name, playerId, connected, auto }) => ({
+      seats: this.seats.map(({ kind, name, avatar, playerId, connected, auto }) => ({
         kind,
         name,
+        avatar,
         playerId,
         connected,
         auto,
@@ -141,17 +156,14 @@ class Room {
   start(): string | null {
     const humans = this.seats.filter((s) => s.kind === 'human').length;
     if (humans === 0) return '至少需要一名玩家';
-    let botIdx = 0;
-    for (const s of this.seats) {
-      if (s.kind === 'empty') {
-        s.kind = 'bot';
-        s.name = BOT_NAMES[botIdx++ % BOT_NAMES.length];
-      }
-    }
+    this.seats.forEach((st, idx) => {
+      if (st.kind === 'empty') this.seats[idx] = botSeat(this.seats);
+    });
     this.table?.dispose();
     this.unsubscribe?.();
     const tableSeats: TableSeat[] = this.seats.map((s) => ({
       name: s.name ?? '玩家',
+      avatar: s.avatar,
       isBot: s.kind === 'bot',
       auto: !!s.auto,
       connected: s.kind === 'bot' ? true : !!(s.playerId && this.hub.clientById(s.playerId)?.send),
@@ -261,6 +273,7 @@ export class Hub {
         id: randomId(),
         token,
         name: cleanName(msg.name),
+        avatar: isAvatarId(msg.avatar) ? msg.avatar : undefined,
         send: null,
         roomCode: null,
         lastSeen: Date.now(),
@@ -269,6 +282,7 @@ export class Hub {
       this.clientsById.set(client.id, client);
     } else {
       client.name = cleanName(msg.name);
+      if (isAvatarId(msg.avatar)) client.avatar = msg.avatar;
     }
     // 同一身份在新页面登录：旧连接让位
     if (client.send && client.send !== send)
@@ -283,6 +297,7 @@ export class Hub {
       if (seat !== null) {
         room.seats[seat].connected = true;
         room.seats[seat].name = client.name;
+        room.seats[seat].avatar = client.avatar;
         delete room.seats[seat].disconnectedAt;
         room.table?.setConnected(seat, true);
       }
@@ -303,11 +318,14 @@ export class Hub {
     switch (msg.t) {
       case 'rename': {
         c.name = cleanName(msg.name);
+        if (isAvatarId(msg.avatar)) c.avatar = msg.avatar;
         if (room) {
           const seat = room.seatOf(c.id);
           if (seat !== null) {
             room.seats[seat].name = c.name;
-            if (room.table) room.table.seats[seat].name = c.name;
+            room.seats[seat].avatar = c.avatar;
+            if (room.table)
+              Object.assign(room.table.seats[seat], { name: c.name, avatar: c.avatar });
           }
           room.broadcastRoom();
         }
@@ -323,7 +341,7 @@ export class Hub {
         );
         const code = this.newCode();
         const r = new Room(this, code, def, normalizeOptions(def, msg.options), seatCount, c.id);
-        r.seats[0] = { kind: 'human', playerId: c.id, name: c.name, connected: true };
+        r.seats[0] = humanSeat(c);
         this.rooms.set(code, r);
         c.roomCode = code;
         this.config.log?.('[room] created', code, def.meta.id, 'by', c.name);
@@ -338,8 +356,7 @@ export class Hub {
         c.roomCode = code;
         if (r.seatOf(c.id) === null && !r.spectators.has(c.id)) {
           const empty = r.status === 'waiting' ? r.seats.findIndex((s) => s.kind === 'empty') : -1;
-          if (empty >= 0)
-            r.seats[empty] = { kind: 'human', playerId: c.id, name: c.name, connected: true };
+          if (empty >= 0) r.seats[empty] = humanSeat(c);
           else r.spectators.add(c.id);
         }
         r.lastActive = Date.now();
@@ -366,12 +383,7 @@ export class Hub {
         if (!target || target.kind !== 'empty') return this.error(c, '这个座位不可用');
         if (seat !== null) room.seats[seat] = { kind: 'empty' };
         room.spectators.delete(c.id);
-        room.seats[Number(msg.seat)] = {
-          kind: 'human',
-          playerId: c.id,
-          name: c.name,
-          connected: true,
-        };
+        room.seats[Number(msg.seat)] = humanSeat(c);
         room.broadcastRoom();
         return;
       }
@@ -382,8 +394,7 @@ export class Hub {
         const s = room.seats[i];
         if (!s) return;
         if (msg.add && s.kind === 'empty') {
-          const used = new Set(room.seats.map((x) => x.name));
-          room.seats[i] = { kind: 'bot', name: BOT_NAMES.find((n) => !used.has(n)) ?? '电脑' };
+          room.seats[i] = botSeat(room.seats);
         } else if (!msg.add && s.kind === 'bot') {
           room.seats[i] = { kind: 'empty' };
         } else if (!msg.add && s.kind === 'human' && s.playerId !== c.id) {
@@ -426,7 +437,7 @@ export class Hub {
           const empty = room.seats.findIndex((s) => s.kind === 'empty');
           const sc = this.clientById(id);
           if (empty < 0 || !sc?.send) break;
-          room.seats[empty] = { kind: 'human', playerId: id, name: sc.name, connected: true };
+          room.seats[empty] = humanSeat(sc);
           room.spectators.delete(id);
         }
         const err = room.start();
@@ -466,7 +477,7 @@ export class Hub {
     if (seat !== null) {
       if (room.status === 'playing') {
         // 对局中离开：座位交给电脑
-        room.seats[seat] = { kind: 'bot', name: `${c.name}(电脑)` };
+        room.seats[seat] = { kind: 'bot', name: `${c.name}(电脑)`, avatar: c.avatar };
         room.table?.setSeat(seat, { isBot: true, name: `${c.name}(电脑)` });
       } else {
         room.seats[seat] = { kind: 'empty' };

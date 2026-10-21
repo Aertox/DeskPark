@@ -10,6 +10,8 @@ export type SeatKind = 'empty' | 'human' | 'bot';
 export interface SeatInfo {
   kind: SeatKind;
   name?: string;
+  /** 像素形象 id（见 AVATARS） */
+  avatar?: string;
   playerId?: string;
   connected?: boolean;
   /** 托管中 */
@@ -32,11 +34,11 @@ export interface RoomSnapshot {
 }
 
 export type ClientMessage =
-  | { t: 'hello'; token: string; name: string; v: number }
+  | { t: 'hello'; token: string; name: string; avatar?: string; v: number }
   | { t: 'create'; gameId: string; options?: Record<string, unknown>; seats?: number }
   | { t: 'join'; code: string }
   | { t: 'leave' }
-  | { t: 'rename'; name: string }
+  | { t: 'rename'; name: string; avatar?: string }
   | { t: 'sit'; seat: number }
   | { t: 'bot'; seat: number; add: boolean }
   | { t: 'configure'; options?: Record<string, unknown>; seats?: number }
@@ -78,4 +80,39 @@ export function normalizeRoomCode(input: string): string {
     .toUpperCase()
     .replace(/[^0-9A-Z]/g, '')
     .slice(0, ROOM_CODE_LENGTH);
+}
+
+/**
+ * 像素形象：id 与电脑玩家使用的名字。像素画本身在 Web 客户端（apps/web/src/components/pixel）。
+ * 新增形象时两边都要加；测试会校验它们一一对应。
+ */
+export const AVATARS = [
+  { id: 'cyber-hacker', botName: '霓虹' },
+  { id: 'cyber-ronin', botName: '零号' },
+  { id: 'cyber-dj', botName: '电音' },
+  { id: 'cyber-cat', botName: '喵七' },
+  { id: 'xian-sword', botName: '青锋' },
+  { id: 'xian-fox', botName: '九尾' },
+  { id: 'xian-taoist', botName: '小道' },
+  { id: 'xian-elder', botName: '老祖' },
+  { id: 'xian-fairy', botName: '瑶池' },
+  { id: 'hero-pig', botName: '猪小侠' },
+  { id: 'anime-ninja', botName: '影' },
+  { id: 'anime-magical', botName: '星光' },
+  { id: 'anime-catgirl', botName: '咪咪' },
+  { id: 'anime-samurai', botName: '一刀' },
+  { id: 'anime-pilot', botName: '破晓' },
+  { id: 'cute-panda', botName: '团团' },
+  { id: 'cute-dino', botName: '嗷呜' },
+  { id: 'cute-frog', botName: '呱呱' },
+  { id: 'cute-ghost', botName: '飘飘' },
+  { id: 'cute-robot', botName: '铁蛋' },
+  { id: 'cute-chick', botName: '叽叽' },
+  { id: 'cute-astronaut', botName: '星际' },
+] as const;
+
+export type AvatarId = (typeof AVATARS)[number]['id'];
+
+export function isAvatarId(id: unknown): id is AvatarId {
+  return typeof id === 'string' && AVATARS.some((a) => a.id === id);
 }

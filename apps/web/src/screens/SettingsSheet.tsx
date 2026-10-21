@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Field, Segmented, Sheet, Switch } from '../components/ui';
 import { Avatar } from '../components/Seat';
+import type { AvatarTheme } from '../components/pixel/characters';
+import { CHARACTERS, THEME_NAME, getCharacter } from '../components/pixel/characters';
+import { PixelAvatar } from '../components/pixel/PixelAvatar';
 import { profile, settings } from '../lib/store';
 import type { FeltTheme } from '../lib/store';
 
@@ -21,7 +24,7 @@ export function NameEditor() {
   };
   return (
     <div className="name-editor">
-      <Avatar name={draft || p.name} size={44} />
+      <Avatar name={draft || p.name} avatar={p.avatar} size={44} />
       <input
         value={draft}
         maxLength={12}
@@ -31,6 +34,33 @@ export function NameEditor() {
         aria-label="昵称"
         placeholder="你的昵称"
       />
+    </div>
+  );
+}
+
+/** 形象选择：按主题分组 */
+export function AvatarPicker() {
+  const p = profile.use();
+  return (
+    <div className="avatar-picker">
+      {(Object.keys(THEME_NAME) as AvatarTheme[]).map((theme) => (
+        <div key={theme} className="avatar-picker__group">
+          <span className="avatar-picker__title">{THEME_NAME[theme]}</span>
+          <div className="avatar-picker__grid">
+            {CHARACTERS.filter((c) => c.theme === theme).map((c) => (
+              <button
+                key={c.id}
+                className={p.avatar === c.id ? 'is-on' : ''}
+                onClick={() => profile.set({ avatar: c.id })}
+                aria-label={c.name}
+                title={c.name}
+              >
+                <PixelAvatar avatar={c.id} name={c.name} size={46} />
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -48,9 +78,18 @@ export function SettingsSheet({
   return (
     <Sheet open={open} onClose={onClose} title={showProfile ? '设置' : '外观'}>
       {showProfile && (
-        <Field label="昵称" hint="联机时其他玩家看到的名字">
-          <NameEditor />
-        </Field>
+        <>
+          <Field label="昵称" hint="联机时其他玩家看到的名字">
+            <NameEditor />
+          </Field>
+          <div className="field field--stack">
+            <div className="field__label">
+              <span>形象</span>
+              <small>{getCharacter(profile.get().avatar)?.name ?? ''}</small>
+            </div>
+            <AvatarPicker />
+          </div>
+        </>
       )}
       <Field label="桌布">
         <div className="felt-picker">

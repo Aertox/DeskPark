@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { AVATARS } from '@park/protocol';
 import { randomToken, storage } from './platform';
 
 /** 极简的可订阅存储（无需额外状态库），带本地持久化。 */
@@ -59,11 +60,13 @@ const NAMES = [
 export interface Profile {
   name: string;
   token: string;
+  avatar: string;
 }
 
 export const profile = createStore<Profile>('park.profile', {
   name: NAMES[Math.floor(Math.random() * NAMES.length)],
   token: randomToken(),
+  avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id,
 });
 // 首次访问时把随机生成的身份写入本地
 profile.set({});

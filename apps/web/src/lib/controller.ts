@@ -1,5 +1,6 @@
 import type { AnyGame, TableSeat } from '@park/engine';
 import { Table, getGame } from '@park/engine';
+import { AVATARS } from '@park/protocol';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { online, useOnline } from './online';
 import { storage } from './platform';
@@ -8,6 +9,7 @@ import { profile } from './store';
 
 export interface PlayerInfo {
   name: string;
+  avatar?: string;
   isBot: boolean;
   isMe: boolean;
   connected: boolean;
@@ -38,7 +40,15 @@ export interface GameController<V = any, A = any> {
   leave(): void;
 }
 
-const BOT_NAMES = ['小白', '阿福', '团子', '豆包', '芝麻', '可乐', '年糕', '布丁'];
+/** 为电脑玩家挑选互不重复的形象，名字取自形象 */
+function pickBots(n: number, exclude: string | undefined): TableSeat[] {
+  const pool = AVATARS.filter((a) => a.id !== exclude);
+  const order = pool.map((a) => ({ a, r: Math.random() })).sort((x, y) => x.r - y.r);
+  return Array.from({ length: n }, (_, i) => {
+    const a = order[i % order.length].a;
+    return { name: a.botName, isBot: true, avatar: a.id };
+  });
+}
 const SAVE_KEY = 'park.local';
 
 interface SavedLocal {
@@ -55,14 +65,13 @@ function makeTable(
   options: Record<string, unknown>,
   restore?: SavedLocal,
 ) {
+  const me = profile.get();
   const seats: TableSeat[] = restore?.seats ?? [
-    { name: profile.get().name, isBot: false },
-    ...Array.from({ length: players - 1 }, (_, i) => ({
-      name: BOT_NAMES[i % BOT_NAMES.length],
-      isBot: true,
-    })),
+    { name: me.name, isBot: false, avatar: me.avatar },
+    ...pickBots(players - 1, me.avatar),
   ];
-  seats[0].name = profile.get().name;
+  seats[0].name = me.name;
+  seats[0].avatar = me.avatar;
   seats[0].auto = false;
   return new Table(def, seats, restore?.options ?? options, {
     humanTimeoutMs: null,
@@ -135,6 +144,7 @@ export function useLocalController(
       seat: 0,
       players: table.seats.map((s, i) => ({
         name: s.name,
+        avatar: s.avatar,
         isBot: s.isBot,
         isMe: i === 0,
         connected: true,
@@ -181,6 +191,7 @@ export function useOnlineController(): GameController | null {
       seat,
       players: room.seats.map((p) => ({
         name: p.name ?? '空位',
+        avatar: p.avatar,
         isBot: p.kind === 'bot',
         isMe: !!p.playerId && p.playerId === s.playerId,
         connected: p.kind === 'bot' ? true : p.connected !== false,

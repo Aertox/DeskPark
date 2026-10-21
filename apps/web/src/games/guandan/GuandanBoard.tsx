@@ -348,7 +348,7 @@ function RoundResult({
           {r.order.map((s, i) => (
             <div key={s} className={`gd-order__item ${gd.teamOf(s) === r.winTeam ? 'is-win' : ''}`}>
               <span className="gd-order__place">{PLACE[i]}</span>
-              <Avatar name={ctl.players[s].name} size={34} />
+              <Avatar name={ctl.players[s].name} avatar={ctl.players[s].avatar} size={34} />
               <strong>{ctl.players[s].name}</strong>
               <small>{teamName(gd.teamOf(s))}</small>
             </div>

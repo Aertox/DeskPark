@@ -421,7 +421,11 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
                     </td>
                     <td>
                       <span className="result__who">
-                        <Avatar name={ctl.players[s].name} size={26} />
+                        <Avatar
+                          name={ctl.players[s].name}
+                          avatar={ctl.players[s].avatar}
+                          size={26}
+                        />
                         {ctl.players[s].name}
                       </span>
                     </td>
