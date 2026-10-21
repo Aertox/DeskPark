@@ -1,0 +1,12 @@
+{
+  "name": "@park/protocol",
+  "version": "0.1.0",
+  "private": true,
+  "description": "客户端与联机服务器之间的消息协议定义",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

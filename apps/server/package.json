@@ -1,0 +1,22 @@
+{
+  "name": "@park/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "牌苑联机服务器：房间管理 + 服务端权威的对局运行（WebSocket）",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "esbuild src/main.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/main.js --external:ws",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@park/engine": "*",
+    "@park/protocol": "*",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.0",
+    "esbuild": "^0.28.0",
+    "tsx": "^4.20.0"
+  }
+}
