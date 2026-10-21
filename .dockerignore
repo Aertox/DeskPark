@@ -1,5 +1,14 @@
+# 依赖与构建产物在镜像内重新生成
 node_modules
 **/node_modules
 **/dist
-.git
 coverage
+# 与运行无关的内容
+.git
+.github
+.vscode
+docs/screenshots
+*.log
+.env
+.env.*
+!.env.example

@@ -3,9 +3,10 @@
 # 闲亭 · DeskPark
 
 **简洁优雅的网页桌游平台** —— 斗地主、掼蛋、德州扑克、四川麻将（血战到底），单人练习或与好友联机。<br/>
-打开网页即玩，规则引擎与界面分离，可扩展自定义卡牌玩法，并为移植 App 预留了结构。
+打开网页即玩，规则引擎与界面分离，可扩展自定义玩法，并为移植 App 预留了结构。
 
 [![CI](https://github.com/solitern/DeskPark/actions/workflows/ci.yml/badge.svg)](https://github.com/solitern/DeskPark/actions/workflows/ci.yml)
+[![Docker](https://github.com/solitern/DeskPark/actions/workflows/docker.yml/badge.svg)](https://github.com/solitern/DeskPark/actions/workflows/docker.yml)
 
 <img src="docs/screenshots/lobby.jpg" alt="大厅" width="860" />
 
@@ -13,7 +14,10 @@
 
 ## 特性
 
-- **三大经典玩法**：斗地主（叫分、全牌型、炸弹/春天倍数、记牌器）、掼蛋（两副牌、逢人配、同花顺、升级、进贡/还贡/抗贡、接风）、德州扑克（盲注与涨盲、最小加注规则、边池、摊牌比牌）。
+- **扑克**：斗地主（叫分、全牌型、炸弹/春天倍数、记牌器）、掼蛋（两副牌、逢人配、同花顺、升级、进贡/还贡/抗贡、接风）、德州扑克（盲注与涨盲、最小加注规则、边池、摊牌比牌）。
+- **麻将**：四川麻将 · 成都血战到底（换三张、定缺、一炮多响、过水、最后四张必胡、刮风下雨、呼叫转移、查花猪 / 查大叫 / 退税），矢量麻将牌与听牌提示。
+- **像素小人头像**：赛博朋克、修仙、动漫、卡通四组共 22 个原创形象；电脑玩家各有形象与名字。
+- **房间聊天**：等待房间与对局中都能聊天，支持快捷语、未读提醒与消息浮窗；另有表情互动。
 - **单人 & 多人**：单人与电脑对战（启发式 AI，德州使用蒙特卡洛胜率估算）；联机输入 4 位房间号或分享链接即可加入，空位由电脑补齐。
 - **服务端权威**：联机时规则在服务器运行，每个座位只收到自己能看到的信息，杜绝作弊；断线重连自动恢复座位，离线/超时自动托管。
 - **可扩展玩法**：所有玩法都实现同一个 `GameDefinition` 插件接口，附带示例玩法「比大小」与 [新增玩法指南](docs/ADDING_A_GAME.md)。
@@ -59,22 +63,17 @@ npm run dev
 
 ## 部署
 
-联机服务器会同时托管构建好的网页，因此只需部署一个 Node 进程：
+一个 Node 进程同时提供网页与联机服务，推荐用 Docker：
 
 ```bash
-npm run build
-PORT=8787 npm start
+git clone https://github.com/solitern/DeskPark.git && cd DeskPark
+cp .env.example .env
+docker compose pull && docker compose up -d     # 打开 http://服务器IP:8787
 ```
 
-或使用 Docker：
-
-```bash
-docker build -t desk-park .
-docker run -p 8787:8787 desk-park
-```
-
-环境变量：`PORT`（默认 8787）、`TURN_TIMEOUT_MS`（联机每步时限，默认 30000）、`STATIC_DIR`（网页目录）。
-若网页与服务器分开部署，构建网页时设置 `VITE_SERVER_URL=wss://你的域名/ws`。单人模式是纯前端的，可以部署在任意静态托管上。
+- 镜像 `ghcr.io/solitern/deskpark`（amd64 / arm64），每次推送 main 自动构建、冒烟测试并发布。
+- 绑定域名并自动 HTTPS：`docker compose -f docker-compose.yml -f deploy/docker-compose.https.yml up -d`
+- 国内网络、版本回滚、Nginx 反代、不用 Docker 的方式等，见 **[部署指南](docs/DEPLOY.md)**。
 
 ## 项目结构
 
@@ -90,6 +89,7 @@ docs/          架构、设计、玩法扩展、App 移植、路线图
 
 ## 文档
 
+- [部署指南](docs/DEPLOY.md) —— Docker、HTTPS、云服务器、国内网络
 - [架构说明](docs/ARCHITECTURE.md) —— 分层、数据流、信息隐藏、联机协议
 - [新增 / 自定义玩法](docs/ADDING_A_GAME.md) —— 以「比大小」为例的完整步骤
 - [设计规范](docs/DESIGN.md) —— 设计原则、色彩、字体、卡面、动效

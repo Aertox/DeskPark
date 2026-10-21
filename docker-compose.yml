@@ -1,0 +1,29 @@
+# 闲亭 DeskPark —— Docker Compose 部署
+#
+#   使用预构建镜像： docker compose pull && docker compose up -d
+#   在本机构建镜像： docker compose up -d --build
+#   启用 HTTPS：     docker compose -f docker-compose.yml -f deploy/docker-compose.https.yml up -d
+#
+# 可配置项见 .env.example（复制为 .env 后修改）。
+
+name: deskpark
+
+services:
+  deskpark:
+    image: ${DESKPARK_IMAGE:-ghcr.io/solitern/deskpark:latest}
+    build:
+      context: .
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-}
+        VITE_SERVER_URL: ${VITE_SERVER_URL:-}
+    restart: unless-stopped
+    init: true
+    ports:
+      - '${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8787}:8787'
+    environment:
+      TURN_TIMEOUT_MS: ${TURN_TIMEOUT_MS:-30000}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'

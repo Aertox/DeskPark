@@ -1,0 +1,28 @@
+# HTTPS 叠加配置：由 Caddy 自动申请并续期 Let's Encrypt 证书，并反向代理网页与 WebSocket。
+#
+#   1. 在 .env 中设置 DOMAIN=你的域名，并把域名的 A 记录解析到服务器
+#   2. 安全组 / 防火墙放行 80 与 443
+#   3. docker compose -f docker-compose.yml -f deploy/docker-compose.https.yml up -d
+#
+# 建议同时设置 HTTP_BIND=127.0.0.1，让 8787 端口只对本机开放。
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - deskpark
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      DOMAIN: ${DOMAIN:?请在 .env 中设置 DOMAIN（你的域名）}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

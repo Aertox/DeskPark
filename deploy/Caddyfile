@@ -1,0 +1,9 @@
+# Caddy 会为 {$DOMAIN} 自动申请 HTTPS 证书；WebSocket（/ws）无需额外配置即可代理。
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy deskpark:8787
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+}
