@@ -1,0 +1,12 @@
+{
+  "name": "@park/engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "平台无关的卡牌游戏规则引擎与 AI（无 DOM 依赖，可复用于 Web / App / 服务端）",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
