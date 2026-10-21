@@ -1,4 +1,93 @@
 {
-  "version": 1,
-  "characters": []
+  "version": 2,
+  "characters": [
+    {
+      "id": "yunshang",
+      "name": "云裳",
+      "group": "修仙",
+      "file": "yunshang.png",
+      "frame": [48, 96],
+      "frames": 16,
+      "fps": 8,
+      "face": [14, 1, 20],
+      "bg": "#dfe8e4"
+    },
+    {
+      "id": "qingfeng",
+      "name": "青锋",
+      "group": "修仙",
+      "file": "qingfeng.png",
+      "frame": [48, 96],
+      "frames": 16,
+      "fps": 8,
+      "face": [14, 1, 20],
+      "bg": "#d7dfea"
+    },
+    {
+      "id": "suqin",
+      "name": "素琴",
+      "group": "修仙",
+      "file": "suqin.png",
+      "frame": [48, 96],
+      "frames": 16,
+      "fps": 8,
+      "face": [14, 1, 20],
+      "bg": "#f1e1e4"
+    },
+    {
+      "id": "baihu",
+      "name": "白狐",
+      "group": "修仙",
+      "file": "baihu.png",
+      "frame": [48, 96],
+      "frames": 16,
+      "fps": 8,
+      "face": [14, 1, 20],
+      "bg": "#e9e4ef"
+    },
+    {
+      "id": "nihong",
+      "name": "霓虹",
+      "group": "赛博朋克",
+      "file": "nihong.png",
+      "frame": [48, 96],
+      "frames": 16,
+      "fps": 8,
+      "face": [14, 1, 20],
+      "bg": "#2b2540"
+    },
+    {
+      "id": "lingshi",
+      "name": "零式",
+      "group": "赛博朋克",
+      "file": "lingshi.png",
+      "frame": [48, 96],
+      "frames": 16,
+      "fps": 8,
+      "face": [14, 1, 20],
+      "bg": "#22283a"
+    },
+    {
+      "id": "xiaoying",
+      "name": "小樱",
+      "group": "动漫",
+      "file": "xiaoying.png",
+      "frame": [48, 96],
+      "frames": 16,
+      "fps": 8,
+      "face": [14, 1, 20],
+      "bg": "#f3e3dc"
+    },
+    {
+      "id": "xingye",
+      "name": "星野",
+      "group": "动漫",
+      "file": "xingye.png",
+      "frame": [48, 96],
+      "frames": 16,
+      "fps": 8,
+      "face": [14, 1, 20],
+      "bg": "#f6e6f0"
+    }
+  ]
 }

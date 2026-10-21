@@ -3,8 +3,9 @@ import { Field, Segmented, Sheet, Switch } from '../components/ui';
 import { Avatar } from '../components/Seat';
 import type { AvatarTheme } from '../components/pixel/characters';
 import { CHARACTERS, THEME_NAME, getCharacter } from '../components/pixel/characters';
+import { CharacterSprite } from '../components/pixel/CharacterSprite';
 import { PixelAvatar } from '../components/pixel/PixelAvatar';
-import { useCharacters } from '../lib/characters';
+import { figureHeight, useCharacters } from '../lib/characters';
 import { profile, setAvatar, settings } from '../lib/store';
 import type { FeltTheme } from '../lib/store';
 
@@ -87,7 +88,7 @@ export function CharacterPicker() {
                   aria-label={c.name}
                   title={c.name}
                 >
-                  <PixelAvatar avatar={`vc:${c.id}`} name={c.name} size={58} />
+                  <CharacterSprite character={c} height={figureHeight(c, 104)} seed={c.id} />
                   <span>{c.name}</span>
                 </button>
               ))}

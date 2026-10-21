@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { memo } from 'react';
-import { characterUrl, findCharacter, useCharacters } from '../../lib/characters';
+import { findCharacter, useCharacters } from '../../lib/characters';
+import { CharacterFace } from './CharacterSprite';
 import type { PixelCharacter } from './characters';
 import { characterForName, expandRows, getCharacter } from './characters';
 
@@ -73,17 +74,7 @@ export function PixelAvatar({
 }) {
   const characters = useCharacters();
   const vc = findCharacter(characters, avatar);
-  if (vc) {
-    return (
-      <span
-        className={`avatar avatar--vc ${className}`}
-        style={{ width: size, height: size, background: vc.bg ?? '#dfe7f5', ...style }}
-        title={vc.name}
-      >
-        <img src={characterUrl(vc)} alt="" draggable={false} />
-      </span>
-    );
-  }
+  if (vc) return <CharacterFace character={vc} size={size} className={className} style={style} />;
   const c = resolveCharacter(avatar, name);
   return (
     <span

@@ -1,8 +1,10 @@
 import { Bot, WifiOff } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
+import { figureHeight, findCharacter, useCharacters } from '../lib/characters';
 import type { PlayerInfo } from '../lib/controller';
 import { useCompact } from '../lib/media';
+import { CharacterSprite } from './pixel/CharacterSprite';
 import { PixelAvatar } from './pixel/PixelAvatar';
 
 export function Avatar({
@@ -47,6 +49,8 @@ export interface SeatProps {
   dim?: boolean;
   size?: number;
   layout?: 'column' | 'row';
+  /** 全身立绘不占额外高度、头部探出座位上沿（德州胶囊座位用） */
+  figureOverflow?: boolean;
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
@@ -64,6 +68,7 @@ export function Seat({
   dim,
   size = 60,
   layout = 'column',
+  figureOverflow = false,
   className = '',
   style,
   children,
@@ -73,27 +78,62 @@ export function Seat({
   const px = compact ? Math.round(size * 0.7) : size;
   const cd = useCountdown(active ? deadline : undefined);
   const ringStyle = cd ? ({ '--p': cd.ratio } as CSSProperties) : undefined;
+  const vc = findCharacter(useCharacters(), player.avatar);
+  const figH = vc ? figureHeight(vc, px * (compact || figureOverflow ? 1.9 : 2.4)) : 0;
+  const marks = (
+    <>
+      {tag && <span className={`seat__tag tone-${tagTone}`}>{tag}</span>}
+      {(player.isBot || player.auto) && (
+        <span className="seat__badge" title={player.isBot ? '电脑' : '托管中'}>
+          <Bot size={11} strokeWidth={2.4} />
+        </span>
+      )}
+      {!player.connected && (
+        <span className="seat__badge is-off" title="离线">
+          <WifiOff size={11} strokeWidth={2.4} />
+        </span>
+      )}
+      {cd && <span className="seat__seconds num">{cd.seconds}</span>}
+    </>
+  );
   return (
     <div
-      className={`seat seat--${layout} ${active ? 'is-active' : ''} ${dim ? 'is-dim' : ''} ${className}`}
+      className={`seat seat--${layout} ${vc ? 'seat--figure' : ''} ${active ? 'is-active' : ''} ${dim ? 'is-dim' : ''} ${className}`}
       style={style}
     >
-      <div className="seat__avatar" style={ringStyle}>
-        {cd && <span className={`seat__ring ${cd.seconds <= 5 ? 'is-urgent' : ''}`} />}
-        <Avatar name={player.name} avatar={player.avatar} size={px} />
-        {tag && <span className={`seat__tag tone-${tagTone}`}>{tag}</span>}
-        {(player.isBot || player.auto) && (
-          <span className="seat__badge" title={player.isBot ? '电脑' : '托管中'}>
-            <Bot size={11} strokeWidth={2.4} />
-          </span>
-        )}
-        {!player.connected && (
-          <span className="seat__badge is-off" title="离线">
-            <WifiOff size={11} strokeWidth={2.4} />
-          </span>
-        )}
-        {cd && <span className="seat__seconds num">{cd.seconds}</span>}
-      </div>
+      {vc ? (
+        <div
+          className={`seat__figure ${figureOverflow ? 'is-overflow' : ''}`}
+          style={figureOverflow ? { height: px, width: (figH * vc.frameW) / vc.frameH } : undefined}
+        >
+          <span className="seat__stage" />
+          {cd && (
+            <svg
+              className={`seat__oval ${cd.seconds <= 5 ? 'is-urgent' : ''}`}
+              viewBox="0 0 100 28"
+              aria-hidden="true"
+            >
+              <ellipse cx="50" cy="14" rx="47" ry="11" pathLength={100} className="track" />
+              <ellipse
+                cx="50"
+                cy="14"
+                rx="47"
+                ry="11"
+                pathLength={100}
+                strokeDasharray={`${cd.ratio * 100} 100`}
+              />
+            </svg>
+          )}
+          <CharacterSprite character={vc} height={figH} seed={player.name} animate={!dim} />
+          {marks}
+        </div>
+      ) : (
+        <div className="seat__avatar" style={ringStyle}>
+          {cd && <span className={`seat__ring ${cd.seconds <= 5 ? 'is-urgent' : ''}`} />}
+          <Avatar name={player.name} avatar={player.avatar} size={px} />
+          {marks}
+        </div>
+      )}
       <div className="seat__meta">
         <span className="seat__name">
           {player.name}

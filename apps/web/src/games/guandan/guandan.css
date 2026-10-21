@@ -52,6 +52,10 @@
   left: 50%;
   translate: -50% 0;
 }
+/* 对家是全身立绘时，出牌区让到立绘下方 */
+.gd__center:has(.gd__top .seat--figure) .gd__zone.is-top {
+  top: 156px;
+}
 .gd__zone.is-left {
   left: 0;
   top: 32%;
@@ -193,6 +197,9 @@
   }
   .gd__zone.is-top {
     top: 46px;
+  }
+  .gd__center:has(.gd__top .seat--figure) .gd__zone.is-top {
+    top: 80px;
   }
   .gd__me {
     min-height: 46px;

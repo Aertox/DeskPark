@@ -5,6 +5,7 @@ import { PlayingCard } from '../../components/PlayingCard';
 import { Avatar, Seat } from '../../components/Seat';
 import { Button, Sheet, toast } from '../../components/ui';
 import type { GameController } from '../../lib/controller';
+import { findCharacter, useCharacters } from '../../lib/characters';
 import { formatChips, signed } from '../../lib/format';
 import { playSound } from '../../lib/sound';
 import { useCompact, useTurnCue } from '../shared/trick';
@@ -49,6 +50,7 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
   const myTurn = !spectator && !!v.me;
   const [raiseOpen, setRaiseOpen] = useState(false);
   const compact = useCompact();
+  const characters = useCharacters();
   const [raiseTo, setRaiseTo] = useState(0);
   useTurnCue(myTurn);
 
@@ -180,7 +182,12 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
 
         {v.players.map((p, s) => {
           if (s === me && !spectator) return null;
-          const { x, y, a } = pos(s);
+          const { x, y: y0, a } = pos(s);
+          // 全身立绘的头部会探出座位上沿，顶部座位下移，避免压到信息栏
+          const y =
+            y0 < 20 && findCharacter(characters, ctl.players[s].avatar)
+              ? y0 + (compact ? 9 : 13)
+              : y0;
           const h = shown.get(s);
           const side = x < 50 ? 'right' : 'left';
           const below = y < 50;
@@ -197,6 +204,7 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
                   dim={p.folded || p.out}
                   size={50}
                   layout="row"
+                  figureOverflow
                   tag={winners.has(s) && result ? '赢' : undefined}
                   sub={p.out ? '出局' : <span className="num">{formatChips(p.stack)}</span>}
                   bubble={
@@ -236,10 +244,15 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
               {p.bet > 0 && v.phase === 'betting' && (
                 <div
                   className="tx__bet"
-                  style={{
-                    left: `calc(${x}% - ${Math.cos(a) * (compact ? 112 : 140)}px)`,
-                    top: `calc(${y}% - ${Math.sin(a) * (compact ? 40 : 58) + (below ? -1 : 1) * (compact ? 14 : 10)}px)`,
-                  }}
+                  style={
+                    compact && y !== y0
+                      ? // 矮屏上顶部座位已下移，筹码放到座位左侧，避免压住底池
+                        { left: `calc(${x}% - 104px)`, top: `calc(${y}% + 8px)` }
+                      : {
+                          left: `calc(${x}% - ${Math.cos(a) * (compact ? 112 : 140)}px)`,
+                          top: `calc(${y}% - ${Math.sin(a) * (compact ? 40 : 58) + (below ? -1 : 1) * (compact ? 14 : 10)}px)`,
+                        }
+                  }
                 >
                   <Chips amount={p.bet} />
                 </div>
