@@ -4,7 +4,9 @@
 ARG NODE_VERSION=22
 
 # ---------- 构建 ----------
-FROM node:${NODE_VERSION}-alpine AS build
+# 构建产物（JS bundle + 静态网页）与 CPU 架构无关，因此构建阶段固定在构建机的原生平台运行，
+# 多架构镜像只需把产物复制进各自的运行时镜像，不必在模拟器里重复安装依赖与打包。
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-alpine AS build
 WORKDIR /src
 # 国内构建可传入 npm 镜像源，例如：--build-arg NPM_REGISTRY=https://registry.npmmirror.com
 ARG NPM_REGISTRY=""
