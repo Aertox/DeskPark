@@ -1,0 +1,15 @@
+name: 功能建议
+description: 新功能、体验改进
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: 想要什么
+      description: 描述使用场景与期望的效果
+    validations:
+      required: true
+  - type: textarea
+    id: alt
+    attributes:
+      label: 其他想法或参考

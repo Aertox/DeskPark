@@ -1,0 +1,90 @@
+# 架构说明
+
+## 总览
+
+```
+┌──────────────────────── apps/web（React）────────────────────────┐
+│  大厅 / 房间 / 牌桌界面        各玩法 Board 组件（只读 view，发出 action）  │
+│                 ▲                                │                 │
+│                 │ GameController（统一接口）       ▼                 │
+│   useLocalController ─── 浏览器内的 Table        useOnlineController │
+└──────────────────────────────┬────────────────────────┬───────────┘
+                               │                        │ WebSocket（packages/protocol）
+                               ▼                        ▼
+                ┌──────── packages/engine ────────┐   ┌──── apps/server ────┐
+                │ GameDefinition（规则插件）        │◄──│ Hub：身份、房间、限流 │
+                │ Table：校验/应用动作、调度电脑与超时 │   │ Room：一个 Table 实例 │
+                │ 斗地主 / 掼蛋 / 德州 / 比大小       │   └─────────────────────┘
+                └─────────────────────────────────┘
+```
+
+核心思想：**规则只写一次**。同一份引擎代码同时运行在浏览器（单人）与服务器（联机），也可以直接运行在未来的 App 中。
+
+## 规则引擎（packages/engine）
+
+### GameDefinition：玩法插件接口
+
+```ts
+interface GameDefinition<State, Action, View, Options> {
+  meta: GameMeta;                 // 名称、人数、规则说明
+  defaultOptions: Options;
+  optionFields: OptionField[];    // 设置项描述，前端据此自动生成表单
+  setup(ctx): State;              // 发牌、初始化
+  activeSeats(state): Seat[];     // 当前需要行动的座位（可多个，如同时出牌、准备）
+  validate(state, seat, action): string | null;  // 合法性校验，返回给玩家的提示
+  apply(state, seat, action): State;              // 纯函数，返回新状态
+  view(state, seat | null): View; // 某座位能看到的信息（null = 观战）
+  isOver(state): boolean;
+  bot(view, seat, rng): Action;   // 电脑决策：只能看 view
+  autoAdvance?(state): { delayMs, action } | null; // 可选：系统定时推进
+}
+```
+
+约定：
+
+1. **State 是纯数据**（可 JSON 序列化），包括随机数状态。因此对局可以保存、恢复、回放，测试可以完全复现。
+2. **apply 不修改入参**，返回新对象，便于 React 渲染与调试。
+3. **信息隐藏只在 view 中处理**。联机时服务器只下发 view，客户端永远拿不到他人手牌、牌堆等隐藏信息。
+4. **bot 只基于 view 决策**，所以电脑不会作弊，单机与联机行为一致，也可以在客户端为玩家生成「提示」。
+
+### Table：牌桌运行器
+
+`Table` 持有一局的状态，负责：
+
+- `act(seat, action)`：检查是否轮到该座位 → `validate` → `apply` → 通知订阅者；
+- 调度：电脑座位按 `meta.botDelayMs` 延迟行动；托管/离线座位快速代打；联机时真人超时由电脑代打一步，并向前端提供各座位截止时间用于倒计时；
+- `autoAdvance` 定时器（如「比大小」亮牌后自动进入下一墩）；
+- `stop()/start()` 生命周期与 `initialState` 恢复（单人对局刷新页面后继续）。
+
+`simulate()` 可以不依赖定时器、同步地让电脑打完整局，用于测试。
+
+### 各玩法要点
+
+| 玩法   | 关键实现                                                                                                                                                       |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 斗地主 | `analyzeValues` 返回一手牌**所有**可能的牌型解释（如 333444555666 既是四连飞机也是三连飞机带三单），领出取最自然的解释，跟牌取能压过上家的解释                 |
+| 掼蛋   | 逢人配通过「非万能牌计数 + 万能牌补位」判定牌型；炸弹按 4 < 5 < 同花顺 < 6 < … < 天王炸 统一用 `bombPower` 比较；进贡、还贡、抗贡、接风、过 A 判定都在状态机中 |
+| 德州   | 7 张牌直接计数评估（无需枚举组合），摊牌时再枚举出最佳 5 张用于高亮；不完整加注不重开加注权；边池按投入额分层结算                                              |
+
+## 联机（apps/server + packages/protocol）
+
+- **身份**：客户端首次访问生成随机 token 并保存在本地；服务器以 token 识别玩家，刷新页面或断网重连后自动回到原座位。
+- **房间**：4 位房间号（去掉易混淆字符），房主可补电脑、请出玩家、修改设置；对局中离开的座位交给电脑。
+- **权威性**：客户端只发送「动作意图」，服务器用同一份引擎校验，再给每个成员推送各自的 view。
+- **健壮性**：消息限流（30 条/秒）、消息大小限制、心跳清理僵尸连接、空闲房间自动回收。
+
+消息定义见 `packages/protocol/src/index.ts`。
+
+## 前端（apps/web）
+
+- `lib/controller.ts`：`GameController` 抹平单机/联机差异——Board 组件只关心 `view`、`players`、`act()`。
+- `lib/platform.ts`：存储、服务器地址、震动、剪贴板等平台能力，App 移植时替换此文件。
+- `lib/store.ts`：基于 `useSyncExternalStore` 的极简持久化状态（设置、资料），无第三方状态库。
+- `games/*`：每个玩法一个 Board，`games/index.ts` 是前端玩法注册表；Board 使用 `React.lazy` 按需加载。
+- 样式：纯 CSS + 设计令牌（`styles/tokens.css`），无运行时 CSS-in-JS。
+
+## 测试策略
+
+- **规则单测**：牌型识别、比较、特殊规则（逢人配、边池、最小加注……）。
+- **整局模拟**：大量随机种子让电脑打完整场，断言不抛错、牌数/筹码守恒、积分零和——这也是对 AI 合法性的模糊测试。
+- **联机集成测试**：启动真实服务器，用 WebSocket 客户端走完建房、加入、开局、断线重连流程。

@@ -1,0 +1,28 @@
+name: 问题反馈
+description: 规则错误、界面异常、联机问题等
+labels: ['bug']
+body:
+  - type: dropdown
+    id: game
+    attributes:
+      label: 玩法
+      options: [斗地主, 掼蛋, 德州扑克, 比大小, 大厅 / 通用, 联机服务器]
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: 模式
+      options: [单人, 联机]
+  - type: textarea
+    id: what
+    attributes:
+      label: 发生了什么
+      description: 复现步骤、期望结果与实际结果，最好附上截图
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: 设备与浏览器
+      placeholder: 例如 iPhone 15 / Safari 18，或 Windows / Chrome 130

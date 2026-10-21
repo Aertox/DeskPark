@@ -1,0 +1,28 @@
+name: 新玩法提案
+description: 提议增加一个卡牌玩法（含自定义小游戏）
+labels: ['game']
+body:
+  - type: input
+    id: name
+    attributes:
+      label: 玩法名称
+      placeholder: 例如 跑得快、升级、二十一点
+    validations:
+      required: true
+  - type: input
+    id: players
+    attributes:
+      label: 人数与用牌
+      placeholder: 例如 3 人，一副牌去掉大小王
+  - type: textarea
+    id: rules
+    attributes:
+      label: 规则要点
+      description: 发牌、出牌顺序、牌型与大小、计分、胜负条件
+    validations:
+      required: true
+  - type: textarea
+    id: ui
+    attributes:
+      label: 界面要点
+      description: 是否需要特殊的牌桌布局或交互
