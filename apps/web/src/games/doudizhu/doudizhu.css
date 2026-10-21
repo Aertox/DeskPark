@@ -1,0 +1,178 @@
+.ddz {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(84px, 1fr) minmax(0, 4.4fr) minmax(84px, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'info info info'
+    'left center right'
+    'me me me'
+    'hand hand hand';
+  padding: 2px max(14px, 2vw) 10px;
+}
+
+.ddz__info {
+  grid-area: info;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+.ddz__bottom {
+  display: flex;
+  gap: 4px;
+}
+
+.ddz__seat {
+  align-self: start;
+  justify-self: center;
+  padding-top: 6%;
+}
+.ddz__seat.is-left {
+  grid-area: left;
+}
+.ddz__seat.is-right {
+  grid-area: right;
+}
+.ddz__score {
+  font-size: 11px;
+  color: var(--felt-ink-3);
+}
+.ddz__sub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.3;
+}
+.ddz__sub em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--felt-ink-3);
+}
+
+.ddz__center {
+  grid-area: center;
+  position: relative;
+  min-height: 0;
+}
+.ddz__zone {
+  position: absolute;
+  display: flex;
+  align-items: center;
+}
+.ddz__zone.is-left {
+  left: 0;
+  top: 10%;
+}
+.ddz__zone.is-right {
+  right: 0;
+  top: 10%;
+}
+.ddz__zone.is-me {
+  left: 50%;
+  bottom: 2px;
+  translate: -50% 0;
+}
+
+.ddz__me {
+  grid-area: me;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 4px 0 6px;
+}
+.ddz__myseat {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  translate: 0 -50%;
+}
+.ddz__hand {
+  grid-area: hand;
+  padding: 0 3%;
+}
+.spectate {
+  justify-content: center;
+  padding: 24px;
+}
+
+/* 记牌器 */
+.counter {
+  position: absolute;
+  z-index: 20;
+  top: 4px;
+  right: 12px;
+  display: flex;
+  gap: 1px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--felt-glass);
+  box-shadow: inset 0 0 0 1px var(--felt-line);
+}
+.counter span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 18px;
+  padding: 1px 2px;
+  line-height: 1.15;
+}
+.counter em {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--felt-ink-3);
+}
+.counter b {
+  font-size: 12px;
+  font-weight: 650;
+}
+.counter .is-zero b {
+  color: var(--felt-ink-3);
+  opacity: 0.5;
+}
+.counter .is-full b {
+  color: var(--felt-accent);
+}
+
+@media (max-width: 900px) {
+  .counter {
+    display: none;
+  }
+}
+@media (max-height: 460px) {
+  .ddz__info {
+    gap: 8px;
+  }
+  .ddz__seat {
+    padding-top: 0;
+  }
+  .ddz__me {
+    min-height: 46px;
+    padding: 2px 0 4px;
+  }
+}
+@media (orientation: portrait) and (max-width: 600px) {
+  .ddz {
+    grid-template-columns: 76px minmax(0, 1fr) 76px;
+    padding: 18px 8px 8px;
+  }
+  .ddz__me {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ddz__myseat {
+    position: static;
+    translate: none;
+    align-self: flex-start;
+    padding-left: 4px;
+  }
+  .ddz__zone.is-left,
+  .ddz__zone.is-right {
+    top: 40%;
+  }
+}

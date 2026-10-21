@@ -59,6 +59,8 @@ export type ServerMessage =
       deadlines: Record<number, number>;
       serverTime: number;
       over: boolean;
+      /** 最近一次动作的座位与类型（不含具体内容，避免泄露隐藏信息） */
+      last: { seat: number; type: string } | null;
     }
   | { t: 'left' }
   | { t: 'error'; message: string; code?: string }

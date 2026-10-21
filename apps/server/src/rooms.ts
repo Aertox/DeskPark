@@ -121,6 +121,12 @@ class Room {
       deadlines: { ...t.deadlines },
       serverTime: Date.now(),
       over: t.isOver(),
+      last: t.lastAction
+        ? {
+            seat: t.lastAction.seat,
+            type: String((t.lastAction.action as { type?: unknown })?.type ?? ''),
+          }
+        : null,
     });
   }
 

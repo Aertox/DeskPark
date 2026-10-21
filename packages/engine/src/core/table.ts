@@ -21,6 +21,8 @@ export interface TableConfig {
   /** 便于测试：关闭所有定时器，由调用方手动推进 */
   manual?: boolean;
   seed?: number;
+  /** 从已保存的状态恢复（例如刷新页面后继续单机对局） */
+  initialState?: unknown;
   onError?: (err: unknown) => void;
 }
 
@@ -47,6 +49,7 @@ export class Table<G extends AnyGame = AnyGame> {
   private seatTimers = new Map<Seat, TimerHandle>();
   private systemTimer: TimerHandle | null = null;
   private disposed = false;
+  private running = false;
 
   constructor(
     public readonly def: G,
@@ -55,16 +58,26 @@ export class Table<G extends AnyGame = AnyGame> {
     private readonly config: TableConfig = {},
   ) {
     const seed = config.seed ?? randomSeed();
-    this.state = def.setup({
-      players: seats.map((s) => ({ name: s.name, isBot: s.isBot })),
-      options,
-      seed,
-    });
+    this.state =
+      (config.initialState as ReturnType<G['setup']>) ??
+      def.setup({
+        players: seats.map((s) => ({ name: s.name, isBot: s.isBot })),
+        options,
+        seed,
+      });
   }
 
-  /** 开始调度（电脑玩家开始行动）。 */
+  /** 开始调度（电脑玩家开始行动）。可在 stop() 之后再次调用。 */
   start(): void {
+    if (this.disposed) return;
+    this.running = true;
     this.schedule(null);
+  }
+
+  /** 暂停调度：清除所有定时器，状态保留。 */
+  stop(): void {
+    this.running = false;
+    this.clearAllTimers();
   }
 
   subscribe(fn: Listener): () => void {
@@ -142,11 +155,16 @@ export class Table<G extends AnyGame = AnyGame> {
 
   dispose(): void {
     this.disposed = true;
+    this.stop();
+    this.listeners.clear();
+  }
+
+  private clearAllTimers(): void {
     for (const t of this.seatTimers.values()) clearTimer(t);
     this.seatTimers.clear();
+    this.deadlines = {};
     if (this.systemTimer) clearTimer(this.systemTimer);
     this.systemTimer = null;
-    this.listeners.clear();
   }
 
   // ---------------------------------------------------------------------------
@@ -178,7 +196,7 @@ export class Table<G extends AnyGame = AnyGame> {
    * 其他仍处于行动中的座位保留原计时（例如多人同时"准备"的阶段）。
    */
   private schedule(actedSeat: Seat | null): void {
-    if (this.config.manual || this.disposed) return;
+    if (this.config.manual || this.disposed || !this.running) return;
     if (actedSeat !== null) this.clearSeatTimer(actedSeat);
     if (this.systemTimer) clearTimer(this.systemTimer);
     this.systemTimer = null;

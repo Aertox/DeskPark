@@ -1,0 +1,13 @@
+{
+  "name": "牌苑 Card Park",
+  "short_name": "牌苑",
+  "description": "简洁优雅的卡牌游戏：斗地主、掼蛋、德州扑克",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f1ea",
+  "theme_color": "#1f5c4f",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
