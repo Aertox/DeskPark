@@ -151,12 +151,10 @@
   font-weight: 600;
 }
 .tx__backs {
-  position: absolute;
-  right: -10px;
-  top: 50%;
-  translate: 0 -50%;
   display: flex;
-  rotate: 8deg;
+  flex: none;
+  margin-left: 2px;
+  rotate: 6deg;
   pointer-events: none;
 }
 .tx__backs .pcard + .pcard {

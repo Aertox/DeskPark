@@ -25,20 +25,67 @@ export function SuitIcon({
   );
 }
 
-export function CrownIcon({ size = '1em' }: { size?: string | number }) {
+/** 卡面底色，用于图标中的镂空细节 */
+const CUT = { fill: 'var(--card-face)' };
+
+/** 人头牌图标：J 羽毛帽、Q 圆珠冠、K 十字王冠（取代重复的字母，避免与左上角点数重复） */
+export function CourtIcon({ rank, className }: { rank: number; className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      <path
-        d="M12 74 6 30l24 18 20-32 20 32 24-18-6 44z"
-        fill="currentColor"
-        stroke="currentColor"
-        strokeWidth="4"
-        strokeLinejoin="round"
-      />
-      <rect x="12" y="80" width="76" height="8" rx="3" fill="currentColor" />
-      <circle cx="6" cy="28" r="5" fill="currentColor" />
-      <circle cx="50" cy="13" r="5" fill="currentColor" />
-      <circle cx="94" cy="28" r="5" fill="currentColor" />
+    <svg viewBox="0 0 100 100" className={className} aria-hidden="true" fill="currentColor">
+      {rank === 13 && (
+        <>
+          <path d="M50 2h5v7h7v5h-7v8h-5v-8h-7V9h7z" />
+          <path d="M15 74 9 33l21 17 20-27 20 27 21-17-6 41z" />
+          <circle cx="9" cy="29" r="5" />
+          <circle cx="91" cy="29" r="5" />
+          <rect x="15" y="78" width="70" height="10" rx="2.5" />
+          <circle cx="50" cy="60" r="5.5" style={CUT} />
+          <circle cx="31" cy="64" r="3" style={CUT} />
+          <circle cx="69" cy="64" r="3" style={CUT} />
+          <rect x="21" y="81.5" width="58" height="3" rx="1.5" style={CUT} />
+        </>
+      )}
+      {rank === 12 && (
+        <>
+          <path d="M13 74c0-13 2-26 5-36l15 17 17-21 17 21 15-17c3 10 5 23 5 36z" />
+          <circle cx="18" cy="32" r="6" />
+          <circle cx="50" cy="26" r="7" />
+          <circle cx="82" cy="32" r="6" />
+          <circle cx="33" cy="50" r="3.5" />
+          <circle cx="67" cy="50" r="3.5" />
+          <rect x="13" y="78" width="74" height="10" rx="5" />
+          <path d="M50 52c5 5 8 8 8 12a8 8 0 0 1-16 0c0-4 3-7 8-12z" style={CUT} />
+          <circle cx="27" cy="83" r="2.5" style={CUT} />
+          <circle cx="50" cy="83" r="2.5" style={CUT} />
+          <circle cx="73" cy="83" r="2.5" style={CUT} />
+        </>
+      )}
+      {rank === 11 && (
+        <>
+          <path d="M64 46C70 27 82 14 98 7c-3 15-11 28-24 41z" />
+          <path
+            d="M66 45C74 31 84 20 95 11"
+            fill="none"
+            strokeWidth="2.2"
+            style={{ stroke: 'var(--card-face)' }}
+          />
+          <path d="M27 67c0-19 10-30 24-30s24 11 24 30z" />
+          <path d="M5 73c0-8 20-12 45-12s45 4 45 12-20 11-45 11S5 81 5 73z" />
+          <rect x="27" y="59" width="48" height="5" style={CUT} />
+          <circle cx="50" cy="73" r="3" style={CUT} />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/** 王牌图标：星芒（与人头牌的王冠明显区分） */
+export function JesterIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} aria-hidden="true" fill="currentColor">
+      <path d="M46 14c4 29 8 35 38 42-30 7-34 13-38 42-4-29-8-35-38-42 30-7 34-13 38-42z" />
+      <path d="M84 6c1.6 9.5 3 11 12 13-9 2-10.4 3.5-12 13-1.6-9.5-3-11-12-13 9-2 10.4-3.5 12-13z" />
+      <circle cx="46" cy="56" r="6" style={CUT} />
     </svg>
   );
 }

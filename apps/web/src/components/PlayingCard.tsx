@@ -1,7 +1,7 @@
 import type { Card } from '@park/engine';
 import type { CSSProperties, HTMLAttributes } from 'react';
 import { memo } from 'react';
-import { CrownIcon, SuitIcon } from './Suit';
+import { CourtIcon, JesterIcon, SuitIcon } from './Suit';
 
 const FACE: Record<number, string> = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
 
@@ -60,9 +60,7 @@ export const PlayingCard = memo(function PlayingCard({
     return (
       <div className={`${cls} pcard--joker ${big ? 'is-big' : ''}`} style={s} {...rest}>
         <div className="pcard__jindex">{big ? '大王' : '小王'}</div>
-        <div className="pcard__jcenter">
-          <CrownIcon size="100%" />
-        </div>
+        <JesterIcon className="pcard__jcenter" />
       </div>
     );
   }
@@ -77,10 +75,7 @@ export const PlayingCard = memo(function PlayingCard({
         <SuitIcon suit={card.suit} className="pcard__suit" />
       </div>
       {face ? (
-        <div className="pcard__face">
-          <span className="pcard__letter">{rankText(card.rank)}</span>
-          <SuitIcon suit={card.suit} className="pcard__facesuit" />
-        </div>
+        <CourtIcon rank={card.rank} className="pcard__court" />
       ) : (
         <SuitIcon suit={card.suit} className={`pcard__pip ${card.rank === 14 ? 'is-ace' : ''}`} />
       )}

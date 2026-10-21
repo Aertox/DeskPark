@@ -210,13 +210,13 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
                   bubbleSide={side}
                 >
                   {s === v.dealer && <span className="tx__dealer">D</span>}
+                  {p.inHand && !h && (
+                    <div className="tx__backs" aria-label="手牌">
+                      <PlayingCard faceDown w="var(--tx-back-w)" />
+                      <PlayingCard faceDown w="var(--tx-back-w)" />
+                    </div>
+                  )}
                 </Seat>
-                {p.inHand && !h && (
-                  <div className="tx__backs">
-                    <PlayingCard faceDown w="var(--tx-back-w)" />
-                    <PlayingCard faceDown w="var(--tx-back-w)" />
-                  </div>
-                )}
                 {h && (
                   <div className="tx__shown">
                     <div className="tx__hole">

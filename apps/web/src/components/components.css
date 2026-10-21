@@ -33,13 +33,13 @@
   --suit-d: var(--card-blue);
   --suit-c: var(--card-green);
 }
-.pcard::after {
-  /* 纸面高光 */
+.pcard::before {
+  /* 纸面高光：放在内容下面，避免冲淡点数 */
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 38%);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 38%);
   pointer-events: none;
 }
 .pcard__index {
@@ -81,29 +81,12 @@
   width: calc(var(--w) * 0.56);
   height: calc(var(--w) * 0.56);
 }
-.pcard__face {
+.pcard__court {
   position: absolute;
   right: calc(var(--w) * 0.08);
-  bottom: calc(var(--w) * 0.06);
-  width: calc(var(--w) * 0.58);
-  height: calc(var(--w) * 0.86);
-  border-radius: calc(var(--w) * 0.06);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, currentColor 7%, transparent);
-}
-.pcard__letter {
-  font-family: var(--font-serif-latin);
-  font-size: calc(var(--w) * 0.44);
-  line-height: 1;
-  font-weight: 500;
-}
-.pcard__facesuit {
-  width: calc(var(--w) * 0.18);
-  height: calc(var(--w) * 0.18);
-  margin-top: calc(var(--w) * 0.04);
+  bottom: calc(var(--w) * 0.12);
+  width: calc(var(--w) * 0.6);
+  height: calc(var(--w) * 0.6);
 }
 .pcard--joker {
   color: var(--card-black);
@@ -124,10 +107,10 @@
 }
 .pcard__jcenter {
   position: absolute;
-  right: calc(var(--w) * 0.1);
-  bottom: calc(var(--w) * 0.14);
-  width: calc(var(--w) * 0.5);
-  height: calc(var(--w) * 0.5);
+  right: calc(var(--w) * 0.07);
+  bottom: calc(var(--w) * 0.12);
+  width: calc(var(--w) * 0.62);
+  height: calc(var(--w) * 0.62);
 }
 .pcard--joker:not(.is-big) .pcard__jcenter {
   opacity: 0.85;
