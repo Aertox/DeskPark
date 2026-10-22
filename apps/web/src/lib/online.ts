@@ -96,7 +96,10 @@ class OnlineClient {
           v: PROTOCOL_VERSION,
         } satisfies ClientMessage),
       );
-      const pending = this.queue;
+      // 重连后回到原来的房间（服务器重启过、房间已不在时会收到 no-room）
+      const roomCode = this.state.room?.code;
+      if (roomCode) ws.send(JSON.stringify({ t: 'join', code: roomCode } satisfies ClientMessage));
+      const pending = this.queue.filter((m) => !(m.t === 'join' && m.code === roomCode));
       this.queue = [];
       for (const m of pending) ws.send(JSON.stringify(m));
       this.patch({ status: 'open' });
@@ -139,7 +142,8 @@ class OnlineClient {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(msg));
     } else if (msg.t !== 'ping') {
-      this.queue.push(msg);
+      // 离线期间排队，最多保留最近 30 条
+      this.queue = [...this.queue, msg].slice(-30);
       this.connect();
     }
   }
@@ -198,6 +202,9 @@ class OnlineClient {
         break;
       case 'error':
         this.patch({ error: { message: m.message, code: m.code, at: Date.now() } });
+        if (m.code === 'no-room' && this.state.room) {
+          this.patch({ room: null, you: null, game: null, chat: [] });
+        }
         if (m.code === 'replaced') {
           this.wanted = false;
           this.ws?.close();

@@ -483,4 +483,32 @@ describe('川麻 · 整局模拟', () => {
       });
     }
   });
+
+  it('抢牌窗口只对需要决定的座位可见', () => {
+    const rng = new Rng(11);
+    let found = false;
+    for (let seed = 1; seed <= 40 && !found; seed++) {
+      let st = sichuan.setup({
+        players: [0, 1, 2, 3].map((i) => ({ name: `P${i}`, isBot: true })),
+        options: { ...sichuan.defaultOptions, rounds: 1 },
+        seed,
+      });
+      for (let step = 0; step < 2000 && !sichuan.isOver(st); step++) {
+        const w = (st as { window: { kind: string; required: boolean[] } | null }).window;
+        if (w && w.kind === 'claims' && w.required.some((r) => !r)) {
+          const outsider = w.required.findIndex((r) => !r);
+          const decider = w.required.findIndex((r) => r);
+          expect(sichuan.view(st, outsider).window).toBeNull();
+          expect(sichuan.view(st, null).window).toBeNull();
+          expect(sichuan.view(st, decider).window?.kind).toBe('claims');
+          found = true;
+          break;
+        }
+        const seats = sichuan.activeSeats(st);
+        const seat = seats[rng.int(seats.length)];
+        st = sichuan.apply(st, seat, sichuan.bot(sichuan.view(st, seat), seat, rng));
+      }
+    }
+    expect(found).toBe(true);
+  });
 });

@@ -1,6 +1,11 @@
+import type { LookupAddress } from 'node:dns';
+import { lookup as lookupCb } from 'node:dns';
 import { lookup } from 'node:dns/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { request as httpsRequest } from 'node:https';
+import type { LookupFunction } from 'node:net';
 import { isIP } from 'node:net';
+import { clientIp } from './net';
 
 /**
  * AI 接口转发：浏览器直连大模型接口被跨域拦截时，由本服务器原样转发。
@@ -131,7 +136,7 @@ export async function handleAiProxy(req: IncomingMessage, res: ServerResponse): 
   if (!route || `/${rest.slice(kind.length + 1)}` !== route.path) {
     return send(res, 404, { error: { message: '不支持的转发路径' } }, cors);
   }
-  const ip = req.socket.remoteAddress ?? 'unknown';
+  const ip = clientIp(req);
   if (rateLimited(ip)) return send(res, 429, { error: { message: '转发请求太频繁' } }, cors);
 
   let target: URL;
@@ -148,24 +153,73 @@ export async function handleAiProxy(req: IncomingMessage, res: ServerResponse): 
     const v = req.headers[h];
     if (typeof v === 'string') headers[h] = v;
   }
-  const upstream = `${target.origin}${target.pathname.replace(/\/+$/, '')}${route.path}`;
+  const path = `${target.pathname.replace(/\/+$/, '')}${route.path}`;
   try {
-    const r = await fetch(upstream, {
-      method: 'POST',
-      headers,
-      body: new Uint8Array(body),
-      redirect: 'error',
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    const buf = Buffer.from(await r.arrayBuffer());
-    if (buf.length > MAX_RESPONSE)
-      return send(res, 502, { error: { message: '上游响应过大' } }, cors);
-    res.writeHead(r.status, {
-      'content-type': r.headers.get('content-type') ?? 'application/json',
-      ...cors,
-    });
-    res.end(buf);
-  } catch {
-    send(res, 502, { error: { message: '无法连接上游 AI 接口' } }, cors);
+    const r = await forward(target.hostname, path, headers, body);
+    res.writeHead(r.status, { 'content-type': r.type, ...cors });
+    res.end(r.body);
+  } catch (e) {
+    const msg = (e as Error).message === 'too large' ? '上游响应过大' : '无法连接上游 AI 接口';
+    send(res, 502, { error: { message: msg } }, cors);
   }
+}
+
+/**
+ * 建立连接时再校验一次解析结果：防止 DNS 重绑定（校验时解析到公网、连接时又解析到内网）。
+ */
+const safeLookup: LookupFunction = (host, options, callback) => {
+  lookupCb(host, { ...options, all: true }, (err, addresses) => {
+    if (err) return callback(err, '', 0);
+    const list = addresses as LookupAddress[];
+    if (!list.length || list.some((a) => isPrivateAddress(a.address))) {
+      return callback(new Error('blocked address'), '', 0);
+    }
+    if ((options as { all?: boolean }).all)
+      return (callback as never as (e: null, a: LookupAddress[]) => void)(null, list);
+    callback(null, list[0].address, list[0].family);
+  });
+};
+
+function forward(
+  hostname: string,
+  path: string,
+  headers: Record<string, string>,
+  body: Buffer,
+): Promise<{ status: number; type: string; body: Buffer }> {
+  return new Promise((resolve, reject) => {
+    const req = httpsRequest(
+      {
+        hostname,
+        port: 443,
+        path,
+        method: 'POST',
+        headers: { ...headers, 'content-length': String(body.length) },
+        lookup: safeLookup,
+        timeout: TIMEOUT_MS,
+      },
+      (r) => {
+        const chunks: Buffer[] = [];
+        let size = 0;
+        r.on('data', (c: Buffer) => {
+          size += c.length;
+          if (size > MAX_RESPONSE) {
+            req.destroy(new Error('too large'));
+            return;
+          }
+          chunks.push(c);
+        });
+        r.on('end', () =>
+          resolve({
+            status: r.statusCode ?? 502,
+            type: String(r.headers['content-type'] ?? 'application/json'),
+            body: Buffer.concat(chunks),
+          }),
+        );
+        r.on('error', reject);
+      },
+    );
+    req.on('timeout', () => req.destroy(new Error('timeout')));
+    req.on('error', reject);
+    req.end(body);
+  });
 }

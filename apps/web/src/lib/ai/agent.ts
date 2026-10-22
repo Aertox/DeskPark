@@ -10,6 +10,20 @@ export interface Persona {
 
 const DECIDE_TIMEOUT_MS = 40_000;
 
+/** 超时与外部取消合并成一个信号（兼容没有 AbortSignal.any / timeout 的旧浏览器） */
+export function withTimeout(ms: number, signal?: AbortSignal): AbortSignal {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(new DOMException('超时', 'TimeoutError')), ms);
+  const stop = () => {
+    clearTimeout(timer);
+    ctrl.abort(signal?.reason);
+  };
+  if (signal?.aborted) stop();
+  else signal?.addEventListener('abort', stop, { once: true });
+  ctrl.signal.addEventListener('abort', () => clearTimeout(timer), { once: true });
+  return ctrl.signal;
+}
+
 function systemPrompt(game: string, p: Persona): string {
   return [
     `你正在桌游平台「闲亭」里玩${game}，扮演电脑玩家「${p.name}」${p.character ? `（形象是「${p.character}」）` : ''}。`,
@@ -20,21 +34,26 @@ function systemPrompt(game: string, p: Persona): string {
 
 /** 从模型输出里取出 pick / say（兼容带说明文字或代码块的输出） */
 export function parseDecision(text: string, count: number): { pick: number; say: string } | null {
+  const valid = (n: number) => Number.isInteger(n) && n >= 1 && n <= count;
   const json = text.match(/\{[\s\S]*\}/);
   if (json) {
     try {
       const obj = JSON.parse(json[0]) as { pick?: unknown; say?: unknown };
-      const pick = Number(obj.pick);
-      if (Number.isInteger(pick) && pick >= 1 && pick <= count) {
-        return { pick, say: typeof obj.say === 'string' ? obj.say.trim().slice(0, 40) : '' };
+      if (obj && typeof obj === 'object' && 'pick' in obj) {
+        // 有 pick 字段就以它为准，不再从文字里猜
+        const pick = typeof obj.pick === 'number' ? obj.pick : Number.NaN;
+        if (!valid(pick)) return null;
+        const say = typeof obj.say === 'string' ? [...obj.say.trim()].slice(0, 40).join('') : '';
+        return { pick, say };
       }
     } catch {
       /* 继续尝试下面的宽松解析 */
     }
   }
-  const num = text.match(/"?pick"?\s*[:：]\s*(\d+)/) ?? text.match(/\b(\d{1,2})\b/);
-  const pick = num ? Number(num[1]) : NaN;
-  return Number.isInteger(pick) && pick >= 1 && pick <= count ? { pick, say: '' } : null;
+  // 宽松解析：只接受「pick: 数字」或整段只有一个数字
+  const num = text.match(/"?pick"?\s*[:：]\s*(\d{1,3})\b/) ?? text.match(/^\s*(\d{1,3})\s*$/);
+  const pick = num ? Number(num[1]) : Number.NaN;
+  return valid(pick) ? { pick, say: '' } : null;
 }
 
 /** 让模型从候选中选一个动作；wantSay 时顺便说一句话 */
@@ -52,9 +71,7 @@ export async function decide(
   const text = await complete({
     system: systemPrompt(game, persona),
     user: `${prompt.situation}\n\n候选动作：\n${list}\n\n${sayRule}`,
-    signal: signal
-      ? AbortSignal.any([signal, AbortSignal.timeout(DECIDE_TIMEOUT_MS)])
-      : AbortSignal.timeout(DECIDE_TIMEOUT_MS),
+    signal: withTimeout(DECIDE_TIMEOUT_MS, signal),
   });
   const d = parseDecision(text, prompt.options.length);
   if (!d) throw new Error('模型没有给出有效的选择');
@@ -73,7 +90,7 @@ export async function replyChat(
       '牌桌上有人在聊天。请用符合你人设的口吻回一句话：不超过 25 个字，轻松友好，不透露手牌。只输出这句话本身。',
     ].join('\n'),
     user: recent.map((m) => `${m.name}：${m.text}`).join('\n'),
-    signal: AbortSignal.timeout(20_000),
+    signal: withTimeout(20_000),
   });
   return text
     .replace(/^["“「]|["”」]$/g, '')
@@ -86,7 +103,7 @@ export async function testConnection(): Promise<string> {
   const text = await complete({
     system: '你是连通性测试助手。',
     user: '请只回复两个字：你好',
-    signal: AbortSignal.timeout(30_000),
+    signal: withTimeout(30_000),
   });
   return text.trim().slice(0, 30) || '（空回复）';
 }

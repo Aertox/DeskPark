@@ -7,6 +7,11 @@
 # 建议同时设置 HTTP_BIND=127.0.0.1，让 8787 端口只对本机开放。
 
 services:
+  deskpark:
+    environment:
+      # 位于 Caddy 之后：按 X-Forwarded-For 识别真实 IP（限流、连接数上限）
+      TRUST_PROXY: '1'
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped

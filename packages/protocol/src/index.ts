@@ -61,15 +61,32 @@ export const QUICK_PHRASES = [
   '我先走一步啦',
 ] as const;
 
-/** 清理聊天文本：去掉控制字符、合并空白、按字符截断 */
-export function cleanChatText(input: unknown): string {
+/** 控制字符（含 C1） */
+// eslint-disable-next-line no-control-regex -- 有意去掉控制字符
+const CONTROL_CHARS = /[\u0000-\u001f\u007f-\u009f]/g;
+/** 零宽、文字方向覆盖等不可见字符：可用来伪装名字（保留表情用的 U+200D） */
+const INVISIBLE_CHARS = /[\u00ad\u200b\u200c\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/g;
+
+function cleanText(input: unknown, max: number): string {
   if (typeof input !== 'string') return '';
   const s = input
-    // eslint-disable-next-line no-control-regex -- 有意去掉控制字符
-    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(CONTROL_CHARS, ' ')
+    .replace(INVISIBLE_CHARS, '')
     .replace(/\s+/g, ' ')
     .trim();
-  return [...s].slice(0, CHAT_MAX_LENGTH).join('');
+  return [...s].slice(0, max).join('');
+}
+
+/** 清理聊天文本：去掉控制字符与不可见字符、合并空白、按字符截断 */
+export function cleanChatText(input: unknown): string {
+  return cleanText(input, CHAT_MAX_LENGTH);
+}
+
+export const NAME_MAX_LENGTH = 12;
+
+/** 清理昵称：同上，最长 12 个字符；为空时返回空字符串 */
+export function cleanPlayerName(input: unknown): string {
+  return cleanText(input, NAME_MAX_LENGTH);
 }
 
 export type ClientMessage =

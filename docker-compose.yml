@@ -23,6 +23,8 @@ services:
     environment:
       TURN_TIMEOUT_MS: ${TURN_TIMEOUT_MS:-30000}
       AI_PROXY: ${AI_PROXY:-}
+      TRUST_PROXY: ${TRUST_PROXY:-}
+      MAX_CONN_PER_IP: ${MAX_CONN_PER_IP:-20}
     logging:
       driver: json-file
       options:

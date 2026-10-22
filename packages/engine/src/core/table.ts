@@ -131,6 +131,9 @@ export class Table<G extends AnyGame = AnyGame> {
     if (seat !== SYSTEM_SEAT && !this.def.activeSeats(this.state).includes(seat)) {
       return '还没轮到你';
     }
+    // 所有玩法的动作都是带字符串 type 的普通对象：其余直接拒绝（联机时来自不可信客户端）
+    if (!action || typeof action !== 'object' || Array.isArray(action)) return '无效操作';
+    if (typeof (action as { type?: unknown }).type !== 'string') return '无效操作';
     let err: string | null;
     try {
       err = this.def.validate(this.state, seat, action);

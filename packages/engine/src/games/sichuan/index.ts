@@ -801,6 +801,21 @@ export function legalActions(state: ScState, seat: Seat): ScLegal | null {
 
 // ---------------------------------------------------------------------------
 
+function cleanAction(a: ScAction): ScAction {
+  switch (a.type) {
+    case 'exchange':
+      return { type: 'exchange', tiles: a.tiles.map(Number) };
+    case 'que':
+      return { type: 'que', suit: a.suit };
+    case 'discard':
+      return { type: 'discard', tile: Number(a.tile) };
+    case 'gang':
+      return typeof a.tile === 'number' ? { type: 'gang', tile: a.tile } : { type: 'gang' };
+    default:
+      return { type: a.type };
+  }
+}
+
 export const sichuan: GameDefinition<ScState, ScAction, ScView, ScOptions> = {
   meta: {
     id: 'sichuan',
@@ -952,7 +967,9 @@ export const sichuan: GameDefinition<ScState, ScAction, ScView, ScOptions> = {
     }
   },
 
-  apply(prev, seat, action) {
+  apply(prev, seat, raw) {
+    // 只保留各动作需要的字段：决定会存进状态，不能带上客户端附加的任意数据
+    const action = cleanAction(raw);
     const state = clone(prev);
     const p = state.players[seat];
     switch (action.type) {
@@ -1134,8 +1151,9 @@ export const sichuan: GameDefinition<ScState, ScAction, ScView, ScOptions> = {
       hand: me ? sortTiles(me.hand, me.que) : [],
       drawn: seat !== null && state.turn === seat && !w ? state.drawnThisTurn : null,
       legal: seat !== null ? legalActions(state, seat) : null,
+      // 抢牌窗口只给需要决定的座位看：否则旁人能从「窗口打开了」推断出有人能碰 / 胡这张牌
       window:
-        w && (w.kind === 'claims' || w.kind === 'rob')
+        w && (w.kind === 'claims' || w.kind === 'rob') && seat !== null && w.required[seat]
           ? { kind: w.kind, source: w.source, tile: w.tile }
           : null,
       lastDiscard: state.lastDiscard,

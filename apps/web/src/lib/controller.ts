@@ -99,7 +99,16 @@ export function loadSavedLocal(gameId: string): SavedLocal | null {
   const saved = storage.get<SavedLocal | null>(SAVE_KEY, null);
   if (!saved || saved.gameId !== gameId) return null;
   const def = getGame(gameId);
-  if (!def || def.isOver(saved.state)) return null;
+  if (!def || !Array.isArray(saved.seats) || !saved.state) return null;
+  try {
+    // 旧版本或损坏的存档：读不出来就丢弃，不能让页面崩掉
+    if (def.isOver(saved.state)) return null;
+    def.activeSeats(saved.state);
+    def.view(saved.state, 0);
+  } catch {
+    clearSavedLocal();
+    return null;
+  }
   return saved;
 }
 

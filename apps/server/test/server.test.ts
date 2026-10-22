@@ -1,5 +1,8 @@
 import type { ClientMessage, ServerMessage } from '@park/protocol';
 import { AVATARS, CHAT_MAX_LENGTH, PROTOCOL_VERSION } from '@park/protocol';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import WebSocket from 'ws';
 import { startServer } from '../src/server';
@@ -219,5 +222,73 @@ describe('联机服务器', () => {
     a.close();
     c.close();
     b.close();
+  });
+});
+
+describe('安全加固', () => {
+  it('畸形 URL 返回 400，服务不受影响；网页带安全响应头', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'deskpark-'));
+    writeFileSync(join(dir, 'index.html'), '<!doctype html><title>闲亭</title>');
+    const web = startServer({ port: 0, host: '127.0.0.1', staticDir: dir });
+    const base = `http://127.0.0.1:${await web.ready}`;
+    expect((await fetch(`${base}/%E0%A4%A`)).status).toBe(400);
+    const page = await fetch(`${base}/room/ABCD`);
+    expect(page.status).toBe(200);
+    expect(page.headers.get('content-security-policy')).toContain("script-src 'self'");
+    expect(page.headers.get('x-content-type-options')).toBe('nosniff');
+    const traversal = await (await fetch(`${base}/..%2f..%2fetc%2fpasswd`)).text();
+    expect(traversal).toContain('闲亭');
+    expect((await fetch(`${base}/healthz`)).status).toBe(200);
+    await web.close();
+  });
+
+  it('穷举房间号会被限制；表情只接受内置表情；伪造动作被拒绝', async () => {
+    const x = new TestClient();
+    await x.opened;
+    x.send({ t: 'hello', token: 'token-sec-xxxxxxxxxxxx', name: '甲', v: PROTOCOL_VERSION });
+    for (let i = 0; i < 9; i++) x.send({ t: 'join', code: `Q${i}ZZ` });
+    expect(await x.wait('error', (m) => m.message.includes('太频繁'))).toBeTruthy();
+
+    x.send({ t: 'create', gameId: 'highcard', seats: 2 });
+    const room = (await x.wait('room')).room;
+    const y = new TestClient();
+    await y.opened;
+    y.send({ t: 'hello', token: 'token-sec-yyyyyyyyyyyy', name: '乙', v: PROTOCOL_VERSION });
+    y.send({ t: 'join', code: room.code });
+    await y.wait('room', (m) => m.you.seat === 1);
+    x.send({ t: 'emote', emote: '<b>垃圾广告</b>' });
+    x.send({ t: 'emote', emote: '👍' });
+    const e = await y.wait('emote');
+    expect(e.emote).toBe('👍');
+
+    x.send({ t: 'start' });
+    const g = await x.wait('game', (m) => m.view !== null);
+    x.send({
+      t: 'act',
+      action: { type: 'bogus', card: (g.view as { hand: { id: number }[] }).hand[0].id },
+    });
+    expect(await x.wait('error', (m) => m.message.includes('未知操作'))).toBeTruthy();
+    x.send({ t: 'act', action: 'not-an-object' as never });
+    expect(await x.wait('error', (m) => m.message.includes('无效操作'))).toBeTruthy();
+    x.close();
+    y.close();
+  });
+
+  it('同一连接换了身份：旧身份标记为离线', async () => {
+    const x = new TestClient();
+    await x.opened;
+    x.send({ t: 'hello', token: 'token-swap-aaaaaaaaaa', name: '甲', v: PROTOCOL_VERSION });
+    x.send({ t: 'create', gameId: 'doudizhu' });
+    const room = (await x.wait('room')).room;
+    const y = new TestClient();
+    await y.opened;
+    y.send({ t: 'hello', token: 'token-swap-bbbbbbbbbb', name: '乙', v: PROTOCOL_VERSION });
+    y.send({ t: 'join', code: room.code });
+    await y.wait('room', (m) => m.you.seat === 1);
+    x.send({ t: 'hello', token: 'token-swap-cccccccccc', name: '丙', v: PROTOCOL_VERSION });
+    const after = await y.wait('room', (m) => m.room.seats[0].connected === false);
+    expect(after.room.seats[0].name).toBe('甲');
+    x.close();
+    y.close();
   });
 });

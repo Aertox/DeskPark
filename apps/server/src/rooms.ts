@@ -10,7 +10,9 @@ import type {
 import {
   AVATARS,
   CHAT_HISTORY,
+  EMOTES,
   cleanChatText,
+  cleanPlayerName,
   PROTOCOL_VERSION,
   ROOM_CODE_ALPHABET,
   ROOM_CODE_LENGTH,
@@ -30,6 +32,8 @@ export interface Client {
   lastSeen: number;
   /** 最近的发言时间，用于限流 */
   chatTimes?: number[];
+  /** 最近加入失败（房间号不存在）的时间，防止穷举房间号 */
+  joinFails?: number[];
 }
 
 interface SeatState extends SeatInfo {
@@ -70,9 +74,12 @@ function randomId(bytes = 9): string {
 }
 
 function cleanName(name: unknown): string {
-  const s = typeof name === 'string' ? name.trim().replace(/\s+/g, ' ') : '';
-  return [...s].slice(0, 12).join('') || '玩家';
+  return cleanPlayerName(name) || '玩家';
 }
+
+const EMOTE_SET = new Set<string>(EMOTES);
+const JOIN_FAIL_WINDOW_MS = 60_000;
+const JOIN_FAIL_LIMIT = 8;
 
 class Room {
   seats: SeatState[];
@@ -258,7 +265,10 @@ export class Hub {
       if (!msg || typeof msg !== 'object' || typeof (msg as { t?: unknown }).t !== 'string') return;
       if (msg.t === 'ping') return send({ t: 'pong', serverTime: Date.now() });
       if (msg.t === 'hello') {
+        // 同一连接换了身份：先让旧身份下线，避免它一直显示在线
+        const prev = client;
         client = this.hello(msg, send);
+        if (prev && prev !== client) this.detach(prev, send);
         return;
       }
       if (!client) return send({ t: 'error', message: '请先连接', code: 'no-hello' });
@@ -271,20 +281,25 @@ export class Hub {
       }
     };
     const onClose = () => {
-      if (!client || client.send !== send) return;
-      client.send = null;
-      client.lastSeen = Date.now();
-      const room = client.roomCode ? this.rooms.get(client.roomCode) : undefined;
-      if (!room) return;
-      const seat = room.seatOf(client.id);
-      if (seat !== null) {
-        room.seats[seat].connected = false;
-        room.seats[seat].disconnectedAt = Date.now();
-        room.table?.setConnected(seat, false);
-      }
-      room.broadcastRoom();
+      if (client) this.detach(client, send);
     };
     return { onMessage, onClose };
+  }
+
+  /** 某个连接断开（或改用别的身份）：把该身份标记为离线 */
+  private detach(client: Client, send: (msg: ServerMessage) => void): void {
+    if (client.send !== send) return;
+    client.send = null;
+    client.lastSeen = Date.now();
+    const room = client.roomCode ? this.rooms.get(client.roomCode) : undefined;
+    if (!room) return;
+    const seat = room.seatOf(client.id);
+    if (seat !== null) {
+      room.seats[seat].connected = false;
+      room.seats[seat].disconnectedAt = Date.now();
+      room.table?.setConnected(seat, false);
+    }
+    room.broadcastRoom();
   }
 
   private hello(
@@ -341,8 +356,8 @@ export class Hub {
     return client;
   }
 
-  private error(c: Client, message: string): void {
-    c.send?.({ t: 'error', message });
+  private error(c: Client, message: string, code?: string): void {
+    c.send?.({ t: 'error', message, ...(code ? { code } : {}) });
   }
 
   private handle(c: Client, msg: ClientMessage): void {
@@ -383,8 +398,17 @@ export class Hub {
       }
       case 'join': {
         const code = normalizeRoomCode(String(msg.code ?? ''));
+        const now = Date.now();
+        const fails = (c.joinFails ?? []).filter((t) => now - t < JOIN_FAIL_WINDOW_MS);
+        if (fails.length >= JOIN_FAIL_LIMIT) {
+          c.joinFails = fails;
+          return this.error(c, '尝试太频繁了，请稍后再试');
+        }
         const r = this.rooms.get(code);
-        if (!r) return this.error(c, `房间 ${code || ''} 不存在或已解散`);
+        if (!r) {
+          c.joinFails = [...fails, now];
+          return this.error(c, `房间 ${code || ''} 不存在或已解散`, 'no-room');
+        }
         if (room && room !== r) this.leave(c, room);
         c.roomCode = code;
         const isNew = r.seatOf(c.id) === null && !r.spectators.has(c.id);
@@ -513,7 +537,8 @@ export class Hub {
       }
       case 'emote': {
         if (seat === null) return;
-        const emote = String(msg.emote).slice(0, 8);
+        const emote = String(msg.emote);
+        if (!EMOTE_SET.has(emote)) return;
         for (const id of room.memberIds()) {
           this.clientById(id)?.send?.({ t: 'emote', seat, emote, name: c.name });
         }

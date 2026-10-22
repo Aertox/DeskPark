@@ -6,6 +6,7 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import { handleAiProxy, isAiProxyPath } from './aiProxy';
+import { clientIp } from './net';
 import type { ServerConfig } from './rooms';
 import { DEFAULT_CONFIG, Hub } from './rooms';
 
@@ -36,9 +37,39 @@ function defaultStaticDir(): string {
   return resolve(here, '../../web/dist');
 }
 
+/** 网页的安全响应头：只允许同源脚本；连接（AI 接口、联机服务器）不限来源 */
+const SECURITY_HEADERS: Record<string, string> = {
+  'x-content-type-options': 'nosniff',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+  'content-security-policy': [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    'connect-src * ws: wss:',
+    "manifest-src 'self'",
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; '),
+};
+
 function serveStatic(root: string, req: IncomingMessage, res: ServerResponse): void {
-  const url = new URL(req.url ?? '/', 'http://localhost');
-  let rel = decodeURIComponent(url.pathname);
+  let rel: string;
+  try {
+    rel = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
+  } catch {
+    res.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('Bad Request');
+    return;
+  }
+  if (rel.includes('\0')) {
+    res.writeHead(400);
+    res.end();
+    return;
+  }
   if (rel.endsWith('/')) rel += 'index.html';
   const file = normalize(join(root, rel));
   const inside = file.startsWith(root + sep);
@@ -54,8 +85,15 @@ function serveStatic(root: string, req: IncomingMessage, res: ServerResponse): v
   res.writeHead(200, {
     'content-type': MIME[ext] ?? 'application/octet-stream',
     'cache-control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache',
+    ...SECURITY_HEADERS,
   });
-  createReadStream(target).pipe(res);
+  if (req.method === 'HEAD') {
+    res.end();
+    return;
+  }
+  createReadStream(target)
+    .on('error', () => res.destroy())
+    .pipe(res);
 }
 
 export function startServer(opts: StartOptions) {
@@ -70,7 +108,10 @@ export function startServer(opts: StartOptions) {
       return;
     }
     if (isAiProxyPath(req.url)) {
-      void handleAiProxy(req, res);
+      handleAiProxy(req, res).catch(() => {
+        if (!res.headersSent) res.writeHead(500);
+        res.end();
+      });
       return;
     }
     if (!staticDir) {
@@ -78,11 +119,31 @@ export function startServer(opts: StartOptions) {
       res.end();
       return;
     }
-    serveStatic(staticDir, req, res);
+    try {
+      serveStatic(staticDir, req, res);
+    } catch {
+      if (!res.headersSent) res.writeHead(500);
+      res.end();
+    }
   });
 
   const wss = new WebSocketServer({ server: http, path: '/ws', maxPayload: 16 * 1024 });
-  wss.on('connection', (socket) => {
+  // 每个 IP 的同时连接数上限，防止单个来源占满资源
+  const perIp = new Map<string, number>();
+  const maxPerIp = Number(process.env.MAX_CONN_PER_IP) || 20;
+  wss.on('connection', (socket, req) => {
+    const ip = clientIp(req);
+    const n = (perIp.get(ip) ?? 0) + 1;
+    if (n > maxPerIp) {
+      socket.close(1008, 'too many connections');
+      return;
+    }
+    perIp.set(ip, n);
+    socket.on('close', () => {
+      const left = (perIp.get(ip) ?? 1) - 1;
+      if (left <= 0) perIp.delete(ip);
+      else perIp.set(ip, left);
+    });
     const send = (msg: ServerMessage) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg));
     };

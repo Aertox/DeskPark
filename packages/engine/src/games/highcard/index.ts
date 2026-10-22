@@ -125,6 +125,7 @@ export const highcard: GameDefinition<HcState, HcAction, HcView, HcOptions> = {
   validate(state, seat, action) {
     if (action.type === 'continue')
       return seat === SYSTEM_SEAT && state.phase === 'reveal' ? null : '无效操作';
+    if (action.type !== 'choose') return '未知操作';
     if (state.phase !== 'choose') return '请稍候';
     if (state.chosen[seat]) return '本墩已出牌';
     if (!state.hands[seat].some((c) => c.id === action.card)) return '请选择一张手牌';

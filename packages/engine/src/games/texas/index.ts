@@ -479,6 +479,7 @@ export const texas: GameDefinition<TxState, TxAction, TxView, TxOptions> = {
         if (!p.canRaise && p.bet + p.stack > state.currentBet) return '当前只能跟注或弃牌';
         return null;
       case 'raise': {
+        if (typeof action.to !== 'number' || !Number.isFinite(action.to)) return '加注额无效';
         const to = Math.floor(action.to);
         const max = p.bet + p.stack;
         if (!p.canRaise) return '当前只能跟注或弃牌';

@@ -87,9 +87,12 @@ async function completeOpenAI(
   const url = cfg.proxy
     ? `${proxyBase('openai')}/chat/completions`
     : `${cfg.baseUrl}/chat/completions`;
-  let res: Response;
-  try {
-    res = await fetch(url, {
+  const messages = [
+    { role: 'system', content: req.system },
+    { role: 'user', content: req.user },
+  ];
+  const post = (body: Record<string, unknown>) =>
+    fetch(url, {
       method: 'POST',
       signal: req.signal,
       headers: {
@@ -97,16 +100,21 @@ async function completeOpenAI(
         authorization: `Bearer ${cfg.apiKey.trim()}`,
         ...(cfg.proxy ? { 'x-ai-target': cfg.baseUrl } : {}),
       },
-      body: JSON.stringify({
-        model: cfg.model,
-        messages: [
-          { role: 'system', content: req.system },
-          { role: 'user', content: req.user },
-        ],
-        temperature: 0.8,
-        max_tokens: 800,
-      }),
+      body: JSON.stringify({ model: cfg.model, messages, ...body }),
     });
+  let res: Response;
+  try {
+    res = await post({ temperature: 0.8, max_tokens: 800 });
+    // 部分新模型（推理模型）不接受 temperature / max_tokens：换成 max_completion_tokens 再试一次
+    if (res.status === 400) {
+      const text = await res
+        .clone()
+        .text()
+        .catch(() => '');
+      if (/max_tokens|temperature|max_completion_tokens|unsupported/i.test(text)) {
+        res = await post({ max_completion_tokens: 2000 });
+      }
+    }
   } catch (e) {
     if ((e as Error).name === 'AbortError') throw e;
     throw new AiError(

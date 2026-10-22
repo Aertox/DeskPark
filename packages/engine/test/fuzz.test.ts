@@ -1,0 +1,142 @@
+import { describe, expect, it } from 'vitest';
+import type { AnyGame } from '../src';
+import { Rng, SYSTEM_SEAT, doudizhu, guandan, highcard, sichuan, texas } from '../src';
+
+/** 状态里不允许出现 NaN / Infinity（会让筹码、分数等永久损坏） */
+function badNumber(x: unknown, path = '$'): string | null {
+  if (typeof x === 'number') return Number.isFinite(x) ? null : path;
+  if (Array.isArray(x)) {
+    for (let i = 0; i < x.length; i++) {
+      const r = badNumber(x[i], `${path}[${i}]`);
+      if (r) return r;
+    }
+  } else if (x && typeof x === 'object') {
+    for (const [k, v] of Object.entries(x)) {
+      const r = badNumber(v, `${path}.${k}`);
+      if (r) return r;
+    }
+  }
+  return null;
+}
+
+const JUNK: unknown[] = [
+  undefined,
+  null,
+  NaN,
+  Infinity,
+  -1,
+  0,
+  1,
+  3.5,
+  1e9,
+  '1',
+  'abc',
+  true,
+  [],
+  {},
+  [0, 0, 0],
+];
+
+/** 联机时恶意客户端可能发来的各种畸形动作 */
+function junkActions(types: string[], ids: number[], rng: Rng): unknown[] {
+  const pick = <T>(a: T[]) => a[rng.int(a.length)];
+  const field = () => (rng.next() < 0.4 && ids.length ? pick(ids) : pick(JUNK));
+  const out: unknown[] = [null, 42, 'play', [], {}];
+  for (let i = 0; i < 24; i++) {
+    const type = rng.next() < 0.15 ? pick(['bogus', 'continue', '', '__proto__']) : pick(types);
+    out.push({
+      type,
+      cards: rng.next() < 0.5 ? [pick(ids), pick(ids)] : field(),
+      card: field(),
+      tile: field(),
+      tiles: rng.next() < 0.5 ? [pick(ids), pick(ids), pick(ids)] : field(),
+      to: field(),
+      score: field(),
+      suit: rng.next() < 0.5 ? pick(['wan', 'tiao', 'tong', 'xx']) : field(),
+    });
+  }
+  return out;
+}
+
+function fuzz(def: AnyGame, players: number, options: unknown, types: string[], seed: number) {
+  const rng = new Rng(seed);
+  let state = def.setup({
+    players: Array.from({ length: players }, (_, i) => ({ name: `P${i}`, isBot: true })),
+    options,
+    seed,
+  });
+  for (let step = 0; step < 3000 && !def.isOver(state); step++) {
+    const active = def.activeSeats(state);
+    if (!active.length) {
+      state = def.apply(state, SYSTEM_SEAT, def.autoAdvance!(state)!.action);
+      continue;
+    }
+    const seat = active[rng.int(active.length)];
+    // 手里的牌 id（以及若干不存在的 id）
+    const s = state as { hands?: { id: number }[][]; players?: { hand?: { id: number }[] }[] };
+    const hand = s.hands?.[seat] ?? s.players?.[seat]?.hand ?? [];
+    const ids = [...hand.map((c) => c.id), 9999, -5];
+    if (step % 3 === 0) {
+      for (const a of junkActions(types, ids, rng)) {
+        let err: string | null;
+        try {
+          err = def.validate(state, seat, a as never);
+        } catch {
+          continue; // Table.act 会把校验时的异常当作无效操作
+        }
+        if (err) continue;
+        const next = def.apply(state, seat, a as never);
+        const bad = badNumber(next);
+        if (bad)
+          throw new Error(
+            `${def.meta.id}：动作 ${JSON.stringify(a)} 通过校验后状态出现非法数字 ${bad}`,
+          );
+        state = next;
+        break;
+      }
+      if (def.isOver(state) || !def.activeSeats(state).includes(seat)) continue;
+    }
+    state = def.apply(state, seat, def.bot(def.view(state, seat), seat, rng));
+  }
+}
+
+describe('畸形动作模糊测试（模拟恶意联机客户端）', () => {
+  it('斗地主', () => {
+    for (let seed = 1; seed <= 15; seed++)
+      fuzz(doudizhu, 3, doudizhu.defaultOptions, ['bid', 'play', 'pass', 'ready'], seed);
+  });
+  it('掼蛋', () => {
+    for (let seed = 1; seed <= 6; seed++)
+      fuzz(guandan, 4, guandan.defaultOptions, ['play', 'pass', 'return', 'ready'], seed);
+  });
+  it('德州扑克', () => {
+    for (let seed = 1; seed <= 15; seed++)
+      fuzz(
+        texas,
+        5,
+        texas.defaultOptions,
+        ['fold', 'check', 'call', 'raise', 'allin', 'ready'],
+        seed,
+      );
+  });
+  it('四川麻将', () => {
+    for (let seed = 1; seed <= 8; seed++)
+      fuzz(
+        sichuan,
+        4,
+        sichuan.defaultOptions,
+        ['exchange', 'que', 'discard', 'hu', 'gang', 'peng', 'pass', 'ready'],
+        seed,
+      );
+  });
+  it('比大小：非出牌动作不能冒充「继续」', () => {
+    for (let seed = 1; seed <= 15; seed++) fuzz(highcard, 4, { rounds: 2 }, ['choose'], seed);
+    const st = highcard.setup({
+      players: [0, 1, 2].map((i) => ({ name: `P${i}`, isBot: false })),
+      options: { rounds: 1 },
+      seed: 1,
+    });
+    const card = (st as { hands: { id: number }[][] }).hands[0][0].id;
+    expect(highcard.validate(st, 0, { type: 'bogus', card } as never)).not.toBeNull();
+  });
+});
