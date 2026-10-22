@@ -1,6 +1,6 @@
 {
   "name": "@park/engine",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "description": "平台无关的桌面游戏规则引擎与 AI（无 DOM 依赖，可复用于 Web / App / 服务端）",
   "type": "module",
