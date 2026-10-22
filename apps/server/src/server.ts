@@ -5,6 +5,7 @@ import { createServer as createHttpServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
+import { handleAiProxy, isAiProxyPath } from './aiProxy';
 import type { ServerConfig } from './rooms';
 import { DEFAULT_CONFIG, Hub } from './rooms';
 
@@ -66,6 +67,10 @@ export function startServer(opts: StartOptions) {
     if (req.url === '/healthz') {
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ ok: true, ...hub.stats() }));
+      return;
+    }
+    if (isAiProxyPath(req.url)) {
+      void handleAiProxy(req, res);
       return;
     }
     if (!staticDir) {

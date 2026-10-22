@@ -1,0 +1,138 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { AnyGame } from '../src';
+import { Rng, SYSTEM_SEAT, Table, doudizhu, guandan, highcard, sichuan, texas } from '../src';
+
+/** 用规则电脑把整局跑一遍，每一步都检查大模型候选动作是否全部合法 */
+function checkPrompts(
+  def: AnyGame,
+  players: number,
+  options: unknown,
+  seed: number,
+  maxSteps = 4000,
+) {
+  const rng = new Rng(seed);
+  let state = def.setup({
+    players: Array.from({ length: players }, (_, i) => ({ name: `P${i}`, isBot: true })),
+    options,
+    seed,
+  });
+  let prompts = 0;
+  for (let step = 0; step < maxSteps && !def.isOver(state); step++) {
+    const active = def.activeSeats(state);
+    if (!active.length) {
+      const auto = def.autoAdvance!(state)!;
+      state = def.apply(state, SYSTEM_SEAT, auto.action);
+      continue;
+    }
+    const seat = active[rng.int(active.length)];
+    const view = def.view(state, seat);
+    const prompt = def.aiPrompt?.(view, seat, new Rng(seed + step));
+    if (prompt) {
+      prompts++;
+      expect(prompt.situation.length).toBeGreaterThan(10);
+      expect(prompt.options.length).toBeGreaterThan(0);
+      expect(prompt.options[0].label).toContain('规则电脑的建议');
+      for (const o of prompt.options) {
+        const err = def.validate(state, seat, o.action);
+        if (err) throw new Error(`${def.meta.id} step ${step}: 候选「${o.label}」不合法：${err}`);
+      }
+    }
+    // 偶尔走非推荐的候选，覆盖更多局面
+    const pick =
+      prompt && rng.next() < 0.3
+        ? prompt.options[rng.int(prompt.options.length)].action
+        : def.bot(view, seat, rng);
+    state = def.apply(state, seat, pick);
+  }
+  return prompts;
+}
+
+describe('大模型接管：候选动作', () => {
+  it('斗地主', () => {
+    for (let seed = 1; seed <= 6; seed++)
+      expect(checkPrompts(doudizhu, 3, { baseScore: 1, rounds: 1 }, seed)).toBeGreaterThan(10);
+  });
+  it('掼蛋', () => {
+    for (let seed = 1; seed <= 3; seed++)
+      expect(
+        checkPrompts(guandan, 4, { ...guandan.defaultOptions, rounds: 1 }, seed),
+      ).toBeGreaterThan(10);
+  });
+  it('德州扑克', () => {
+    for (let seed = 1; seed <= 4; seed++)
+      expect(
+        checkPrompts(texas, 5, { ...texas.defaultOptions, hands: 3 }, seed, 600),
+      ).toBeGreaterThan(5);
+  });
+  it('四川麻将', () => {
+    for (let seed = 1; seed <= 4; seed++)
+      expect(
+        checkPrompts(sichuan, 4, { ...sichuan.defaultOptions, rounds: 1 }, seed),
+      ).toBeGreaterThan(20);
+  });
+  it('比大小', () => {
+    expect(checkPrompts(highcard, 4, { rounds: 1 }, 3)).toBeGreaterThan(5);
+  });
+});
+
+describe('Table 外部决策（delegate）', () => {
+  afterEach(() => vi.useRealTimers());
+
+  const seats = [
+    { name: '我', isBot: false },
+    { name: 'B1', isBot: true, ai: true },
+    { name: 'B2', isBot: true },
+  ];
+
+  it('采用外部给出的合法动作，期间标记为思考中', async () => {
+    vi.useFakeTimers();
+    let resolve!: (a: unknown) => void;
+    const calls: number[] = [];
+    const table: Table = new Table(
+      highcard,
+      structuredClone(seats),
+      { rounds: 1 },
+      {
+        seed: 9,
+        delegate: (seat) => {
+          if (seat !== 1) return null;
+          calls.push(seat);
+          return new Promise((r) => (resolve = r));
+        },
+      },
+    );
+    table.start();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(calls).toEqual([1]);
+    expect(table.thinking).toEqual([1]);
+    // 思考期间不会重复调度
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(calls).toEqual([1]);
+    const card = table.view(1).hand.at(-1)!;
+    resolve({ type: 'choose', card: card.id });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(table.thinking).toEqual([]);
+    expect(table.view(1).myChoice?.id).toBe(card.id);
+    table.dispose();
+  });
+
+  it('动作不合法或出错时退回规则电脑', async () => {
+    vi.useFakeTimers();
+    const errors: unknown[] = [];
+    const table = new Table(
+      highcard,
+      structuredClone(seats),
+      { rounds: 1 },
+      {
+        seed: 3,
+        onError: (e) => errors.push(e),
+        delegate: (seat) => (seat === 1 ? Promise.resolve({ type: 'choose', card: -1 }) : null),
+      },
+    );
+    table.start();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(table.view(1).myChoice).not.toBeNull();
+    expect(errors.length).toBeGreaterThan(0);
+    table.dispose();
+  });
+});

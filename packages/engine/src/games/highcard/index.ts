@@ -4,6 +4,7 @@ import { createDeck, sortCards } from '../../core/cards';
 import { Rng } from '../../core/rng';
 import type { GameDefinition, Seat } from '../../core/types';
 import { SYSTEM_SEAT } from '../../core/types';
+import { hcAiPrompt } from './ai';
 
 /**
  * 比大小 —— 自定义玩法的参考示例（约 150 行）。
@@ -182,6 +183,7 @@ export const highcard: GameDefinition<HcState, HcAction, HcView, HcOptions> = {
     return state.phase === 'reveal' ? { delayMs: 1800, action: { type: 'continue' } } : null;
   },
 
+  aiPrompt: (view, seat, rng) => hcAiPrompt(view, seat, rng, highcard.bot),
   bot(view, _seat, rng) {
     // 简单策略：随机出一张，略偏向中等牌
     const hand = view.hand;

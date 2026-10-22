@@ -114,10 +114,22 @@ docker compose -f docker-compose.yml -f deploy/docker-compose.https.yml up -d
 | `HTTP_PORT`       | `8787`                             | 对外端口                                                        |
 | `HTTP_BIND`       | `0.0.0.0`                          | 监听地址；配合 HTTPS 时设为 `127.0.0.1`                         |
 | `TURN_TIMEOUT_MS` | `30000`                            | 联机时每一步的时限，超时由电脑代打                              |
+| `AI_PROXY`        | 开启                               | 设为 `off` 关闭 AI 接口转发（见下方「AI 人机」）                |
 | `DESKPARK_IMAGE`  | `ghcr.io/solitern/deskpark:latest` | 使用的镜像与版本                                                |
 | `NPM_REGISTRY`    | 空                                 | 本地构建时使用的 npm 源                                         |
 | `VITE_SERVER_URL` | 空                                 | 网页与服务器分开部署时，网页连接的 WebSocket 地址（构建时生效） |
 | `DOMAIN`          | 空                                 | 启用 HTTPS 时的域名                                             |
+
+### AI 人机与接口转发
+
+AI 人机由玩家在网页「设置 → AI 人机」中填写自己的接口与 Key，Key 只保存在玩家的浏览器里。
+浏览器直连接口被跨域（CORS）拦截时，玩家可以开启「经服务器转发」，由本服务器的 `/api/ai-proxy/` 原样转发：
+
+- 只转发 Anthropic `/v1/messages` 与 OpenAI 兼容 `/chat/completions` 两个端点；
+- 目标必须是 https 公网域名（拒绝 IP、localhost 与解析到内网的域名），有请求大小、超时与每 IP 频率限制；
+- 不记录、不保存任何 Key 与内容。
+
+不需要这个功能时，在 `.env` 中设置 `AI_PROXY=off`。
 
 ## 七、不用 Docker
 

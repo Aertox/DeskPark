@@ -3,6 +3,7 @@ export * from './core/rng';
 export * from './core/types';
 export * from './core/table';
 export * from './core/registry';
+export * from './core/ai';
 
 import { registerGame } from './core/registry';
 import { doudizhu } from './games/doudizhu';

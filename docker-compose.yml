@@ -22,6 +22,7 @@ services:
       - '${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-8787}:8787'
     environment:
       TURN_TIMEOUT_MS: ${TURN_TIMEOUT_MS:-30000}
+      AI_PROXY: ${AI_PROXY:-}
     logging:
       driver: json-file
       options:

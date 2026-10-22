@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { Field, Segmented, Sheet, Switch } from '../components/ui';
+import { Button, Field, Segmented, Sheet, Switch, toast } from '../components/ui';
+import { testConnection } from '../lib/ai/agent';
+import type { AiProtocol } from '../lib/ai/settings';
+import { AI_DEFAULTS, aiSettings } from '../lib/ai/settings';
 import { Avatar } from '../components/Seat';
 import type { AvatarTheme } from '../components/pixel/characters';
 import { CHARACTERS, THEME_NAME, getCharacter } from '../components/pixel/characters';
@@ -164,6 +167,97 @@ function AvatarSection() {
   );
 }
 
+/** AI 人机：接口设置（只保存在本机浏览器） */
+function AiSection() {
+  const a = aiSettings.use();
+  const d = AI_DEFAULTS[a.protocol];
+  const [testing, setTesting] = useState(false);
+  const test = async () => {
+    setTesting(true);
+    try {
+      const reply = await testConnection();
+      toast(`连接成功：${reply}`);
+    } catch (e) {
+      toast(`连接失败：${e instanceof Error ? e.message : String(e)}`, 'error');
+    } finally {
+      setTesting(false);
+    }
+  };
+  return (
+    <div className="field field--stack ai-settings">
+      <div className="field__label">
+        <span>AI 人机</span>
+        <small>点电脑玩家头像上方的 ✨ 唤醒，由大模型接管它出牌和聊天</small>
+      </div>
+      <Segmented<AiProtocol>
+        value={a.protocol}
+        onChange={(protocol) => aiSettings.set({ protocol })}
+        options={[
+          { value: 'anthropic', label: 'Anthropic' },
+          { value: 'openai', label: 'OpenAI 兼容' },
+        ]}
+      />
+      <label className="ai-input">
+        <span>接口地址</span>
+        <input
+          value={a.baseUrl}
+          placeholder={d.baseUrl}
+          onChange={(e) => aiSettings.set({ baseUrl: e.target.value })}
+          spellCheck={false}
+          inputMode="url"
+        />
+      </label>
+      <label className="ai-input">
+        <span>API Key</span>
+        <input
+          type="password"
+          value={a.apiKey}
+          placeholder={a.protocol === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
+          onChange={(e) => aiSettings.set({ apiKey: e.target.value })}
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </label>
+      <label className="ai-input">
+        <span>模型</span>
+        <input
+          value={a.model}
+          placeholder={d.model || '例如 deepseek-chat、qwen-plus'}
+          onChange={(e) => aiSettings.set({ model: e.target.value })}
+          spellCheck={false}
+        />
+      </label>
+      <div className="ai-row">
+        <span>发言</span>
+        <Segmented<number>
+          value={a.chat}
+          onChange={(chat) => aiSettings.set({ chat: chat as 0 | 1 | 2 | 3 })}
+          options={[
+            { value: 0, label: '不说话' },
+            { value: 1, label: '偶尔' },
+            { value: 2, label: '适中' },
+            { value: 3, label: '话痨' },
+          ]}
+        />
+      </div>
+      <div className="ai-row">
+        <span>
+          经服务器转发
+          <small>浏览器直连被跨域拦截时开启（需要部署了闲亭服务器）</small>
+        </span>
+        <Switch checked={a.proxy} onChange={(proxy) => aiSettings.set({ proxy })} />
+      </div>
+      <Button variant="secondary" size="sm" onClick={test} disabled={testing || !a.apiKey.trim()}>
+        {testing ? '测试中…' : '测试连接'}
+      </Button>
+      <p className="field__note">
+        Key
+        只保存在这台设备的浏览器里；对局信息只发给你填写的接口（开启转发时经本站服务器中转，服务器不保存）。
+      </p>
+    </div>
+  );
+}
+
 export function SettingsSheet({
   open,
   onClose,
@@ -185,6 +279,7 @@ export function SettingsSheet({
           <AvatarSection />
         </>
       )}
+      <AiSection />
       <Field label="桌布">
         <div className="felt-picker">
           {FELTS.map((f) => (

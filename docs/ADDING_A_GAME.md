@@ -75,6 +75,11 @@ export const highcard: GameDefinition<HcState, HcAction, HcView, HcOptions> = {
   bot(view, seat, rng) {
     /* 只根据 view 做决策 */
   },
+  aiPrompt(view, seat, rng) {
+    // 可选：把局面写成文字 + 候选动作，供大模型（AI 人机）选择；
+    // 第 1 个候选放规则电脑的推荐（用 withRecommended），返回 null 表示这一步交给规则电脑
+    return null;
+  },
 };
 ```
 
@@ -148,6 +153,7 @@ export default function MyBoard({ ctl }: { ctl: GameController<MyView, MyAction>
 - [ ] `apply` 不修改入参
 - [ ] `view` 不泄露隐藏信息（联机时用两个浏览器验证）
 - [ ] `bot` 在模拟测试中从不产生非法动作
+- [ ] 若实现了 `aiPrompt`：它给出的每个候选动作都能通过 `validate`（参考 `packages/engine/test/ai.test.ts`）
 - [ ] 有结束条件，`simulate` 能在合理步数内结束
 - [ ] 界面在桌面、横屏手机、竖屏手机下可用
 - [ ] `npm run check` 通过

@@ -13,6 +13,8 @@ export interface TableSeat {
   auto?: boolean;
   /** 联机时玩家是否在线，离线视同托管 */
   connected?: boolean;
+  /** 由外部（例如大模型）接管决策的电脑玩家 */
+  ai?: boolean;
 }
 
 export interface TableConfig {
@@ -26,6 +28,12 @@ export interface TableConfig {
   /** 从已保存的状态恢复（例如刷新页面后继续单机对局） */
   initialState?: unknown;
   onError?: (err: unknown) => void;
+  /**
+   * 可选：电脑座位轮到行动时，交给外部异步决策（例如大模型）。
+   * 返回 Promise 表示接管这一步；返回 null 则照常由规则电脑决策。
+   * 结果过期（期间局面已变化）会被丢弃；出错或动作不合法时退回规则电脑。
+   */
+  delegate?: (seat: Seat) => Promise<unknown> | null;
 }
 
 export interface LastAction {
@@ -52,6 +60,9 @@ export class Table<G extends AnyGame = AnyGame> {
   private systemTimer: TimerHandle | null = null;
   private disposed = false;
   private running = false;
+  private thinkingSeats = new Set<Seat>();
+  /** 思考期间曾经不再需要行动的座位：结果作废 */
+  private thinkingStale = new Set<Seat>();
 
   constructor(
     public readonly def: G,
@@ -99,6 +110,11 @@ export class Table<G extends AnyGame = AnyGame> {
     return this.def.activeSeats(this.state);
   }
 
+  /** 正在等待外部决策（思考中）的座位 */
+  get thinking(): Seat[] {
+    return [...this.thinkingSeats];
+  }
+
   /** 执行一个动作，成功返回 null，失败返回错误提示。 */
   act(seat: Seat, action: unknown): string | null {
     if (this.disposed) return '牌桌已关闭';
@@ -116,6 +132,10 @@ export class Table<G extends AnyGame = AnyGame> {
     if (err) return err;
     this.state = this.def.apply(this.state, seat, action);
     this.version++;
+    if (this.thinkingSeats.size) {
+      const stillActive = new Set(this.def.activeSeats(this.state));
+      for (const s of this.thinkingSeats) if (!stillActive.has(s)) this.thinkingStale.add(s);
+    }
     this.lastAction = { seat, action, at: Date.now() };
     this.schedule(seat);
     this.emit();
@@ -222,7 +242,7 @@ export class Table<G extends AnyGame = AnyGame> {
     }
 
     for (const seat of active) {
-      if (this.seatTimers.has(seat)) continue;
+      if (this.seatTimers.has(seat) || this.thinkingSeats.has(seat)) continue;
       let delay: number | null = null;
       if (this.isAutomated(seat)) {
         const s = this.seats[seat];
@@ -249,6 +269,53 @@ export class Table<G extends AnyGame = AnyGame> {
   private runBot(seat: Seat): void {
     if (this.disposed || this.def.isOver(this.state)) return;
     if (!this.def.activeSeats(this.state).includes(seat)) return;
+    let pending: Promise<unknown> | null = null;
+    try {
+      pending = this.seats[seat]?.isBot ? (this.config.delegate?.(seat) ?? null) : null;
+    } catch (e) {
+      this.config.onError?.(e);
+    }
+    if (pending) {
+      this.thinkingSeats.add(seat);
+      this.thinkingStale.delete(seat);
+      this.emit();
+      pending.then(
+        (action) => this.finishDelegate(seat, action, null),
+        (err) => this.finishDelegate(seat, undefined, err ?? new Error('delegate failed')),
+      );
+      return;
+    }
+    this.runRuleBot(seat);
+  }
+
+  private finishDelegate(seat: Seat, action: unknown, err: unknown): void {
+    this.thinkingSeats.delete(seat);
+    const brokeOff = this.thinkingStale.delete(seat);
+    if (this.disposed) return;
+    // 其他座位在此期间行动（例如同时出牌）不影响；只有这个座位中途不再需要行动才算过期
+    const stale =
+      brokeOff ||
+      !this.running ||
+      this.def.isOver(this.state) ||
+      !this.def.activeSeats(this.state).includes(seat);
+    if (stale) {
+      // 局面已经变了：重新排队，下一次再决策
+      this.schedule(null);
+      this.emit();
+      return;
+    }
+    if (err) this.config.onError?.(err);
+    const rejected = err || action == null ? 'no action' : this.act(seat, action);
+    if (rejected) {
+      if (!err)
+        this.config.onError?.(new Error(`delegate action rejected (seat ${seat}): ${rejected}`));
+      const before = this.version;
+      this.runRuleBot(seat);
+      if (this.version === before) this.emit();
+    }
+  }
+
+  private runRuleBot(seat: Seat): void {
     try {
       const action = this.botAction(seat);
       const err = this.act(seat, action);

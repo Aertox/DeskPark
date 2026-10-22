@@ -79,6 +79,23 @@ export interface GameDefinition<S = any, A = any, V = any, O = any> {
   bot(view: V, seat: Seat, rng: Rng): A;
   /** 可选：需要系统定时推进时返回动作与延迟。 */
   autoAdvance?(state: S): { delayMs: number; action: A } | null;
+  /**
+   * 可选：把某个座位的 view 整理成给大模型看的局面与候选动作。
+   * 返回 null 表示这一步不需要大模型（例如"准备"），由规则电脑处理。
+   */
+  aiPrompt?(view: V, seat: Seat, rng: Rng): AiPrompt<A> | null;
+}
+
+/** 交给大模型的一个候选动作 */
+export interface AiOption<A = unknown> {
+  label: string;
+  action: A;
+}
+
+/** 交给大模型的局面：文字描述 + 候选动作（第 1 个是规则电脑的推荐） */
+export interface AiPrompt<A = unknown> {
+  situation: string;
+  options: AiOption<A>[];
 }
 
 export type AnyGame = GameDefinition<any, any, any, any>;

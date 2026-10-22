@@ -1,7 +1,10 @@
 import type { AnyGame, TableSeat } from '@park/engine';
 import { Table, getGame } from '@park/engine';
 import { AVATARS } from '@park/protocol';
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react';
+import { aiEvents, aiSpeech } from './ai/events';
+import { aiReady } from './ai/settings';
+import { aiCapable, aiTurn } from './ai/turn';
 import { online, useOnline } from './online';
 import { storage } from './platform';
 import { navigate } from './router';
@@ -14,6 +17,12 @@ export interface PlayerInfo {
   isMe: boolean;
   connected: boolean;
   auto: boolean;
+  /** 正在思考（等待 AI 决策） */
+  thinking?: boolean;
+  /** AI 人机最近说的话 */
+  speech?: string;
+  /** 单机电脑玩家：AI 接管开关 */
+  ai?: { on: boolean; toggle: () => void };
 }
 
 /**
@@ -64,6 +73,7 @@ function makeTable(
   players: number,
   options: Record<string, unknown>,
   restore?: SavedLocal,
+  aiSeats?: boolean[],
 ) {
   const me = profile.get();
   const seats: TableSeat[] = restore?.seats ?? [
@@ -73,11 +83,16 @@ function makeTable(
   seats[0].name = me.name;
   seats[0].avatar = me.avatar;
   seats[0].auto = false;
-  return new Table(def, seats, restore?.options ?? options, {
+  aiSeats?.forEach((on, i) => {
+    if (on && seats[i]?.isBot) seats[i].ai = true;
+  });
+  const table: Table = new Table(def, seats, restore?.options ?? options, {
     humanTimeoutMs: null,
     initialState: restore?.state,
-    onError: (e) => console.error('[table]', e),
+    onError: (e) => console.warn('[table]', e),
+    delegate: (seat) => aiTurn(table, seat),
   });
+  return table;
 }
 
 export function loadSavedLocal(gameId: string): SavedLocal | null {
@@ -105,7 +120,9 @@ export function useLocalController(
     const saved = resume ? loadSavedLocal(gameId) : null;
     return makeTable(def, players, options, saved ?? undefined);
   });
-  const [, bump] = useReducer((x: number) => x + 1, 0);
+  const [tick, bump] = useReducer((x: number) => x + 1, 0);
+  const speech = useSyncExternalStore(aiSpeech.subscribe, aiSpeech.get, aiSpeech.get);
+  useEffect(() => () => aiSpeech.clear(), []);
 
   useEffect(() => {
     if (!table) return;
@@ -149,6 +166,20 @@ export function useLocalController(
         isMe: i === 0,
         connected: true,
         auto: !!s.auto,
+        thinking: table.thinking.includes(i),
+        speech: speech[i]?.text,
+        ai: aiCapable(table, i)
+          ? {
+              on: !!s.ai,
+              toggle: () => {
+                if (!s.ai && !aiReady()) {
+                  aiEvents.emit({ type: 'needConfig' });
+                  return;
+                }
+                table.setSeat(i, { ai: !s.ai });
+              },
+            }
+          : undefined,
       })),
       version: table.version,
       deadlines: {},
@@ -162,13 +193,21 @@ export function useLocalController(
       canRestart: true,
       restart: () => {
         clearSavedLocal();
-        setTable(makeTable(def, table.seats.length, table.options as Record<string, unknown>));
+        setTable(
+          makeTable(
+            def,
+            table.seats.length,
+            table.options as Record<string, unknown>,
+            undefined,
+            table.seats.map((x) => !!x.ai),
+          ),
+        );
       },
       leave: () => navigate('/'),
     };
     // table.version 变化时重新生成快照
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [table, def, table?.version, table?.seats[0]?.auto]);
+  }, [table, def, table?.version, table?.seats[0]?.auto, tick, speech]);
 }
 
 /** 联机：状态来自服务器推送。 */

@@ -3,6 +3,7 @@ import type { Card } from '../../core/cards';
 import { createDeck, pickCards, removeCards, sortCards } from '../../core/cards';
 import { Rng } from '../../core/rng';
 import type { GameDefinition, Seat } from '../../core/types';
+import { ddzAiPrompt } from './ai';
 import { ddzBot } from './bot';
 import type { DdzKind, DdzPattern } from './patterns';
 import { ddzValue, resolvePlay } from './patterns';
@@ -385,4 +386,5 @@ export const doudizhu: GameDefinition<DdzState, DdzAction, DdzView, DdzOptions> 
   },
 
   bot: ddzBot,
+  aiPrompt: ddzAiPrompt,
 };

@@ -1,4 +1,4 @@
-import { Bot, WifiOff } from 'lucide-react';
+import { Bot, Sparkles, WifiOff } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { figureHeight, useFigure } from '../lib/characters';
@@ -84,8 +84,36 @@ export function Seat({
     <>
       {tag && <span className={`seat__tag tone-${tagTone}`}>{tag}</span>}
       {(player.isBot || player.auto) && (
-        <span className="seat__badge" title={player.isBot ? '电脑' : '托管中'}>
-          <Bot size={11} strokeWidth={2.4} />
+        <span
+          className={`seat__badge ${player.ai?.on ? 'is-ai' : ''}`}
+          title={player.ai?.on ? 'AI 接管中' : player.isBot ? '电脑' : '托管中'}
+        >
+          {player.ai?.on ? (
+            <Sparkles size={11} strokeWidth={2.4} />
+          ) : (
+            <Bot size={11} strokeWidth={2.4} />
+          )}
+        </span>
+      )}
+      {player.ai && (
+        <button
+          type="button"
+          className={`seat__wake ${player.ai.on ? 'is-on' : ''}`}
+          onClick={player.ai.toggle}
+          title={
+            player.ai.on ? 'AI 接管中，点击交还给规则电脑' : '唤醒 AI：由大模型接管这位电脑玩家'
+          }
+          aria-label={player.ai.on ? '取消 AI 接管' : '唤醒 AI 接管'}
+          aria-pressed={player.ai.on}
+        >
+          <Sparkles size={12} strokeWidth={2.4} />
+        </button>
+      )}
+      {player.thinking && (
+        <span className="seat__think" role="status" aria-label="思考中">
+          <i />
+          <i />
+          <i />
         </span>
       )}
       {!player.connected && (
@@ -99,12 +127,21 @@ export function Seat({
   return (
     <div
       className={`seat seat--${layout} ${vc ? 'seat--figure' : ''} ${active ? 'is-active' : ''} ${dim ? 'is-dim' : ''} ${className}`}
-      style={style}
+      style={
+        vc && figureOverflow
+          ? ({ ...style, '--fig-over': `${Math.max(0, figH - px)}px` } as CSSProperties)
+          : style
+      }
     >
       {vc ? (
         <div
           className={`seat__figure ${figureOverflow ? 'is-overflow' : ''}`}
-          style={figureOverflow ? { height: px, width: (figH * vc.frameW) / vc.frameH } : undefined}
+          style={
+            {
+              '--fig-h': `${figH}px`,
+              ...(figureOverflow ? { height: px, width: (figH * vc.frameW) / vc.frameH } : {}),
+            } as CSSProperties
+          }
         >
           <span className="seat__stage" />
           {cd && (
@@ -142,6 +179,14 @@ export function Seat({
         {sub !== undefined && <span className="seat__sub num">{sub}</span>}
       </div>
       {bubble && <div className={`seat__bubble side-${bubbleSide}`}>{bubble}</div>}
+      {player.speech && (
+        <div
+          key={player.speech}
+          className={`seat__speech ${bubbleSide === 'right' ? 'align-start' : bubbleSide === 'left' ? 'align-end' : ''}`}
+        >
+          {player.speech}
+        </div>
+      )}
       {children}
     </div>
   );

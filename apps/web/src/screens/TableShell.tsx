@@ -15,7 +15,11 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { ChatPanel } from '../components/Chat';
 import { PixelAvatar } from '../components/pixel/PixelAvatar';
-import { Button, IconButton, Sheet } from '../components/ui';
+import { Button, IconButton, Sheet, toast } from '../components/ui';
+import { replyChat } from '../lib/ai/agent';
+import { aiEvents, aiSpeech } from '../lib/ai/events';
+import { aiReady } from '../lib/ai/settings';
+import { characterName } from '../lib/ai/turn';
 import type { GameController } from '../lib/controller';
 import { online, useOnline } from '../lib/online';
 import { playSound } from '../lib/sound';
@@ -57,38 +61,79 @@ export function TableShell({
   const [chatOpen, setChatOpen] = useState(false);
   const net = useOnline();
   const online_ = ctl.mode === 'online';
-  // 人机局：聊天只在本地记录，电脑不发言
+  // 人机局：聊天只在本地记录；被 AI 接管的电脑会偶尔发言，也会回应玩家
   const [localChat, setLocalChat] = useState<ChatMessage[]>([]);
   const chatMessages = online_ ? net.chat : localChat;
   const myChatId = online_ ? net.playerId : LOCAL_ID;
-  const sendChat = (text: string) => {
-    if (online_) {
-      online.send({ t: 'chat', text });
-      return;
-    }
-    const me = ctl.players[ctl.seat ?? 0];
+  const ctlRef = useRef(ctl);
+  ctlRef.current = ctl;
+  const pushLocal = (seat: number, text: string) => {
+    const p = ctlRef.current.players[seat];
+    if (!p) return;
     setLocalChat((list) => [
-      ...list,
+      ...list.slice(-59),
       {
         id: (list.at(-1)?.id ?? 0) + 1,
         kind: 'user',
         text: cleanChatText(text),
         at: Date.now(),
-        name: me?.name,
-        avatar: me?.avatar,
-        playerId: LOCAL_ID,
-        seat: ctl.seat,
+        name: p.name,
+        avatar: p.avatar,
+        playerId: p.isMe ? LOCAL_ID : `bot-${seat}`,
+        seat,
       },
     ]);
   };
+  const aiBots = ctl.players.flatMap((p, i) => (p.ai?.on ? [i] : []));
+  const sendChat = (text: string) => {
+    if (online_) {
+      online.send({ t: 'chat', text });
+      return;
+    }
+    pushLocal(ctl.seat ?? 0, text);
+    // 有 AI 人机时，挑一位回话（点名优先）
+    if (!aiBots.length || !aiReady()) return;
+    const named = aiBots.find((i) => text.includes(ctl.players[i].name));
+    const seat = named ?? aiBots[Math.floor(Math.random() * aiBots.length)];
+    if (named === undefined && Math.random() < 0.25) return;
+    const p = ctl.players[seat];
+    const recent = [...localChat.slice(-6), { name: ctl.players[ctl.seat ?? 0].name, text }].map(
+      (m) => ({
+        name: 'name' in m ? (m.name ?? '?') : '?',
+        text: m.text,
+      }),
+    );
+    replyChat(ctl.def.meta.name, { name: p.name, character: characterName(p.avatar) }, recent)
+      .then((reply) => {
+        if (!reply) return;
+        pushLocal(seat, reply);
+        aiSpeech.say(seat, reply);
+      })
+      .catch(() => {});
+  };
+  // AI 事件：发言写进聊天记录；出错时提示（同类提示 20 秒内只出现一次）
+  const lastErr = useRef(0);
+  useEffect(() => {
+    if (online_) return;
+    return aiEvents.on((e) => {
+      if (e.type === 'say') pushLocal(e.seat, e.text);
+      else if (e.type === 'needConfig') {
+        toast('先在「外观 → AI 人机」里填写接口地址和 Key');
+        setLook(true);
+      } else if (e.type === 'error' && Date.now() - lastErr.current > 20_000) {
+        lastErr.current = Date.now();
+        toast(`AI 出错：${e.message}，这一步由规则电脑代打`, 'error');
+      }
+    });
+  }, [online_]);
   const lastChatId = chatMessages.at(-1)?.id ?? 0;
   const [seenChat, setSeenChat] = useState(lastChatId);
   useEffect(() => {
     if (chatOpen) setSeenChat(lastChatId);
   }, [chatOpen, lastChatId]);
-  const incoming = online_
-    ? net.chat.filter((m) => m.kind === 'user' && m.id > seenChat && m.playerId !== net.playerId)
-    : [];
+  const incoming = chatMessages.filter(
+    (m) => m.kind === 'user' && m.id > seenChat && m.playerId !== myChatId,
+  );
   // 新消息提示音
   const chatSound = useRef(lastChatId);
   useEffect(() => {
@@ -204,7 +249,7 @@ export function TableShell({
 
       <main className="board">{children}</main>
 
-      {online_ && !chatOpen && incoming.length > 0 && (
+      {!chatOpen && incoming.length > 0 && (
         <div className="chat-peek">
           {incoming.slice(-3).map((m) => (
             <div key={m.id} className="chat-peek__item" onClick={() => setChatOpen(true)}>
@@ -232,7 +277,13 @@ export function TableShell({
             myId={myChatId}
             autoFocus
             onSend={sendChat}
-            placeholder={online_ ? undefined : '人机局：电脑不会回复，只有你可以发言'}
+            placeholder={
+              online_
+                ? undefined
+                : aiBots.length
+                  ? '和 AI 人机聊几句吧（提到名字会优先回复）'
+                  : '人机局：唤醒 AI 后，电脑才会说话'
+            }
           />
         </aside>
       )}

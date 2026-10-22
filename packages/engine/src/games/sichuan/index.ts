@@ -14,6 +14,7 @@ import {
   suitsOf,
   tileOf,
 } from '../../mahjong/tiles';
+import { scAiPrompt } from './ai';
 import { sichuanBot } from './bot';
 import type { MeldShape, WinScore } from './scoring';
 import { FAN_CAP, evaluateHand, scoreOf, scoreWin } from './scoring';
@@ -1153,6 +1154,7 @@ export const sichuan: GameDefinition<ScState, ScAction, ScView, ScOptions> = {
   isOver: (state) => state.phase === 'matchOver',
 
   bot: sichuanBot,
+  aiPrompt: scAiPrompt,
 };
 
 /** 测试用：直接执行终局结算与账本折算 */

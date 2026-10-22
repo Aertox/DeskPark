@@ -3,6 +3,7 @@ import type { Card } from '../../core/cards';
 import { createDeck } from '../../core/cards';
 import { Rng } from '../../core/rng';
 import type { GameDefinition, Seat } from '../../core/types';
+import { txAiPrompt } from './ai';
 import { txBot } from './bot';
 import { bestFive, handName } from './evaluator';
 
@@ -617,4 +618,5 @@ export const texas: GameDefinition<TxState, TxAction, TxView, TxOptions> = {
   },
 
   bot: txBot,
+  aiPrompt: txAiPrompt,
 };

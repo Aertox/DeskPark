@@ -99,6 +99,9 @@ export async function loadCharacters(): Promise<void> {
   }
 }
 
+/** 当前已加载的角色库（非 React 场景使用） */
+export const charactersNow = (): VirtualCharacter[] => state.list;
+
 export function useCharacters(): VirtualCharacter[] {
   return useSyncExternalStore(
     (l) => {

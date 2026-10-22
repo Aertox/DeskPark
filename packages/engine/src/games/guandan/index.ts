@@ -3,6 +3,7 @@ import type { Card } from '../../core/cards';
 import { BIG_JOKER, createDeck, pickCards, removeCards, sortCards } from '../../core/cards';
 import { Rng } from '../../core/rng';
 import type { GameDefinition, Seat } from '../../core/types';
+import { gdAiPrompt } from './ai';
 import { gdBot } from './bot';
 import type { GdKind, GdPattern } from './patterns';
 import { gdValue, isWild, resolveGd } from './patterns';
@@ -434,4 +435,5 @@ export const guandan: GameDefinition<GdState, GdAction, GdView, GdOptions> = {
   },
 
   bot: gdBot,
+  aiPrompt: gdAiPrompt,
 };
