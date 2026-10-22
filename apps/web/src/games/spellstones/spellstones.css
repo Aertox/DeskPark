@@ -4,73 +4,259 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  padding: 2px max(14px, 2vw) 10px;
+  padding: 2px max(12px, 1.6vw) 10px;
 }
 .ss__arena {
   position: relative;
   flex: 1;
   min-height: 0;
-  margin: 0 max(24px, 4vw);
+  margin: 6px 0 8px;
 }
-.ss__table {
+.ss__arena.is-measuring {
+  visibility: hidden;
+}
+
+/* ---------------- 游戏桌布（图版） ---------------- */
+.ss-mat {
   position: absolute;
-  inset: 34% 12% 2%;
-  border-radius: 50%;
-  background:
-    radial-gradient(50% 50% at 50% 50%, rgba(170, 140, 255, 0.1), transparent 70%),
-    radial-gradient(70% 70% at 50% 40%, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+  z-index: 1;
+  border-radius: 1.8% / 1.5%;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    inset 0 0 0 10px rgba(0, 0, 0, 0.06),
-    inset 0 0 0 11px rgba(255, 255, 255, 0.05),
-    0 20px 60px rgba(0, 0, 0, 0.18);
+    0 22px 60px rgba(0, 0, 0, 0.38),
+    0 4px 14px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
-.ss__opp {
+.ss-mat.is-flying {
+  z-index: 8;
+}
+.ss-mat__bg {
   position: absolute;
-  z-index: 3;
-  translate: -50% -100%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+  user-select: none;
+}
+.ss-mat__row {
+  position: absolute;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+@media (hover: hover) {
+  .ss-mat__row:hover {
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 236, 170, 0.75),
+      0 0 12px rgba(255, 236, 170, 0.35);
+  }
+}
+.ss-mat__cell,
+.ss-mat__owl,
+.ss-mat__token {
+  position: absolute;
+  translate: -50% -50%;
+}
+.ss-mat__cell {
+  z-index: 2;
+  width: 7.4%;
+}
+.ss-mat__cell .stone {
+  display: block;
+}
+.ss-mat__owl {
+  z-index: 2;
+  width: 5.4%;
+}
+.ss-mat__owl .stone {
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
+}
+.ss-mat__token {
+  width: 6.8%;
+  translate: -50% -62%;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5));
+  transition:
+    left 1s var(--ease-out),
+    top 1s var(--ease-out);
+}
+.ss-mat__token .ss-wiz {
+  width: 100%;
+  height: auto;
+}
+.ss-mat__token.is-turn .ss-wiz {
+  box-shadow:
+    0 0 0 2px #fff6c8,
+    0 0 10px 3px rgba(255, 232, 150, 0.8);
+}
+
+/* ---------------- 施法特写 ---------------- */
+.ss-flash {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  top: 44%;
+  translate: -50% -50%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  pointer-events: none;
+  animation: ss-flash 1.6s var(--ease-out) forwards;
 }
+.ss-flash__stone {
+  position: relative;
+  width: clamp(54px, calc(var(--mw) * 0.24), 150px);
+  filter: drop-shadow(0 0 18px rgba(255, 240, 180, 0.7));
+}
+.ss-flash__stone .stone {
+  display: block;
+}
+.ss-flash.is-fail .ss-flash__stone {
+  filter: drop-shadow(0 0 14px rgba(255, 90, 70, 0.7));
+}
+.ss-flash.is-fail .ss-flash__stone .stone {
+  filter: grayscale(0.65) brightness(0.85);
+}
+.ss-flash__stamp {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  translate: -50% -50%;
+  rotate: -14deg;
+  padding: 2px 10px;
+  border: 3px solid #ff5a4a;
+  border-radius: 8px;
+  color: #ff5a4a;
+  background: rgba(30, 6, 6, 0.55);
+  font-family: var(--font-display);
+  font-size: clamp(16px, calc(var(--mw) * 0.07), 34px);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  animation: ss-stamp 0.35s 0.15s var(--ease-out) backwards;
+}
+.ss-flash__text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 13px;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(8, 10, 34, 0.82);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.ss-flash__text b {
+  color: var(--felt-accent);
+  font-weight: 650;
+}
+@keyframes ss-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.55);
+  }
+  14% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  24% {
+    transform: scale(1);
+  }
+  78% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+}
+@keyframes ss-stamp {
+  0% {
+    opacity: 0;
+    scale: 2;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+.ss-die {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 7px;
+  background: #fffdf6;
+  color: #2a2116;
+  animation: ss-roll 0.5s var(--ease-out);
+}
+.ss-die b {
+  color: inherit;
+}
+@keyframes ss-roll {
+  0% {
+    transform: rotate(-220deg) scale(0.4);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* ---------------- 对手 ---------------- */
+.ss-opp {
+  position: absolute;
+  z-index: 4;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.ss-opp.side-top {
+  translate: -50% 0;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 16px;
+}
+/* 魔法石立在面前的木架上 */
 .ss-rack {
   display: flex;
+  align-items: flex-end;
   gap: 4px;
-  justify-content: center;
-  min-height: 24px;
+  min-height: 30px;
+  padding: 5px 7px 7px;
+  border-radius: 9px;
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.22));
+  box-shadow:
+    inset 0 -4px 0 rgba(84, 52, 26, 0.55),
+    inset 0 -5px 0 rgba(255, 210, 150, 0.12);
+  zoom: var(--k, 1);
 }
-.ss-rack .stone {
-  animation: pop-in 0.3s var(--ease-out) backwards;
+.ss-opp.is-turn .ss-rack {
+  background: linear-gradient(rgba(255, 230, 160, 0), rgba(255, 230, 160, 0.14));
+}
+.ss-owls {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-left: 4px;
+  padding-left: 7px;
+  border-left: 1px solid var(--felt-line);
 }
 .ss-sub {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
-.ss-hearts {
-  display: inline-flex;
-  gap: 1px;
-  color: #f07b84;
-}
-.ss-hearts svg:not([fill='currentColor']) {
-  color: var(--felt-ink-3);
-}
-.ss-sub__secret {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
+.ss-sub__lv {
   color: var(--felt-accent);
-}
-
-/* 大屏幕：石头、法阵、咒语栏随座位一起放大（--k 来自 useSeatScale） */
-.ss-rack,
-.ss-circle,
-.ss-banner,
-.ss__mine,
-.ss__hint,
-.ss-spellbar {
-  zoom: var(--k, 1);
+  font-weight: 600;
 }
 
 /* 生命变化飘字 */
@@ -78,13 +264,13 @@
   position: absolute;
   z-index: 6;
   left: 50%;
-  top: 30%;
+  top: 18%;
   translate: -50% 0;
   font:
-    750 22px/1 var(--font-card),
+    750 24px/1 var(--font-card),
     sans-serif;
   color: #ff8a8a;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
   pointer-events: none;
   animation: ss-float 1.6s var(--ease-out) forwards;
 }
@@ -92,8 +278,8 @@
   color: #8be0a8;
 }
 .ss-float.is-me {
-  left: 40px;
-  top: -6px;
+  left: 36px;
+  top: -8px;
 }
 @keyframes ss-float {
   0% {
@@ -114,89 +300,76 @@
   }
 }
 
-/* 中央法阵 */
-.ss__center {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: 66%;
-  translate: -50% -50%;
+/* ---------------- 效果卡 ---------------- */
+.ss-peek {
+  position: fixed;
+  z-index: 90;
+  visibility: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  width: min(960px, 70%);
-}
-.ss-circle {
-  display: flex;
   gap: 10px;
-  padding: 12px 18px 9px;
-  border-radius: 99px;
-  background: rgba(10, 14, 22, 0.22);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  width: 248px;
+  padding: 14px 16px 16px;
+  border-radius: 18px;
+  color: var(--felt-ink);
+  background:
+    radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--c) 30%, transparent), transparent),
+    rgba(14, 16, 34, 0.94);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--c) 45%, rgba(255, 255, 255, 0.1)),
+    0 18px 50px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  animation: pop-in 0.22s var(--ease-out);
 }
-.ss-circle__col {
+.ss-peek__stone {
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+}
+.ss-peek__body {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  gap: 8px;
+  text-align: center;
 }
-.ss-circle__count {
-  font-size: 12px;
+.ss-peek__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.ss-peek__title .num {
+  color: var(--c);
+}
+.ss-peek__effect {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--felt-ink-2);
+}
+.ss-peek__stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 10px;
+  font-size: 11.5px;
+  color: var(--felt-ink-3);
+}
+.ss-peek__stats b {
   color: var(--felt-ink);
   font-weight: 650;
-  line-height: 1;
 }
-.ss-circle__count small {
-  font-size: 10px;
-  color: var(--felt-ink-3);
-  font-weight: 500;
+.ss-peek__odds {
+  font-size: 12.5px;
+  color: var(--felt-ink-2);
 }
-.ss-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 100%;
-  min-height: 30px;
-  padding: 5px 14px;
-  border-radius: 99px;
-  font-size: 13px;
-  line-height: 1.4;
-  text-align: center;
-  color: var(--felt-ink);
-  background: var(--felt-glass);
-  box-shadow: inset 0 0 0 1px var(--felt-line);
-  animation: rise-in 0.3s var(--ease-out);
-}
-.ss-banner:empty {
-  visibility: hidden;
-}
-.ss-banner.is-fail {
-  color: #ffc0b8;
-}
-.ss-die {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 1px 7px;
-  border-radius: 8px;
-  background: #fffdf6;
-  color: #2a2116;
-  animation: ss-roll 0.5s var(--ease-out);
-}
-@keyframes ss-roll {
-  0% {
-    transform: rotate(-200deg) scale(0.4);
-  }
-  100% {
-    transform: none;
-  }
+.ss-peek__odds b {
+  color: var(--felt-accent);
 }
 
-/* 底部：自己 + 咒语栏 */
+/* ---------------- 底部：自己 + 咒语栏 ---------------- */
 .ss__dock {
   position: relative;
+  z-index: 5;
   display: flex;
   align-items: flex-end;
   gap: 18px;
@@ -208,22 +381,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  padding-bottom: 4px;
-}
-.ss__mine {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.ss__secrets {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 3px 6px;
-  border-radius: 99px;
-  color: var(--felt-accent);
-  background: rgba(231, 200, 134, 0.1);
-  box-shadow: inset 0 0 0 1px rgba(231, 200, 134, 0.25);
+  padding-bottom: 2px;
 }
 .ss__spells {
   flex: 1;
@@ -236,18 +394,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 6px 12px;
   min-height: 32px;
   font-size: 13px;
   color: var(--felt-ink-2);
+  zoom: var(--k, 1);
+}
+.ss-log {
+  max-width: 100%;
+  padding: 4px 12px;
+  border-radius: 99px;
+  background: var(--felt-glass);
+  box-shadow: inset 0 0 0 1px var(--felt-line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ss-cue {
+  color: var(--felt-accent);
+  font-weight: 600;
 }
 .ss-spellbar {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 6px;
-  max-width: 760px;
+  max-width: 800px;
   width: 100%;
   margin: 0 auto;
+  zoom: var(--k, 1);
 }
 .ss-spell {
   position: relative;
@@ -255,7 +430,7 @@
   flex-direction: column;
   align-items: center;
   gap: 5px;
-  padding: 9px 4px 7px;
+  padding: 8px 4px 7px;
   border-radius: var(--radius);
   color: var(--felt-ink);
   background: var(--felt-glass);
@@ -267,8 +442,8 @@
     opacity 0.2s;
 }
 .ss-spell:not(:disabled):hover {
-  background: color-mix(in srgb, var(--c) 18%, transparent);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 70%, transparent);
+  background: color-mix(in srgb, var(--c) 20%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 75%, transparent);
   transform: translateY(-2px);
 }
 .ss-spell:not(:disabled):active {
@@ -307,16 +482,16 @@
 }
 .ss-spell__odds {
   position: relative;
-  width: 78%;
+  width: 80%;
   height: 14px;
   border-radius: 99px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(0, 0, 0, 0.25);
 }
 .ss-spell__odds i {
   position: absolute;
   inset: 0 auto 0 0;
-  background: color-mix(in srgb, var(--c) 70%, transparent);
+  background: color-mix(in srgb, var(--c) 75%, transparent);
   transition: width 0.4s var(--ease);
 }
 .ss-spell__odds em {
@@ -328,7 +503,7 @@
   font-weight: 650;
   text-align: center;
   color: #fff;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
 }
 
 /* 结算 */
@@ -342,40 +517,55 @@
   display: inline-flex;
   gap: 3px;
 }
+.result__who .ss-wiz {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
 
-/* 矮屏（横屏手机） */
+/* ---------------- 矮屏（横屏手机） ---------------- */
 @media (max-height: 500px) {
   .ss {
     padding-bottom: 6px;
   }
-  .ss__table {
-    inset: 44% 14% 2%;
+  .ss__arena {
+    margin: 2px 0 4px;
   }
-  .ss__opp {
+  .ss-opp {
     gap: 3px;
   }
-  .ss__center {
-    top: 73%;
-    gap: 6px;
+  .ss-rack {
+    gap: 2px;
+    min-height: 0;
+    padding: 3px 4px 5px;
+    border-radius: 6px;
   }
-  .ss-circle {
+  .ss-owls {
+    margin-left: 2px;
+    padding-left: 4px;
+  }
+  .ss-sub {
     gap: 4px;
-    padding: 6px 10px 5px;
   }
-  .ss-banner {
-    min-height: 24px;
-    padding: 2px 10px;
+  .ss-float {
+    font-size: 18px;
+  }
+  .ss-flash__text {
     font-size: 11.5px;
+    padding: 2px 9px;
   }
   .ss__dock {
     gap: 10px;
   }
   .ss__me {
-    gap: 4px;
+    gap: 3px;
   }
   .ss__hint {
     min-height: 26px;
-    font-size: 12px;
+    font-size: 11.5px;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .ss-log {
+    padding: 2px 10px;
   }
   .ss__hint .btn {
     height: 26px;
@@ -388,40 +578,47 @@
   }
   .ss-spell {
     flex-direction: row;
-    flex-wrap: wrap;
     justify-content: center;
-    gap: 2px 4px;
-    padding: 5px 2px 4px;
+    gap: 4px;
+    padding: 4px 3px;
     border-radius: var(--radius-sm);
   }
-  .ss-spell .stone {
-    --s: 22px;
-  }
-  .ss-spell .stone__icon {
+  .ss-spell__text {
     display: none;
-  }
-  .ss-spell .stone b {
-    position: static;
-    min-width: 0;
-    height: auto;
-    background: none;
-    box-shadow: none;
-    color: #fff;
-    font-size: 12px;
-  }
-  .ss-spell__text small {
-    display: none;
-  }
-  .ss-spell__text b {
-    font-size: 11px;
   }
   .ss-spell__odds {
-    width: 86%;
-    height: 12px;
+    width: auto;
+    flex: 1;
+    max-width: 44px;
+    height: 13px;
   }
   .ss-spell__odds em {
-    line-height: 12px;
+    line-height: 13px;
     font-size: 9.5px;
+  }
+  .ss-peek {
+    flex-direction: row;
+    align-items: flex-start;
+    width: 320px;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .ss-peek .stone--xl {
+    --sw: 76px;
+  }
+  .ss-peek__body {
+    text-align: left;
+    gap: 5px;
+  }
+  .ss-peek__title {
+    font-size: 15px;
+  }
+  .ss-peek__effect {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .ss-peek__stats {
+    justify-content: flex-start;
   }
 }
 @media (max-width: 720px) and (min-height: 501px) {

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 754 977" width="754" height="977">
+<title>Magic Card – back</title>
+<defs>
+<linearGradient id="frameOuter" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2e4c44"/><stop offset="1" stop-color="#13241e"/></linearGradient>
+<linearGradient id="frameBevel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#35554c"/><stop offset="1" stop-color="#1a2f28"/></linearGradient>
+<radialGradient id="night" cx="0.5" cy="0.45" r="0.75"><stop offset="0" stop-color="#3c47a8"/><stop offset="0.55" stop-color="#1e2672"/><stop offset="1" stop-color="#0c0f44"/></radialGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2b0"/><stop offset="0.5" stop-color="#eec04a"/><stop offset="1" stop-color="#b47e1c"/></linearGradient>
+<radialGradient id="halo" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#8fa2ff" stop-opacity="0.55"/><stop offset="1" stop-color="#8fa2ff" stop-opacity="0"/></radialGradient>
+<clipPath id="panelClip"><rect x="78" y="74" width="610" height="840"/></clipPath>
+</defs>
+<rect width="754" height="977" rx="10" fill="url(#frameOuter)"/>
+<rect x="12" y="12" width="730" height="953" rx="8" fill="none" stroke="#406159" stroke-width="3"/>
+<rect x="26" y="26" width="702" height="925" rx="5" fill="url(#frameBevel)"/>
+<rect x="26" y="26" width="702" height="925" rx="5" fill="none" stroke="#0d1914" stroke-width="4"/>
+<rect x="60" y="58" width="634" height="861" fill="#152822"/>
+<rect x="78" y="74" width="610" height="840" fill="url(#night)"/>
+<g clip-path="url(#panelClip)">
+<circle cx="383" cy="494" r="300" fill="url(#halo)"/>
+<path d="M150,154 Q152.88,167.12 166,170 Q152.88,172.88 150,186 Q147.12,172.88 134,170 Q147.12,167.12 150,154 Z" fill="#fff4c0" opacity="0.9"/><path d="M600,138 Q602.16,147.84 612,150 Q602.16,152.16 600,162 Q597.84,152.16 588,150 Q597.84,147.84 600,138 Z" fill="#fff4c0" opacity="0.8"/><path d="M630,321 Q631.62,328.38 639,330 Q631.62,331.62 630,339 Q628.38,331.62 621,330 Q628.38,328.38 630,321 Z" fill="#fff4c0" opacity="0.7"/><path d="M130,410 Q131.8,418.2 140,420 Q131.8,421.8 130,430 Q128.2,421.8 120,420 Q128.2,418.2 130,410 Z" fill="#fff4c0" opacity="0.7"/><path d="M612,685 Q614.7,697.3 627,700 Q614.7,702.7 612,715 Q609.3,702.7 597,700 Q609.3,697.3 612,685 Z" fill="#fff4c0" opacity="0.85"/><path d="M160,808 Q162.16,817.84 172,820 Q162.16,822.16 160,832 Q157.84,822.16 148,820 Q157.84,817.84 160,808 Z" fill="#fff4c0" opacity="0.8"/><path d="M470,851 Q471.62,858.38 479,860 Q471.62,861.62 470,869 Q468.38,861.62 461,860 Q468.38,858.38 470,851 Z" fill="#fff4c0" opacity="0.6"/><path d="M250,112 Q251.44,118.56 258,120 Q251.44,121.44 250,128 Q248.56,121.44 242,120 Q248.56,118.56 250,112 Z" fill="#fff4c0" opacity="0.6"/><path d="M520,243 Q521.26,248.74 527,250 Q521.26,251.26 520,257 Q518.74,251.26 513,250 Q518.74,248.74 520,243 Z" fill="#fff4c0" opacity="0.6"/><path d="M240,753 Q241.26,758.74 247,760 Q241.26,761.26 240,767 Q238.74,761.26 233,760 Q238.74,758.74 240,753 Z" fill="#fff4c0" opacity="0.6"/>
+<circle cx="383" cy="494" r="212" fill="none" stroke="url(#gold)" stroke-width="7"/>
+<circle cx="383" cy="494" r="190" fill="none" stroke="url(#gold)" stroke-width="2.5" opacity="0.7"/>
+<polygon points="383.0,304.0 428.9,383.1 517.4,359.6 493.9,448.1 573.0,494.0 493.9,539.9 517.4,628.4 428.9,604.9 383.0,684.0 337.1,604.9 248.6,628.4 272.1,539.9 193.0,494.0 272.1,448.1 248.6,359.6 337.1,383.1" fill="none" stroke="url(#gold)" stroke-width="4" stroke-linejoin="round" opacity="0.85"/>
+<circle cx="383" cy="494" r="118" fill="#141a5c" stroke="url(#gold)" stroke-width="4"/>
+<text x="383" y="570" text-anchor="middle" font-family='Georgia, "DejaVu Serif", "Times New Roman", serif' font-size="230" font-style="italic" fill="url(#gold)" stroke="#5a3a08" stroke-width="5" paint-order="stroke">?</text>
+</g>
+<rect x="104" y="100" width="558" height="788" rx="16" fill="none" stroke="url(#gold)" stroke-width="3" opacity="0.55"/>
+<path d="M118,184 L118,114 L188,114" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/><circle cx="140" cy="136" r="7" fill="url(#gold)"/><path d="M648,184 L648,114 L578,114" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/><circle cx="626" cy="136" r="7" fill="url(#gold)"/><path d="M118,804 L118,874 L188,874" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/><circle cx="140" cy="852" r="7" fill="url(#gold)"/><path d="M648,804 L648,874 L578,874" fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="round"/><circle cx="626" cy="852" r="7" fill="url(#gold)"/>
+<path d="M78,914 L78,74 L688,74" fill="none" stroke="#2b3a36" stroke-width="6"/>
+<path d="M78,914 L676,914 L688,74" fill="none" stroke="#72847f" stroke-width="3" opacity="0.6"/>
+</svg>

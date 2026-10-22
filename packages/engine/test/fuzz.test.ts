@@ -132,7 +132,7 @@ describe('畸形动作模糊测试（模拟恶意联机客户端）', () => {
   });
   it('魔法出包', () => {
     for (let seed = 1; seed <= 20; seed++)
-      fuzz(spellstones, 2 + (seed % 4), { target: 5 }, ['cast', 'stop', 'ready'], seed);
+      fuzz(spellstones, 2 + (seed % 4), {}, ['cast', 'stop', 'ready'], seed);
   });
   it('比大小：非出牌动作不能冒充「继续」', () => {
     for (let seed = 1; seed <= 15; seed++) fuzz(highcard, 4, { rounds: 2 }, ['choose'], seed);

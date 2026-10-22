@@ -5,12 +5,12 @@ import { MAX_LIFE, leftOf, rightOf } from './shared';
 import { rackOdds } from './odds';
 
 /**
- * 魔法出包电脑玩家：按「推算概率 × 收益 − 失败概率 × 代价」估算每个可宣告咒语的期望，
- * 第一次必须宣告；之后期望不够高就收手。
+ * 魔法出包电脑玩家：按「推算概率 × 收益 − 失败概率 × 代价」估算每个可喊咒语的期望，
+ * 第一次必须喊；之后期望不够高就收手。
  */
 
-const KILL = 6; // 把人打到 0 = 赢下本轮（3 分），价值很高
-const DEATH = 6; // 失败把自己打到 0 = 本轮 0 分
+const KILL = 6; // 把人打到 0 = 上 3 层，价值很高
+const DEATH = 6; // 出包把自己打到 0 = 本轮不动，别人还各上 1 层
 
 /** 掷 1–3 点时至少 k 点的概率 */
 const atLeast = (k: number) => (k <= 1 ? 1 : k === 2 ? 2 / 3 : k === 3 ? 1 / 3 : 0);
@@ -32,6 +32,8 @@ export function evaluateSpells(view: SsView, seat: Seat): SpellValue[] {
   const heal = (h: number) => Math.min(h, MAX_LIFE - life);
   const odds = rackOdds(view, seat);
   const lastStone = me.rackCount === 1;
+  // 只有牌库用完后，打空面前的石头才能赢下本轮
+  const finalStretch = view.poolCount === 0;
 
   return odds.map(({ spell, chance }) => {
     let gain = 0;
@@ -63,11 +65,13 @@ export function evaluateSpells(view: SsView, seat: Seat): SpellValue[] {
         gain = heal(1) > 0 ? 1 : 0.1;
         break;
     }
-    // 每施放一块都更接近打空（打空 = 赢下本轮）
-    gain += lastStone ? KILL : 0.35;
+    // 牌库空了以后，每施放一块都更接近打空（打空 = 上 3 层）
+    gain += finalStretch ? (lastStone ? KILL : 0.6) : 0.15;
+    // 火龙出包：掷骰点数 + 1
     const cost =
       spell === 1
-        ? (Math.min(1, life) + Math.min(2, life) + Math.min(3, life)) / 3 + atLeast(life) * DEATH
+        ? (Math.min(2, life) + Math.min(3, life) + Math.min(4, life)) / 3 +
+          atLeast(life - 1) * DEATH
         : 1 + (life <= 1 ? DEATH : 0);
     return { spell, chance, gain, cost, ev: chance * gain - (1 - chance) * cost };
   });

@@ -1,96 +1,162 @@
 import type { ss } from '@park/engine';
-import type { LucideProps } from 'lucide-react';
-import { Bird, FlaskConical, Flame, Ghost, Moon, Snowflake, Zap } from 'lucide-react';
-import type { ComponentType, CSSProperties } from 'react';
+import { ss as SS } from '@park/engine';
+import type { CSSProperties, MouseEvent } from 'react';
+import board from './art/board.svg';
+import back from './art/card-back.svg';
+import c1 from './art/card-1.svg';
+import c2 from './art/card-2.svg';
+import c3 from './art/card-3.svg';
+import c4 from './art/card-4.svg';
+import c5 from './art/card-5.svg';
+import c6 from './art/card-6.svg';
+import c7 from './art/card-7.svg';
+import c8 from './art/card-8.svg';
+import wBlue from './art/wizard-blue.svg';
+import wGray from './art/wizard-gray.svg';
+import wGreen from './art/wizard-green.svg';
+import wPink from './art/wizard-pink.svg';
+import wYellow from './art/wizard-yellow.svg';
 import './stones.css';
 
 type Spell = ss.Spell;
 
-/** 远古巨龙：lucide 风格的线条龙头（双角、张口） */
-function Dragon({ size = 24, strokeWidth = 2, ...rest }: LucideProps) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      {...rest}
-    >
-      <path d="M7 21c-1-4-1-8 2-11.5l4-1.5 6.5 1.2c1.4.3 2 1.3 1.6 2.4L15 12l4.6 1.4c-1.3 2-4 2.8-6.6 2.4C12.5 18 13 20 14.5 21" />
-      <path d="M10 8.3C9 5.5 7 3.8 4 3.2" />
-      <path d="M13 7.9c.2-2.4-.6-4.4-2.4-5.9" />
-      <circle cx="15" cy="10" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
+export const CARD_ART: Record<Spell, string> = {
+  1: c1,
+  2: c2,
+  3: c3,
+  4: c4,
+  5: c5,
+  6: c6,
+  7: c7,
+  8: c8,
+};
+export const BACK_ART = back;
+export const BOARD_ART = board;
+
+/** 每个座位一位魔法师：既是生命指示物，也是计分轨道上的前进指示物 */
+export const WIZARDS = [
+  { id: 'blue', art: wBlue, color: '#4f7fe0' },
+  { id: 'green', art: wGreen, color: '#4cae4a' },
+  { id: 'pink', art: wPink, color: '#e2559c' },
+  { id: 'yellow', art: wYellow, color: '#e8b830' },
+  { id: 'gray', art: wGray, color: '#9aa2ae' },
+] as const;
+export const wizardOf = (seat: number) => WIZARDS[seat % WIZARDS.length];
 
 export interface SpellUI {
+  /** 与图版上这一行同色（在深色牌桌上提亮过） */
   color: string;
-  deep: string;
-  Icon: ComponentType<LucideProps>;
   /** 简短效果（按钮上） */
   short: string;
 }
 
 export const SPELL_UI: Record<Spell, SpellUI> = {
-  1: { color: '#e0574a', deep: '#8e1f1c', Icon: Dragon, short: '对手各 −骰' },
-  2: { color: '#8a6ee0', deep: '#40298f', Icon: Ghost, short: '对手 −1 · 己 +1' },
-  3: { color: '#ea8cc0', deep: '#9a3a72', Icon: Moon, short: '自己 +骰' },
-  4: { color: '#5a7ed6', deep: '#22397e', Icon: Bird, short: '拿秘密石' },
-  5: { color: '#f0c13c', deep: '#8f6a0e', Icon: Zap, short: '左右 −1' },
-  6: { color: '#58bfe6', deep: '#1c6688', Icon: Snowflake, short: '下家 −1' },
-  7: { color: '#f07a38', deep: '#9a3a0e', Icon: Flame, short: '上家 −1' },
-  8: { color: '#4cbd7e', deep: '#1c6b42', Icon: FlaskConical, short: '自己 +1' },
+  1: { color: '#e0493c', short: '对手各 −骰' },
+  2: { color: '#a65ad6', short: '对手 −1 · 己 +1' },
+  3: { color: '#e8508a', short: '自己 +骰' },
+  4: { color: '#d36a3c', short: '拿猫头鹰石' },
+  5: { color: '#b9b04a', short: '左右手 −1' },
+  6: { color: '#4aa8d4', short: '左手边 −1' },
+  7: { color: '#f08a3a', short: '右手边 −1' },
+  8: { color: '#4cb85a', short: '自己 +1' },
 };
 
-/** 一块魔法石：spell 为 null 时是背面（看不到号码） */
+export type StoneSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'fill';
+
+/** 一块魔法石：spell 为 null 时是背面（看不到号码）。传入 onClick 时可点击查看魔法效果。 */
 export function Stone({
   spell,
   size = 'md',
   dim,
   className = '',
   style,
+  onClick,
+  title,
+  attrs,
 }: {
   spell: Spell | null;
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: StoneSize;
   dim?: boolean;
   className?: string;
   style?: CSSProperties;
+  onClick?: (e: MouseEvent<HTMLElement>) => void;
+  title?: string;
+  /** 额外的 data-* 属性（飞行动画用） */
+  attrs?: Record<string, string | number>;
 }) {
-  if (spell === null) {
-    return (
-      <span
-        className={`stone stone--${size} is-back ${className}`}
-        style={style}
-        aria-label="看不到的魔法石"
-      >
-        <b>?</b>
-      </span>
-    );
-  }
-  const ui = SPELL_UI[spell];
-  return (
-    <span
-      className={`stone stone--${size} ${dim ? 'is-dim' : ''} ${className}`}
-      style={{ '--c': ui.color, '--d': ui.deep, ...style } as CSSProperties}
-      aria-label={`${spell} 号`}
+  const label = spell === null ? '看不到的魔法石' : `${spell} 号 ${SS.SPELL_NAME[spell]}`;
+  const cls = `stone stone--${size} ${spell === null ? 'is-back' : ''} ${dim ? 'is-dim' : ''} ${onClick ? 'is-click' : ''} ${className}`;
+  const img = <img src={spell === null ? BACK_ART : CARD_ART[spell]} alt="" draggable={false} />;
+  return onClick ? (
+    <button
+      type="button"
+      className={cls}
+      style={style}
+      onClick={onClick}
+      title={title ?? `${label}：点击查看魔法效果`}
+      aria-label={label}
+      {...attrs}
     >
-      <ui.Icon className="stone__icon" strokeWidth={2.4} />
-      <b>{spell}</b>
+      {img}
+    </button>
+  ) : (
+    <span className={cls} style={style} role="img" aria-label={label} title={title} {...attrs}>
+      {img}
     </span>
   );
 }
 
-/** 大厅卡片插画：三块魔法石 */
+/** 魔法师指示物 */
+export function Wizard({
+  seat,
+  size,
+  lost,
+  className = '',
+  style,
+}: {
+  seat: number;
+  size?: number;
+  lost?: boolean;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  return (
+    <img
+      className={`ss-wiz ${lost ? 'is-lost' : ''} ${className}`}
+      src={wizardOf(seat).art}
+      width={size}
+      height={size}
+      style={style}
+      alt=""
+      draggable={false}
+    />
+  );
+}
+
+/** 生命：6 个魔法师指示物，失去的变灰 */
+export function LifeTokens({
+  seat,
+  life,
+  size = 13,
+}: {
+  seat: number;
+  life: number;
+  size?: number;
+}) {
+  return (
+    <span className="ss-life" role="img" aria-label={`生命 ${life}/${SS.MAX_LIFE}`}>
+      {Array.from({ length: SS.MAX_LIFE }, (_, i) => (
+        <Wizard key={i} seat={seat} size={size} lost={i >= life} />
+      ))}
+    </span>
+  );
+}
+
+/** 大厅卡片插画：三块魔法石扇形展开 */
 export function SpellArt() {
   return (
     <div className="ss-art">
-      {([1, 5, 7] as Spell[]).map((s, i) => (
+      {([1, 4, 7] as Spell[]).map((s, i) => (
         <Stone key={s} spell={s} size="lg" style={{ '--i': i - 1 } as CSSProperties} />
       ))}
     </div>

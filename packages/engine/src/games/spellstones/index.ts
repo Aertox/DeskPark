@@ -14,7 +14,17 @@ import type {
   SsView,
   Spell,
 } from './shared';
-import { MAX_LIFE, RACK_SIZE, SECRET_COUNT, SPELLS, leftOf, rightOf } from './shared';
+import {
+  MAX_CHAIN,
+  MAX_LIFE,
+  RACK_SIZE,
+  SECRET_COUNT,
+  SPELLS,
+  SPELL_NAME,
+  TARGET,
+  leftOf,
+  rightOf,
+} from './shared';
 
 export * from './shared';
 
@@ -22,10 +32,10 @@ export * from './shared';
  * 魔法出包：猜自己面前的魔法石。规则参考《出包魔法师》（Abracada...What?）。
  *
  * - 共 36 块魔法石：1 号咒语 1 块、2 号 2 块……8 号 8 块；号码越小越稀有、威力越大。
- * - 每人面前 5 块石头朝外摆放：看得到别人的，看不到自己的；另有 4 块秘密石不公开。
- * - 轮到你时宣告一个咒语：手里有就施放成功（石头移到法阵上），没有就失败掉血并结束回合。
- *   成功后可以继续宣告号码「不小于」刚才的咒语，或者结束回合补满 5 块。
- * - 有人生命归零或有人打空面前的石头，本轮结束并计分；先到目标分（默认 8 分）的人获胜。
+ * - 每人面前 5 块石头朝外立着：看得到别人的，看不到自己的；城堡里另有 4 块备用的猫头鹰魔法石。
+ * - 轮到你时喊出一个咒语：面前有就施放成功（石头摆到图版上对应的一行），没有就「出包」扣血并结束回合。
+ *   成功后可以继续喊号码「不小于」刚才的咒语（每回合最多 5 次），或者结束回合补满 5 块。
+ * - 有人生命归零，或牌库用完后有人打空面前的石头，本轮结束；玩家沿计分轨道向上爬，最先到第 8 层的获胜。
  */
 
 const isSpell = (x: unknown): x is Spell => typeof x === 'number' && SPELLS.includes(x as Spell);
@@ -143,6 +153,13 @@ function applySpell(state: SsState, seat: Seat, spell: Spell): EventInput {
   return { type: 'cast', seat, spell, roll: r, deltas, secret };
 }
 
+/**
+ * 本轮结算（层数）：
+ * - 打空石头：该玩家上 3 层，其他人不动；
+ * - 击倒对手：击杀者上 3 层（一次击倒多人也只有 3 层），其他幸存者各上 1 层，倒下的不动；
+ * - 喊错反噬倒下：该玩家不动，其余所有人各上 1 层；
+ * - 幸存者面前每块猫头鹰魔法石再上 1 层。
+ */
 function endRound(state: SsState, reason: SsRoundReason, winner: Seat | null): void {
   const n = state.players.length;
   const knocked = state.players.map((p, s) => (p.life <= 0 ? s : -1)).filter((s) => s >= 0);
@@ -150,7 +167,8 @@ function endRound(state: SsState, reason: SsRoundReason, winner: Seat | null): v
   const secretPoints = state.players.map(() => 0);
   state.players.forEach((p, s) => {
     if (p.life <= 0) return;
-    points[s] += s === winner ? 3 : 1;
+    if (s === winner) points[s] += 3;
+    else if (reason !== 'empty') points[s] += 1;
     secretPoints[s] = p.secrets.length;
     points[s] += p.secrets.length;
   });
@@ -168,14 +186,20 @@ function endRound(state: SsState, reason: SsRoundReason, winner: Seat | null): v
   state.starter = (state.turn + 1) % n;
   state.chainMin = null;
   state.castThisTurn = 0;
-  const top = Math.max(...state.players.map((p) => p.score));
-  if (top >= state.options.target) {
+  const reached = state.players.map((p) => p.score >= TARGET);
+  if (reached.some(Boolean)) {
     state.phase = 'matchOver';
-    // 同分：本轮得分多者优先，再看剩余生命
+    // 多人同时到达第 8 层：本轮前进层数多的获胜，仍然相同则共同获胜
+    const best = Math.max(...points.filter((_, s) => reached[s]));
+    state.winners = state.players.map((_, s) => s).filter((s) => reached[s] && points[s] === best);
+    // 名次：赢家 → 其他到达者（按本轮前进层数）→ 其余玩家（按层数）
+    const rank = (s: Seat) => (reached[s] ? 2 : 0) + (state.winners!.includes(s) ? 1 : 0);
     state.ranking = state.players
       .map((_, s) => s)
       .sort(
         (a, b) =>
+          rank(b) - rank(a) ||
+          (reached[a] ? points[b] - points[a] : 0) ||
           state.players[b].score - state.players[a].score ||
           points[b] - points[a] ||
           state.players[b].life - state.players[a].life,
@@ -189,7 +213,8 @@ function endRound(state: SsState, reason: SsRoundReason, winner: Seat | null): v
 function endTurn(state: SsState): void {
   const seat = state.turn;
   const p = state.players[seat];
-  if (p.rack.length === 0) {
+  // 牌库用完、无法再补时，最先打空面前石头的玩家赢下本轮
+  if (p.rack.length === 0 && state.pool.length === 0) {
     endRound(state, 'empty', seat);
     return;
   }
@@ -212,36 +237,23 @@ export const spellstones: GameDefinition<SsState, SsAction, SsView, SsOptions> =
     maxPlayers: 5,
     defaultPlayers: 4,
     rules: [
-      '共 36 块魔法石：1 号咒语 1 块、2 号 2 块……8 号 8 块。号码越小越稀有、威力越大。',
-      '每人面前 5 块石头朝外摆：你能看到所有对手的石头，却看不到自己的。另有 4 块秘密石不公开。',
-      '轮到你时宣告一个咒语：面前有这块石头就施放成功，没有就失败——失去 1 点生命（远古巨龙失败则掷骰扣血）并结束回合。',
-      '施放成功后可以结束回合，也可以继续宣告；继续时号码必须大于或等于刚才施放的咒语。',
-      '回合结束时从牌库补满 5 块。牌库用完就不再补。',
-      '咒语：①远古巨龙 掷骰，其他人各扣点数 ②暗影游魂 其他人各扣 1、自己回 1 ③甜梦术 掷骰回血 ④夜歌鸮 拿 1 块秘密石 ⑤雷霆风暴 左右邻座各扣 1 ⑥暴风雪 下家扣 1 ⑦火球术 上家扣 1 ⑧魔力药水 回 1。生命上限 6，骰子为 1–3 点。',
-      '有人生命归零或有人打空面前的石头，本轮结束：打空石头或把别人打到 0 的人得 3 分，其他存活者各得 1 分，存活者每块秘密石再 +1 分；自己把自己打到 0 时没有赢家。',
-      '2 人局开局公开移出 12 块、3 人局移出 6 块。先达到目标分（默认 8 分）的人获胜。',
+      '共 36 块魔法石：1 号咒语 1 块、2 号 2 块……8 号 8 块。号码越小越稀有、威力越大。每人 6 点生命。',
+      '每人面前 5 块石头正面朝外立着：你能看到所有对手的石头，却看不到自己的。城堡里放着 4 块备用的猫头鹰魔法石。',
+      '轮到你时喊出一个咒语：面前有这块石头就施放成功，石头摆到图版上对应的一行；没有就「出包」——失去 1 点生命，回合结束。喊火龙出包会遭到火龙反噬：掷骰扣血，再加 1 点。',
+      '施放成功后可以结束回合，也可以继续喊；继续时号码必须大于或等于刚才的咒语，每回合最多连续施放 5 次。回合结束时从牌库补满 5 块，牌库用完就不再补。',
+      '咒语：①火龙 掷骰，其他人各扣点数 ②暗黑幽灵 其他人各扣 1、自己回 1 ③甜蜜的梦 掷骰回血 ④猫头鹰 拿 1 块猫头鹰魔法石 ⑤闪电暴风雨 左右手边各扣 1 ⑥暴风雪 左手边扣 1 ⑦火球 右手边扣 1 ⑧魔法药水 回 1。生命上限 6，骰子为 1–3 点。',
+      '本轮结束：有人生命归零时，击杀者上 3 层，其他幸存者各上 1 层；喊错把自己反噬倒下时，其余所有人各上 1 层；牌库用完后最先打空面前石头的玩家上 3 层，其他人不动。幸存者每块猫头鹰魔法石再上 1 层。',
+      '2 人局开局公开 12 块、3 人局公开 6 块放到图版上。最先到达第 8 层的玩家获胜；多人同时到达时，本轮前进层数多的获胜，仍然相同则共同获胜。',
     ],
     botDelayMs: [800, 1400],
   },
-  defaultOptions: { target: 8 },
-  optionFields: [
-    {
-      key: 'target',
-      label: '目标分',
-      hint: '先达到的人获胜',
-      type: 'select',
-      choices: [
-        { value: 5, label: '5 分' },
-        { value: 8, label: '8 分' },
-        { value: 12, label: '12 分' },
-      ],
-    },
-  ],
+  defaultOptions: {},
+  optionFields: [],
 
-  setup({ players, options, seed }) {
+  setup({ players, seed }) {
     const n = players.length;
     const state: SsState = {
-      options: { target: [5, 8, 12].includes(options.target) ? options.target : 8 },
+      options: {},
       rng: seed,
       round: 1,
       phase: 'play',
@@ -260,6 +272,7 @@ export const spellstones: GameDefinition<SsState, SsAction, SsView, SsOptions> =
       history: [],
       ready: players.map(() => false),
       ranking: null,
+      winners: null,
     };
     deal(state);
     return state;
@@ -277,12 +290,13 @@ export const spellstones: GameDefinition<SsState, SsAction, SsView, SsOptions> =
       case 'cast':
         if (state.phase !== 'play') return '现在不能施法';
         if (!isSpell(action.spell)) return '请选择一个咒语';
+        if (state.castThisTurn >= MAX_CHAIN) return `每回合最多连续施放 ${MAX_CHAIN} 次`;
         if (state.chainMin !== null && action.spell < state.chainMin)
-          return `接下来只能宣告 ${state.chainMin} 号或更大的咒语`;
+          return `接下来只能喊 ${state.chainMin} 号（${SPELL_NAME[state.chainMin]}）或更大的咒语`;
         return null;
       case 'stop':
         if (state.phase !== 'play') return '现在不能操作';
-        return state.castThisTurn > 0 ? null : '至少要宣告一个咒语';
+        return state.castThisTurn > 0 ? null : '至少要喊一个咒语';
       case 'ready':
         return state.phase === 'roundOver' ? null : '本轮尚未结束';
       default:
@@ -308,9 +322,9 @@ export const spellstones: GameDefinition<SsState, SsAction, SsView, SsOptions> =
     const p = state.players[seat];
     const idx = p.rack.findIndex((s) => s.spell === spell);
     if (idx < 0) {
-      // 施法失败：扣血并结束回合
+      // 出包：失去 1 点生命并结束回合；火龙反噬再掷骰扣血
       const r = spell === 1 ? roll(state) : undefined;
-      const loss = Math.min(p.life, r ?? 1);
+      const loss = Math.min(p.life, (r ?? 0) + 1);
       p.life -= loss;
       pushEvent(state, { type: 'fail', seat, spell, roll: r, loss });
       if (p.life <= 0) endRound(state, 'self', null);
@@ -326,8 +340,8 @@ export const spellstones: GameDefinition<SsState, SsAction, SsView, SsOptions> =
       endRound(state, 'knockout', seat);
       return state;
     }
-    // 打空了面前的石头：回合自动结束，赢下本轮
-    if (p.rack.length === 0) endTurn(state);
+    // 打空了面前的石头（或已连续施放 5 次）：回合自动结束；牌库也空了就赢下本轮
+    if (p.rack.length === 0 || state.castThisTurn >= MAX_CHAIN) endTurn(state);
     return state;
   },
 
@@ -361,6 +375,7 @@ export const spellstones: GameDefinition<SsState, SsAction, SsView, SsOptions> =
       history: state.history,
       ready: state.ready,
       ranking: state.ranking,
+      winners: state.winners,
     };
   },
 
