@@ -2,6 +2,7 @@ import type { Card } from '@park/engine';
 import type { ComponentType } from 'react';
 import { lazy } from 'react';
 import type { GameController } from '../lib/controller';
+import { SpellArt } from './spellstones/spells';
 
 /**
  * 前端玩法注册表：每个玩法 = 引擎中的规则定义（按 id 关联）+ 一个牌桌界面组件 + 大厅展示信息。
@@ -22,6 +23,8 @@ export interface GameUI {
   badge?: string;
   /** showcase 中哪些牌显示为万能牌 */
   wildIds?: number[];
+  /** 自定义大厅卡片插画（桌游等非牌类玩法） */
+  Art?: ComponentType;
 }
 
 const c = (id: number, suit: Card['suit'], rank: number): Card => ({ id, suit, rank });
@@ -60,6 +63,14 @@ export const GAME_UIS: GameUI[] = [
       { id: 3, suit: 'tiao', rank: 1 },
     ],
     people: '4 人 · 血战到底',
+  },
+  {
+    id: 'spellstones',
+    Board: lazy(() => import('./spellstones/SpellBoard')),
+    tint: ['#5b4a9a', '#2c2357'],
+    showcase: [],
+    Art: SpellArt,
+    people: '2–5 人',
   },
   {
     id: 'highcard',

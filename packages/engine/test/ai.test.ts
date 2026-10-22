@@ -1,6 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AnyGame } from '../src';
-import { Rng, SYSTEM_SEAT, Table, doudizhu, guandan, highcard, sichuan, texas } from '../src';
+import {
+  Rng,
+  SYSTEM_SEAT,
+  Table,
+  doudizhu,
+  guandan,
+  highcard,
+  sichuan,
+  spellstones,
+  texas,
+} from '../src';
 
 /** 用规则电脑把整局跑一遍，每一步都检查大模型候选动作是否全部合法 */
 function checkPrompts(
@@ -69,6 +79,10 @@ describe('大模型接管：候选动作', () => {
       expect(
         checkPrompts(sichuan, 4, { ...sichuan.defaultOptions, rounds: 1 }, seed),
       ).toBeGreaterThan(20);
+  });
+  it('魔法出包', () => {
+    for (let seed = 1; seed <= 6; seed++)
+      expect(checkPrompts(spellstones, 2 + (seed % 4), { target: 5 }, seed)).toBeGreaterThan(10);
   });
   it('比大小', () => {
     expect(checkPrompts(highcard, 4, { rounds: 1 }, 3)).toBeGreaterThan(5);

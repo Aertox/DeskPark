@@ -28,7 +28,7 @@ export type OptionField =
     };
 
 /** 玩法大类：大厅据此分组展示 */
-export type GameCategory = 'poker' | 'mahjong' | 'casual';
+export type GameCategory = 'poker' | 'mahjong' | 'board' | 'casual';
 
 export interface GameMeta {
   id: string;

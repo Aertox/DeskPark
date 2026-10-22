@@ -1,0 +1,431 @@
+/* ============================ 牌桌 ============================ */
+.ss {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2px max(14px, 2vw) 10px;
+}
+.ss__arena {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 max(24px, 4vw);
+}
+.ss__table {
+  position: absolute;
+  inset: 34% 12% 2%;
+  border-radius: 50%;
+  background:
+    radial-gradient(50% 50% at 50% 50%, rgba(170, 140, 255, 0.1), transparent 70%),
+    radial-gradient(70% 70% at 50% 40%, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 0 10px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 11px rgba(255, 255, 255, 0.05),
+    0 20px 60px rgba(0, 0, 0, 0.18);
+}
+.ss__opp {
+  position: absolute;
+  z-index: 3;
+  translate: -50% -100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.ss-rack {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  min-height: 24px;
+}
+.ss-rack .stone {
+  animation: pop-in 0.3s var(--ease-out) backwards;
+}
+.ss-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ss-hearts {
+  display: inline-flex;
+  gap: 1px;
+  color: #f07b84;
+}
+.ss-hearts svg:not([fill='currentColor']) {
+  color: var(--felt-ink-3);
+}
+.ss-sub__secret {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--felt-accent);
+}
+
+/* 大屏幕：石头、法阵、咒语栏随座位一起放大（--k 来自 useSeatScale） */
+.ss-rack,
+.ss-circle,
+.ss-banner,
+.ss__mine,
+.ss__hint,
+.ss-spellbar {
+  zoom: var(--k, 1);
+}
+
+/* 生命变化飘字 */
+.ss-float {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  top: 30%;
+  translate: -50% 0;
+  font:
+    750 22px/1 var(--font-card),
+    sans-serif;
+  color: #ff8a8a;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: ss-float 1.6s var(--ease-out) forwards;
+}
+.ss-float.is-up {
+  color: #8be0a8;
+}
+.ss-float.is-me {
+  left: 40px;
+  top: -6px;
+}
+@keyframes ss-float {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-14px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-26px);
+  }
+}
+
+/* 中央法阵 */
+.ss__center {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 66%;
+  translate: -50% -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(960px, 70%);
+}
+.ss-circle {
+  display: flex;
+  gap: 10px;
+  padding: 12px 18px 9px;
+  border-radius: 99px;
+  background: rgba(10, 14, 22, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.ss-circle__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.ss-circle__count {
+  font-size: 12px;
+  color: var(--felt-ink);
+  font-weight: 650;
+  line-height: 1;
+}
+.ss-circle__count small {
+  font-size: 10px;
+  color: var(--felt-ink-3);
+  font-weight: 500;
+}
+.ss-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 5px 14px;
+  border-radius: 99px;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--felt-ink);
+  background: var(--felt-glass);
+  box-shadow: inset 0 0 0 1px var(--felt-line);
+  animation: rise-in 0.3s var(--ease-out);
+}
+.ss-banner:empty {
+  visibility: hidden;
+}
+.ss-banner.is-fail {
+  color: #ffc0b8;
+}
+.ss-die {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: #fffdf6;
+  color: #2a2116;
+  animation: ss-roll 0.5s var(--ease-out);
+}
+@keyframes ss-roll {
+  0% {
+    transform: rotate(-200deg) scale(0.4);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 底部：自己 + 咒语栏 */
+.ss__dock {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+.ss__me {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+.ss__mine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ss__secrets {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 6px;
+  border-radius: 99px;
+  color: var(--felt-accent);
+  background: rgba(231, 200, 134, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(231, 200, 134, 0.25);
+}
+.ss__spells {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ss__hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 32px;
+  font-size: 13px;
+  color: var(--felt-ink-2);
+}
+.ss-spellbar {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+}
+.ss-spell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 4px 7px;
+  border-radius: var(--radius);
+  color: var(--felt-ink);
+  background: var(--felt-glass);
+  box-shadow: inset 0 0 0 1px var(--felt-line);
+  transition:
+    background 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s var(--ease),
+    opacity 0.2s;
+}
+.ss-spell:not(:disabled):hover {
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 70%, transparent);
+  transform: translateY(-2px);
+}
+.ss-spell:not(:disabled):active {
+  transform: translateY(0) scale(0.97);
+}
+.ss-spell:disabled {
+  cursor: default;
+}
+.ss-spell.is-locked {
+  opacity: 0.32;
+}
+.ss-spell.is-none:not(.is-locked) {
+  opacity: 0.55;
+}
+.ss-spell__text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.25;
+  min-width: 0;
+  max-width: 100%;
+}
+.ss-spell__text b {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ss-spell__text small {
+  font-size: 10.5px;
+  color: var(--felt-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.ss-spell__odds {
+  position: relative;
+  width: 78%;
+  height: 14px;
+  border-radius: 99px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.22);
+}
+.ss-spell__odds i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--c) 70%, transparent);
+  transition: width 0.4s var(--ease);
+}
+.ss-spell__odds em {
+  position: relative;
+  display: block;
+  font-style: normal;
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 650;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+/* 结算 */
+.ss-res {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.ss-res__rack {
+  display: inline-flex;
+  gap: 3px;
+}
+
+/* 矮屏（横屏手机） */
+@media (max-height: 500px) {
+  .ss {
+    padding-bottom: 6px;
+  }
+  .ss__table {
+    inset: 44% 14% 2%;
+  }
+  .ss__opp {
+    gap: 3px;
+  }
+  .ss__center {
+    top: 73%;
+    gap: 6px;
+  }
+  .ss-circle {
+    gap: 4px;
+    padding: 6px 10px 5px;
+  }
+  .ss-banner {
+    min-height: 24px;
+    padding: 2px 10px;
+    font-size: 11.5px;
+  }
+  .ss__dock {
+    gap: 10px;
+  }
+  .ss__me {
+    gap: 4px;
+  }
+  .ss__hint {
+    min-height: 26px;
+    font-size: 12px;
+  }
+  .ss__hint .btn {
+    height: 26px;
+  }
+  .ss__spells {
+    gap: 4px;
+  }
+  .ss-spellbar {
+    gap: 4px;
+  }
+  .ss-spell {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px 4px;
+    padding: 5px 2px 4px;
+    border-radius: var(--radius-sm);
+  }
+  .ss-spell .stone {
+    --s: 22px;
+  }
+  .ss-spell .stone__icon {
+    display: none;
+  }
+  .ss-spell .stone b {
+    position: static;
+    min-width: 0;
+    height: auto;
+    background: none;
+    box-shadow: none;
+    color: #fff;
+    font-size: 12px;
+  }
+  .ss-spell__text small {
+    display: none;
+  }
+  .ss-spell__text b {
+    font-size: 11px;
+  }
+  .ss-spell__odds {
+    width: 86%;
+    height: 12px;
+  }
+  .ss-spell__odds em {
+    line-height: 12px;
+    font-size: 9.5px;
+  }
+}
+@media (max-width: 720px) and (min-height: 501px) {
+  .ss-spellbar {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

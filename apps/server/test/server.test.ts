@@ -166,6 +166,30 @@ describe('联机服务器', () => {
     d.close();
   });
 
+  it('魔法出包联机：看不到自己的石头，看得到别人的，可以施法', async () => {
+    const e = new TestClient();
+    await e.opened;
+    e.send({ t: 'hello', token: 'token-ssssssssssssssss', name: '戊', v: PROTOCOL_VERSION });
+    e.send({ t: 'create', gameId: 'spellstones', seats: 3 });
+    await e.wait('room');
+    e.send({ t: 'start' });
+    type V = {
+      turn: number | null;
+      phase: string;
+      players: { rack: unknown[] | null }[];
+      myRack: number[];
+    };
+    const mine = await e.wait('game', (m) => (m.view as V).turn === 0, 9000);
+    const view = mine.view as V;
+    expect(view.players[0].rack).toBeNull();
+    expect(view.myRack).toHaveLength(5);
+    expect(view.players[1].rack).toHaveLength(5);
+    e.send({ t: 'act', action: { type: 'cast', spell: 8 } });
+    const after = await e.wait('game', (m) => m.version > mine.version);
+    expect((after.view as { events: unknown[] }).events.length).toBeGreaterThan(0);
+    e.close();
+  }, 15000);
+
   it('房间聊天：广播、系统消息、历史记录、文本清理与限流', async () => {
     const a = new TestClient();
     const b = new TestClient();

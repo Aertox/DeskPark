@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AnyGame } from '../src';
-import { Rng, SYSTEM_SEAT, doudizhu, guandan, highcard, sichuan, texas } from '../src';
+import { Rng, SYSTEM_SEAT, doudizhu, guandan, highcard, sichuan, spellstones, texas } from '../src';
 
 /** 状态里不允许出现 NaN / Infinity（会让筹码、分数等永久损坏） */
 function badNumber(x: unknown, path = '$'): string | null {
@@ -53,6 +53,7 @@ function junkActions(types: string[], ids: number[], rng: Rng): unknown[] {
       to: field(),
       score: field(),
       suit: rng.next() < 0.5 ? pick(['wan', 'tiao', 'tong', 'xx']) : field(),
+      spell: rng.next() < 0.6 ? pick([1, 2, 3, 4, 5, 6, 7, 8]) : field(),
     });
   }
   return out;
@@ -128,6 +129,10 @@ describe('畸形动作模糊测试（模拟恶意联机客户端）', () => {
         ['exchange', 'que', 'discard', 'hu', 'gang', 'peng', 'pass', 'ready'],
         seed,
       );
+  });
+  it('魔法出包', () => {
+    for (let seed = 1; seed <= 20; seed++)
+      fuzz(spellstones, 2 + (seed % 4), { target: 5 }, ['cast', 'stop', 'ready'], seed);
   });
   it('比大小：非出牌动作不能冒充「继续」', () => {
     for (let seed = 1; seed <= 15; seed++) fuzz(highcard, 4, { rounds: 2 }, ['choose'], seed);

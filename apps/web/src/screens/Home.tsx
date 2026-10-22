@@ -25,10 +25,21 @@ const REPO_URL = 'https://github.com/solitern/DeskPark';
 const CATEGORIES: { id: GameCategory; title: string; note?: string }[] = [
   { id: 'poker', title: '扑克' },
   { id: 'mahjong', title: '麻将' },
+  { id: 'board', title: '桌游' },
   { id: 'casual', title: '更多玩法', note: 'custom' },
 ];
 
 function GameArt({ ui }: { ui: GameUI }) {
+  if (ui.Art) {
+    return (
+      <div
+        className="gtile__art"
+        style={{ '--t1': ui.tint[0], '--t2': ui.tint[1] } as CSSProperties}
+      >
+        <ui.Art />
+      </div>
+    );
+  }
   if (ui.tiles) {
     return (
       <div
