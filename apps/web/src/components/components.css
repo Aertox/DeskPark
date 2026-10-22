@@ -581,15 +581,19 @@
       0 0 18px rgba(255, 170, 220, 0.9);
   }
 }
+/* 立绘：按钮、思考气泡贴着角色的头顶（矮个子角色也不会飘在半空） */
 .seat__figure .seat__wake {
-  top: -14px;
+  top: calc(var(--fig-top) - 14px);
 }
-/* 探出胶囊的立绘：按钮与思考气泡放在头顶 */
+.seat__figure .seat__think {
+  bottom: calc(100% + 13px - var(--fig-top));
+}
+/* 探出胶囊的立绘 */
 .seat__figure.is-overflow .seat__wake {
-  top: calc(100% - var(--fig-h) - 16px);
+  top: calc(100% - var(--fig-h) + var(--fig-top) - 16px);
 }
 .seat__figure.is-overflow .seat__think {
-  bottom: calc(var(--fig-h) + 10px);
+  bottom: calc(var(--fig-h) - var(--fig-top) + 10px);
 }
 .seat__badge.is-ai {
   color: #fff;
@@ -637,7 +641,7 @@
 .seat__speech {
   position: absolute;
   z-index: 35;
-  bottom: calc(100% + 6px + var(--fig-over, 0px));
+  bottom: calc(100% + 6px + var(--fig-over, 0px) - var(--fig-top, 0px));
   left: 50%;
   translate: -50% 0;
   width: max-content;

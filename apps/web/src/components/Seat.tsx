@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { figureHeight, useFigure } from '../lib/characters';
 import type { PlayerInfo } from '../lib/controller';
-import { useCompact } from '../lib/media';
+import { useCompact, useSeatScale } from '../lib/media';
 import { CharacterSprite } from './pixel/CharacterSprite';
 import { PixelAvatar } from './pixel/PixelAvatar';
 
@@ -74,8 +74,9 @@ export function Seat({
   children,
 }: SeatProps) {
   const compact = useCompact();
-  // 横屏手机等矮屏幕上自动缩小
-  const px = compact ? Math.round(size * 0.7) : size;
+  const scale = useSeatScale();
+  // 横屏手机等矮屏幕上自动缩小，大屏幕上适当放大
+  const px = compact ? Math.round(size * 0.7) : Math.round(size * scale);
   const cd = useCountdown(active ? deadline : undefined);
   const ringStyle = cd ? ({ '--p': cd.ratio } as CSSProperties) : undefined;
   const vc = useFigure(player.avatar, player.name);
@@ -128,20 +129,20 @@ export function Seat({
     <div
       className={`seat seat--${layout} ${vc ? 'seat--figure' : ''} ${active ? 'is-active' : ''} ${dim ? 'is-dim' : ''} ${className}`}
       style={
-        vc && figureOverflow
-          ? ({ ...style, '--fig-over': `${Math.max(0, figH - px)}px` } as CSSProperties)
+        vc
+          ? ({
+              ...style,
+              '--fig-h': `${figH}px`,
+              '--fig-top': `${Math.round((vc.top / vc.frameH) * figH)}px`,
+              '--fig-over': `${figureOverflow ? Math.max(0, figH - px) : 0}px`,
+            } as CSSProperties)
           : style
       }
     >
       {vc ? (
         <div
           className={`seat__figure ${figureOverflow ? 'is-overflow' : ''}`}
-          style={
-            {
-              '--fig-h': `${figH}px`,
-              ...(figureOverflow ? { height: px, width: (figH * vc.frameW) / vc.frameH } : {}),
-            } as CSSProperties
-          }
+          style={figureOverflow ? { height: px, width: (figH * vc.frameW) / vc.frameH } : undefined}
         >
           <span className="seat__stage" />
           {cd && (

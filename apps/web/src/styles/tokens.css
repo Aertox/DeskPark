@@ -67,7 +67,7 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* 卡牌尺寸（随屏幕自适应） */
-  --cw: clamp(40px, min(6.6vw, 13vh), 96px);
+  --cw: clamp(40px, min(6.6vw, 13vh), 124px);
   --ch: calc(var(--cw) * 1.4);
   --cw-sm: calc(var(--cw) * 0.72);
   --cw-xs: calc(var(--cw) * 0.5);

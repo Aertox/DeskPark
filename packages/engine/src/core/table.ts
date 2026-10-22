@@ -33,7 +33,12 @@ export interface TableConfig {
    * 返回 Promise 表示接管这一步；返回 null 则照常由规则电脑决策。
    * 结果过期（期间局面已变化）会被丢弃；出错或动作不合法时退回规则电脑。
    */
-  delegate?: (seat: Seat) => Promise<unknown> | null;
+  delegate?: (seat: Seat, ctx: DelegateContext) => Promise<unknown> | null;
+}
+
+/** 外部决策的上下文：被取消（例如关闭 AI 接管）时会调用 onCancel 注册的回调 */
+export interface DelegateContext {
+  onCancel(fn: () => void): void;
 }
 
 export interface LastAction {
@@ -63,6 +68,10 @@ export class Table<G extends AnyGame = AnyGame> {
   private thinkingSeats = new Set<Seat>();
   /** 思考期间曾经不再需要行动的座位：结果作废 */
   private thinkingStale = new Set<Seat>();
+  /** 每次外部决策的编号与取消回调：结果编号不匹配即作废 */
+  private thinkingToken = new Map<Seat, number>();
+  private thinkingCancel = new Map<Seat, () => void>();
+  private tokenSeq = 0;
 
   constructor(
     public readonly def: G,
@@ -155,6 +164,46 @@ export class Table<G extends AnyGame = AnyGame> {
     this.clearSeatTimer(seat);
     this.schedule(null);
     this.emit();
+  }
+
+  /**
+   * 开关某个电脑座位的外部决策（AI 接管）。
+   * 关闭时若正在等待外部结果，立即取消；轮到它行动的话由规则电脑马上出手，不再等待。
+   */
+  setAi(seat: Seat, on: boolean): void {
+    const s = this.seats[seat];
+    if (!s || !!s.ai === on) return;
+    s.ai = on;
+    this.clearSeatTimer(seat);
+    if (!on) {
+      this.cancelThinking(seat);
+      const due =
+        this.running &&
+        !this.disposed &&
+        s.isBot &&
+        !this.def.isOver(this.state) &&
+        this.def.activeSeats(this.state).includes(seat);
+      if (due) {
+        const before = this.version;
+        this.runRuleBot(seat);
+        if (this.version !== before) return;
+      }
+    }
+    this.schedule(null);
+    this.emit();
+  }
+
+  private cancelThinking(seat: Seat): void {
+    if (!this.thinkingSeats.delete(seat)) return;
+    this.thinkingToken.delete(seat);
+    this.thinkingStale.delete(seat);
+    const cancel = this.thinkingCancel.get(seat);
+    this.thinkingCancel.delete(seat);
+    try {
+      cancel?.();
+    } catch (e) {
+      this.config.onError?.(e);
+    }
   }
 
   setConnected(seat: Seat, connected: boolean): void {
@@ -270,25 +319,41 @@ export class Table<G extends AnyGame = AnyGame> {
     if (this.disposed || this.def.isOver(this.state)) return;
     if (!this.def.activeSeats(this.state).includes(seat)) return;
     let pending: Promise<unknown> | null = null;
+    const token = ++this.tokenSeq;
+    this.thinkingToken.set(seat, token);
     try {
-      pending = this.seats[seat]?.isBot ? (this.config.delegate?.(seat) ?? null) : null;
+      pending = this.seats[seat]?.isBot
+        ? (this.config.delegate?.(seat, {
+            onCancel: (fn) => {
+              if (this.thinkingToken.get(seat) === token) this.thinkingCancel.set(seat, fn);
+            },
+          }) ?? null)
+        : null;
     } catch (e) {
       this.config.onError?.(e);
+    }
+    if (!pending) {
+      this.thinkingToken.delete(seat);
+      this.thinkingCancel.delete(seat);
     }
     if (pending) {
       this.thinkingSeats.add(seat);
       this.thinkingStale.delete(seat);
       this.emit();
       pending.then(
-        (action) => this.finishDelegate(seat, action, null),
-        (err) => this.finishDelegate(seat, undefined, err ?? new Error('delegate failed')),
+        (action) => this.finishDelegate(seat, token, action, null),
+        (err) => this.finishDelegate(seat, token, undefined, err ?? new Error('delegate failed')),
       );
       return;
     }
     this.runRuleBot(seat);
   }
 
-  private finishDelegate(seat: Seat, action: unknown, err: unknown): void {
+  private finishDelegate(seat: Seat, token: number, action: unknown, err: unknown): void {
+    // 已被取消（例如关闭了 AI 接管）：结果作废
+    if (this.thinkingToken.get(seat) !== token) return;
+    this.thinkingToken.delete(seat);
+    this.thinkingCancel.delete(seat);
     this.thinkingSeats.delete(seat);
     const brokeOff = this.thinkingStale.delete(seat);
     if (this.disposed) return;

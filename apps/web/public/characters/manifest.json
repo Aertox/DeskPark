@@ -10,6 +10,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 3,
       "bg": "#9ef0d0",
       "avatar": "cyber-hacker"
     },
@@ -22,6 +23,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 0,
       "bg": "#8fd8ff",
       "avatar": "cyber-ronin"
     },
@@ -34,6 +36,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 4,
       "bg": "#cbbcff",
       "avatar": "cyber-dj"
     },
@@ -46,6 +49,7 @@
       "frames": 16,
       "fps": 8,
       "face": [12, 30, 24],
+      "top": 32,
       "bg": "#ffd36e",
       "avatar": "cyber-cat"
     },
@@ -58,6 +62,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 1,
       "bg": "#bfe3d6",
       "avatar": "xian-sword"
     },
@@ -70,6 +75,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 3,
       "bg": "#ffd9b8",
       "avatar": "xian-fox"
     },
@@ -82,6 +88,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 23, 20],
+      "top": 23,
       "bg": "#ffe7a8",
       "avatar": "xian-taoist"
     },
@@ -94,6 +101,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 5,
       "bg": "#d9cff0",
       "avatar": "xian-elder"
     },
@@ -106,6 +114,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 4,
       "bg": "#cdeccf",
       "avatar": "xian-fairy"
     },
@@ -118,6 +127,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 2,
       "bg": "#ffcf8a",
       "avatar": "anime-ninja"
     },
@@ -130,6 +140,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 1,
       "bg": "#fff0b3",
       "avatar": "anime-magical"
     },
@@ -142,6 +153,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 2,
       "bg": "#ffd6e8",
       "avatar": "anime-catgirl"
     },
@@ -154,6 +166,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 1,
       "bg": "#f3d2a2",
       "avatar": "anime-samurai"
     },
@@ -166,6 +179,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 3,
       "bg": "#bde0fe",
       "avatar": "anime-pilot"
     },
@@ -178,6 +192,7 @@
       "frames": 16,
       "fps": 8,
       "face": [12, 34, 24],
+      "top": 36,
       "bg": "#bfe0ff",
       "avatar": "hero-pig"
     },
@@ -190,6 +205,7 @@
       "frames": 16,
       "fps": 8,
       "face": [12, 38, 24],
+      "top": 40,
       "bg": "#c8f0c0",
       "avatar": "cute-panda"
     },
@@ -202,6 +218,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 23, 20],
+      "top": 27,
       "bg": "#ffe0b3",
       "avatar": "cute-dino"
     },
@@ -214,6 +231,7 @@
       "frames": 16,
       "fps": 8,
       "face": [12, 42, 24],
+      "top": 34,
       "bg": "#bfe9ff",
       "avatar": "cute-frog"
     },
@@ -226,6 +244,7 @@
       "frames": 16,
       "fps": 8,
       "face": [12, 40, 24],
+      "top": 48,
       "bg": "#2f3561",
       "avatar": "cute-ghost"
     },
@@ -238,6 +257,7 @@
       "frames": 16,
       "fps": 8,
       "face": [12, 30, 24],
+      "top": 28,
       "bg": "#ffd9a6",
       "avatar": "cute-robot"
     },
@@ -250,6 +270,7 @@
       "frames": 16,
       "fps": 8,
       "face": [12, 54, 24],
+      "top": 57,
       "bg": "#bfe0ff",
       "avatar": "cute-chick"
     },
@@ -262,6 +283,7 @@
       "frames": 16,
       "fps": 8,
       "face": [12, 22, 24],
+      "top": 27,
       "bg": "#2a3160",
       "avatar": "cute-astronaut"
     },
@@ -274,6 +296,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 0,
       "bg": "#dfe8e4"
     },
     {
@@ -285,6 +308,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 1,
       "bg": "#d7dfea"
     },
     {
@@ -296,6 +320,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 2,
       "bg": "#f1e1e4"
     },
     {
@@ -307,6 +332,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 3,
       "bg": "#e9e4ef"
     },
     {
@@ -318,6 +344,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 5,
       "bg": "#2b2540"
     },
     {
@@ -329,6 +356,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 2,
       "bg": "#22283a"
     },
     {
@@ -340,6 +368,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 2,
       "bg": "#f3e3dc"
     },
     {
@@ -351,6 +380,7 @@
       "frames": 16,
       "fps": 8,
       "face": [14, 1, 20],
+      "top": 5,
       "bg": "#f6e6f0"
     }
   ]

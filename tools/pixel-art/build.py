@@ -59,8 +59,10 @@ def main(argv):
             continue
         mod = load(name)
         meta = mod.META
+        frames = [mod.frame(t) for t in range(N)]
+        # 头顶位置：所有帧中最靠上的不透明像素（界面据此把按钮、气泡放在头顶）
+        top = min(y for f in frames for y in range(FH) if any(f.px[y]))
         if name in only:
-            frames = [mod.frame(t) for t in range(N)]
             strip(frames, str(OUT / f'{meta["id"]}.png'))
             rendered.append((name, frames))
             print('✓', meta['id'], meta['name'])
@@ -73,6 +75,7 @@ def main(argv):
             'frames': N,
             'fps': meta.get('fps', FPS),
             'face': meta['face'],
+            'top': top,
             'bg': meta['bg'],
             **({'avatar': meta['avatar']} if meta.get('avatar') else {}),
         })

@@ -135,4 +135,38 @@ describe('Table 外部决策（delegate）', () => {
     expect(errors.length).toBeGreaterThan(0);
     table.dispose();
   });
+
+  it('关闭 AI 接管：取消等待中的请求，并由规则电脑立即出手', async () => {
+    vi.useFakeTimers();
+    let cancelled = 0;
+    let resolve!: (a: unknown) => void;
+    const table = new Table(
+      highcard,
+      structuredClone(seats),
+      { rounds: 1 },
+      {
+        seed: 4,
+        delegate: (seat, ctx) => {
+          if (seat !== 1) return null;
+          ctx.onCancel(() => cancelled++);
+          return new Promise((r) => (resolve = r));
+        },
+      },
+    );
+    table.start();
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(table.thinking).toEqual([1]);
+    expect(table.view(1).myChoice).toBeNull();
+    table.setAi(1, false);
+    // 不等任何定时器：已经出牌
+    expect(cancelled).toBe(1);
+    expect(table.thinking).toEqual([]);
+    const chosen = table.view(1).myChoice;
+    expect(chosen).not.toBeNull();
+    // 迟到的结果被丢弃
+    resolve({ type: 'choose', card: table.view(1).hand[0].id });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(table.view(1).myChoice?.id).toBe(chosen!.id);
+    table.dispose();
+  });
 });

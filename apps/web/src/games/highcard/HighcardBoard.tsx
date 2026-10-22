@@ -6,7 +6,7 @@ import { PlayingCard } from '../../components/PlayingCard';
 import { Avatar, Seat } from '../../components/Seat';
 import { Button, Sheet, toast } from '../../components/ui';
 import type { GameController } from '../../lib/controller';
-import { useSelection, useTurnCue } from '../shared/trick';
+import { useCompact, useSelection, useTurnCue } from '../shared/trick';
 import './highcard.css';
 
 type Ctl = GameController<hc.HcView, hc.HcAction>;
@@ -38,9 +38,46 @@ export default function HighcardBoard({ ctl }: { ctl: Ctl }) {
 
   const ranking = ctl.players.map((_, s) => s).sort((a, b) => v.scores[b] - v.scores[a]);
 
+  // 圆桌座位：对手分布在左 → 上 → 右的半圈，自己在下方
+  const compact = useCompact();
+  const n = others.length;
+  // 矮屏：出牌位排成一行，自己的在最右
+  const slots = n + (spectator ? 0 : 1);
+  const rowX = (i: number) => 50 + (i - (slots - 1) / 2) * Math.min(12, 66 / slots);
+  const angleOf = (i: number) => (n === 1 ? 270 : 180 + (i * 180) / (n - 1)) * (Math.PI / 180);
+  const cardEl = (s: number) => {
+    const t = trickCard(s);
+    const won = v.lastTrick?.winners.includes(s);
+    return t ? (
+      <PlayingCard
+        key={`${v.round}-${v.trick}-${t.down}`}
+        card={t.card}
+        faceDown={t.down}
+        highlight={won}
+        w="var(--cw-sm)"
+        className="hc__flip"
+      />
+    ) : (
+      <span className="hc__empty" />
+    );
+  };
+  const seatEl = (s: number, side: 'top' | 'bottom' | 'left' | 'right' = 'top') => {
+    const won = v.lastTrick?.winners.includes(s);
+    return (
+      <Seat
+        player={ctl.players[s]}
+        active={v.phase === 'choose' && !v.hasChosen[s]}
+        size={58}
+        sub={<span className="num">{v.scores[s]} 分</span>}
+        tag={won ? '+1' : undefined}
+        bubbleSide={side}
+      />
+    );
+  };
+
   return (
     <div className="hc">
-      <div className="info-chips">
+      <div className="info-chips top-info">
         <span className="chip">
           第 <b className="num">{v.round}</b> / {v.options.rounds} 局
         </span>
@@ -50,58 +87,70 @@ export default function HighcardBoard({ ctl }: { ctl: Ctl }) {
       </div>
 
       <div className="hc__arena">
-        {[...others, ...(spectator ? [] : [me])].map((s) => {
-          const t = trickCard(s);
+        <div className="hc__table" />
+        {others.map((s, i) => {
+          const a = angleOf(i);
+          const cos = Math.cos(a);
+          const sin = Math.sin(a);
+          const side = cos < -0.3 ? 'right' : cos > 0.3 ? 'left' : 'bottom';
           const won = v.lastTrick?.winners.includes(s);
+          const top = sin < -0.5;
+          // 座位以脚底为锚点放在椭圆上；出牌位朝向桌子中心（矮屏上，上方座位的牌放在旁边）
+          const seatPos = {
+            left: `${50 + 43 * cos}%`,
+            top: `${(compact ? 82 : 70) + (compact ? 30 : 38) * sin}%`,
+          };
+          // 矮屏：对手的牌在桌子中间排成一行（顺序与座位一致），避免与座位重叠
+          const cardPos = compact
+            ? { left: `${rowX(i)}%`, top: '74%' }
+            : { left: `${50 + 23 * cos}%`, top: `${58 + 18 * sin}%` };
           return (
-            <div key={s} className={`hc__slot ${won ? 'is-won' : ''}`}>
-              <Seat
-                player={ctl.players[s]}
-                active={v.phase === 'choose' && !v.hasChosen[s]}
-                size={50}
-                sub={<span className="num">{v.scores[s]} 分</span>}
-                tag={won ? '+1' : undefined}
-              />
-              <div className="hc__card">
-                {t ? (
-                  <PlayingCard
-                    key={`${v.round}-${v.trick}-${t.down}`}
-                    card={t.card}
-                    faceDown={t.down}
-                    highlight={won}
-                    w="var(--cw-sm)"
-                    className="hc__flip"
-                  />
-                ) : (
-                  <span className="hc__empty" />
-                )}
+            <div key={s}>
+              <div className={`hc__seat ${won ? 'is-won' : ''}`} style={seatPos}>
+                {seatEl(s, top ? (compact ? 'left' : 'bottom') : side)}
+              </div>
+              <div className="hc__card" style={cardPos}>
+                {cardEl(s)}
               </div>
             </div>
           );
         })}
+        {!spectator && (
+          <div
+            className="hc__card is-mine"
+            style={compact ? { left: `${rowX(n)}%`, top: '74%' } : { left: '50%', top: '81%' }}
+          >
+            {cardEl(me)}
+          </div>
+        )}
       </div>
 
       {!spectator && (
         <div className="hc__dock">
-          <div className="action-bar">
-            {choosing ? (
-              <Button variant="felt-primary" disabled={sel.size === 0} onClick={play}>
-                出这张
-              </Button>
-            ) : (
-              <span className="action-hint">
-                {v.phase === 'reveal' ? '亮牌！' : '等待其他玩家出牌…'}
-              </span>
-            )}
+          <div className={`hc__me ${v.lastTrick?.winners.includes(me) ? 'is-won' : ''}`}>
+            {seatEl(me, 'right')}
           </div>
-          <Hand
-            cards={v.hand}
-            selected={sel}
-            onChange={choosing ? setSel : undefined}
-            single
-            disabled={!choosing}
-            dealKey={v.round}
-          />
+          <div className="hc__hand">
+            <div className="action-bar">
+              {choosing ? (
+                <Button variant="felt-primary" disabled={sel.size === 0} onClick={play}>
+                  出这张
+                </Button>
+              ) : (
+                <span className="action-hint">
+                  {v.phase === 'reveal' ? '亮牌！' : '等待其他玩家出牌…'}
+                </span>
+              )}
+            </div>
+            <Hand
+              cards={v.hand}
+              selected={sel}
+              onChange={choosing ? setSel : undefined}
+              single
+              disabled={!choosing}
+              dealKey={v.round}
+            />
+          </div>
         </div>
       )}
 

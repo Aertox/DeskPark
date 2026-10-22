@@ -1,4 +1,4 @@
-import type { Table } from '@park/engine';
+import type { DelegateContext, Table } from '@park/engine';
 import { Rng, randomSeed } from '@park/engine';
 import { getCharacter } from '../../components/pixel/characters';
 import { charactersNow, findCharacter } from '../characters';
@@ -20,18 +20,17 @@ export function aiCapable(table: Table, seat: number): boolean {
  * Table 的 delegate：AI 接管的电脑座位轮到行动时，把它的 view 交给大模型选择。
  * 返回 null 表示这一步交给规则电脑（未开启、未配置、或只有一种选择）。
  */
-export function aiTurn(table: Table, seat: number): Promise<unknown> | null {
+export function aiTurn(table: Table, seat: number, ctx: DelegateContext): Promise<unknown> | null {
   const s = table.seats[seat];
   if (!s?.ai || !aiReady()) return null;
   const prompt = table.def.aiPrompt?.(table.view(seat), seat, new Rng(randomSeed()));
   if (!prompt || prompt.options.length <= 1) return null;
   const wantSay = Math.random() < CHAT_RATE[aiSettings.get().chat];
-  return decide(
-    prompt,
-    table.def.meta.name,
-    { name: s.name, character: characterName(s.avatar) },
-    wantSay,
-  ).then(
+  // 关闭 AI 接管时取消这次请求
+  const ctrl = new AbortController();
+  ctx.onCancel(() => ctrl.abort());
+  const persona = { name: s.name, character: characterName(s.avatar) };
+  return decide(prompt, table.def.meta.name, persona, wantSay, ctrl.signal).then(
     ({ index, say }) => {
       if (say) {
         aiSpeech.say(seat, say);
@@ -40,7 +39,9 @@ export function aiTurn(table: Table, seat: number): Promise<unknown> | null {
       return prompt.options[index].action;
     },
     (e: unknown) => {
-      aiEvents.emit({ type: 'error', message: e instanceof Error ? e.message : String(e) });
+      if (!ctrl.signal.aborted) {
+        aiEvents.emit({ type: 'error', message: e instanceof Error ? e.message : String(e) });
+      }
       throw e;
     },
   );

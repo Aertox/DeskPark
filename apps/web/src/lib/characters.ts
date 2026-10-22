@@ -22,6 +22,8 @@ export interface VirtualCharacter {
   fps: number;
   /** 小头像裁切区域：第 1 帧中的正方形 [x, y, 边长] */
   face: [number, number, number];
+  /** 头顶位置（帧内像素行），用于把按钮、气泡放在头顶 */
+  top: number;
   /** 若是某个像素头像的全身像，则为该头像 id；否则是可单独选择的额外角色 */
   avatar?: string;
 }
@@ -85,6 +87,7 @@ export async function loadCharacters(): Promise<void> {
         frames,
         fps,
         face,
+        top: isInt(r.top, 0, frameH - 1) ? r.top : 0,
         avatar:
           typeof r.avatar === 'string' &&
           !r.avatar.startsWith(CHARACTER_PREFIX) &&
@@ -123,7 +126,7 @@ export function figureHeight(c: VirtualCharacter, target: number): number {
   const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
   const k = Math.round((target * dpr) / c.frameH);
   const snapped = (k * c.frameH) / dpr;
-  return k >= 2 && Math.abs(snapped - target) <= target * 0.15 ? snapped : target;
+  return k >= 2 && Math.abs(snapped - target) <= target * 0.18 ? snapped : target;
 }
 
 /** 某个玩家的全身像：额外角色直接取用；像素头像取对应的全身像；没有形象时按名字稳定挑一个 */

@@ -90,7 +90,7 @@ function makeTable(
     humanTimeoutMs: null,
     initialState: restore?.state,
     onError: (e) => console.warn('[table]', e),
-    delegate: (seat) => aiTurn(table, seat),
+    delegate: (seat, ctx) => aiTurn(table, seat, ctx),
   });
   return table;
 }
@@ -176,7 +176,7 @@ export function useLocalController(
                   aiEvents.emit({ type: 'needConfig' });
                   return;
                 }
-                table.setSeat(i, { ai: !s.ai });
+                table.setAi(i, !s.ai);
               },
             }
           : undefined,

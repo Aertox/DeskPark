@@ -5,38 +5,80 @@
   flex-direction: column;
   padding: 2px max(14px, 2vw) 10px;
 }
+/* 圆桌：座位与出牌位都按百分比定位在椭圆周围 */
 .hc__arena {
+  position: relative;
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: center;
-  justify-content: center;
-  gap: clamp(14px, 3vw, 40px);
+  margin: 0 max(24px, 4vw);
 }
-.hc__slot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+.hc__table {
+  position: absolute;
+  inset: 30% 14% 3%;
+  border-radius: 50%;
+  background: radial-gradient(
+    70% 70% at 50% 40%,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.015)
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 0 10px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 11px rgba(255, 255, 255, 0.05),
+    0 20px 60px rgba(0, 0, 0, 0.18);
+}
+.hc__seat {
+  position: absolute;
+  translate: -50% -100%;
 }
 .hc__card {
-  height: calc(var(--cw-sm) * 1.4);
+  position: absolute;
+  translate: -50% -50%;
+}
+.hc__seat {
+  z-index: 3;
+}
+.hc__card {
+  z-index: 2;
   display: grid;
   place-items: center;
 }
 .hc__empty {
+  display: block;
   width: var(--cw-sm);
   height: calc(var(--cw-sm) * 1.4);
   border-radius: 8px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
+.hc__card.is-mine .hc__empty {
+  box-shadow: inset 0 0 0 1.5px rgba(240, 213, 155, 0.45);
+}
 .hc__flip {
   animation: pop-in 0.35s var(--ease-out);
 }
 .hc__dock {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+.hc__me {
+  flex: none;
+  padding-bottom: 4px;
+}
+.hc__hand {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 10%;
+  padding-right: max(0px, calc(10% - 40px));
+}
+@media (max-height: 500px) {
+  .hc__table {
+    inset: 40% 16% 2%;
+  }
+  .hc__dock {
+    gap: 10px;
+  }
 }
