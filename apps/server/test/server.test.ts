@@ -190,6 +190,29 @@ describe('联机服务器', () => {
     e.close();
   }, 15000);
 
+  it('喊一张联机：只收到自己的手牌，可以摸牌', async () => {
+    const f = new TestClient();
+    await f.opened;
+    f.send({ t: 'hello', token: 'token-oooooooooooooooo', name: '己', v: PROTOCOL_VERSION });
+    f.send({ t: 'create', gameId: 'onecard', seats: 3 });
+    await f.wait('room');
+    f.send({ t: 'start' });
+    type V = { turn: number | null; hand: unknown[]; counts: number[]; window: unknown };
+    const mine = await f.wait(
+      'game',
+      (m) => (m.view as V).turn === 0 && !(m.view as V).window,
+      9000,
+    );
+    const view = mine.view as V;
+    expect(view.hand.length).toBe(view.counts[0]);
+    expect(JSON.stringify(view)).not.toContain('"hands"');
+    expect(JSON.stringify(view)).not.toContain('guilty');
+    f.send({ t: 'act', action: { type: 'draw' } });
+    const after = await f.wait('game', (m) => m.version > mine.version);
+    expect((after.view as V).hand.length).toBeGreaterThanOrEqual(view.hand.length);
+    f.close();
+  }, 15000);
+
   it('房间聊天：广播、系统消息、历史记录、文本清理与限流', async () => {
     const a = new TestClient();
     const b = new TestClient();

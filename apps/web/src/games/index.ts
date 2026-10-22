@@ -2,6 +2,7 @@ import type { Card } from '@park/engine';
 import type { ComponentType } from 'react';
 import { lazy } from 'react';
 import type { GameController } from '../lib/controller';
+import { OneCardArt } from './onecard/cards';
 import { SpellArt } from './spellstones/spells';
 
 /**
@@ -71,6 +72,14 @@ export const GAME_UIS: GameUI[] = [
     showcase: [],
     Art: SpellArt,
     people: '2–5 人',
+  },
+  {
+    id: 'onecard',
+    Board: lazy(() => import('./onecard/OneCardBoard')),
+    tint: ['#d4473c', '#6f2140'],
+    showcase: [],
+    Art: OneCardArt,
+    people: '2–8 人',
   },
   {
     id: 'highcard',

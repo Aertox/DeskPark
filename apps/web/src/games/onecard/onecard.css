@@ -1,0 +1,541 @@
+/* ============================ 喊一张：牌桌 ============================ */
+.oc {
+  --ocw: calc(var(--cw) * 1.08);
+  --ocp: calc(var(--cw) * 1.02);
+  --ocf: calc(24px * var(--k, 1));
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2px max(14px, 2vw) 8px;
+}
+.oc__arena {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 max(24px, 4vw);
+}
+.oc__table {
+  position: absolute;
+  inset: 28% 12% 3%;
+  border-radius: 50%;
+  background: radial-gradient(
+    70% 70% at 50% 42%,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.015)
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 0 10px rgba(0, 0, 0, 0.06),
+    inset 0 0 0 11px rgba(255, 255, 255, 0.05),
+    inset 0 0 90px -30px var(--glow),
+    0 20px 60px rgba(0, 0, 0, 0.18);
+  transition: box-shadow 0.6s;
+}
+
+/* ---------------- 对手 ---------------- */
+.oc-opp {
+  position: absolute;
+  z-index: 3;
+  translate: -50% -100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.oc-opp.is-row {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+}
+/* 没喊「一张」：红色标签 */
+.oc .seat__tag.tone-accent {
+  color: #fff;
+  background: #e8403a;
+  box-shadow: 0 2px 8px rgba(232, 64, 58, 0.5);
+}
+.oc-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.oc-sub__score {
+  margin-left: 6px;
+  color: var(--felt-accent);
+}
+/* 对手的手牌：一小把牌背 */
+.oc-fan {
+  position: relative;
+  width: calc(var(--ocf) + (var(--n) - 1) * 6px);
+  height: calc(var(--ocf) * 1.5);
+}
+.oc-fan .occ {
+  --w: var(--ocf);
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  translate: calc(-50% + var(--j) * 6px) calc(var(--j) * var(--j) * 0.25px);
+  rotate: calc(var(--j) * 4deg);
+  transform-origin: 50% 130%;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.oc-fan__uno {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: -10px;
+  translate: -50% 0;
+  padding: 1px 8px;
+  border-radius: 99px;
+  font: italic 800 11px/1.5 var(--font-card);
+  color: #2a1d05;
+  background: linear-gradient(#ffe58a, #f4b400);
+  box-shadow: 0 2px 8px rgba(244, 180, 0, 0.5);
+  white-space: nowrap;
+  animation: pop-in 0.3s var(--ease-out);
+}
+.oc-opp.is-next .oc-fan::after {
+  /* 下一位：牌下一道细光 */
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 240, 200, 0.7), transparent);
+}
+
+/* ---------------- 中央：牌堆、弃牌堆、方向 ---------------- */
+.oc__center {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 62%;
+  translate: -50% -50%;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--ocp) * 0.55);
+}
+.oc-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--ocp) * 4.2);
+  height: calc(var(--ocp) * 2.52);
+  translate: -50% -50%;
+  overflow: visible;
+  color: rgba(255, 255, 255, 0.28);
+  pointer-events: none;
+  transition: scale 0.5s var(--ease-out);
+}
+.oc-ring path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1.5 6;
+  animation: oc-flow 1.4s linear infinite;
+}
+.oc-ring marker path {
+  stroke: none;
+  animation: none;
+}
+.oc__center.is-ccw .oc-ring {
+  scale: -1 1;
+}
+@keyframes oc-flow {
+  to {
+    stroke-dashoffset: -15;
+  }
+}
+.oc-pile {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: calc(var(--ocp) * 0.095);
+}
+.oc-pile .occ {
+  box-shadow:
+    2px 2px 0 #ece6da,
+    4px 4px 0 #d9d2c4,
+    6px 6px 0 #c6beae,
+    0 12px 26px rgba(0, 0, 0, 0.38);
+  transition: translate 0.2s var(--ease);
+}
+.oc-pile.is-live {
+  cursor: pointer;
+}
+.oc-pile.is-live .occ {
+  animation: oc-glow 1.6s ease-in-out infinite;
+}
+@media (hover: hover) {
+  .oc-pile.is-live:hover .occ {
+    translate: -2px -4px;
+  }
+}
+.oc-pile:disabled {
+  cursor: default;
+}
+.oc-pile__count {
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  translate: -50% 0;
+  font-size: 11px;
+  color: var(--felt-ink-3);
+}
+@keyframes oc-glow {
+  50% {
+    box-shadow:
+      2px 2px 0 #ece6da,
+      4px 4px 0 #d9d2c4,
+      6px 6px 0 #c6beae,
+      0 0 0 3px rgba(255, 240, 200, 0.55),
+      0 0 26px rgba(255, 230, 160, 0.55);
+  }
+}
+.oc-discard {
+  position: relative;
+  width: var(--ocp);
+  height: calc(var(--ocp) * 1.5);
+}
+.oc-discard::before {
+  /* 当前颜色的光晕 */
+  content: '';
+  position: absolute;
+  inset: -30% -55%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--glow, transparent), transparent);
+  opacity: 0.32;
+  pointer-events: none;
+}
+.oc-discard__under,
+.oc-discard__top {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.oc-discard__under {
+  filter: brightness(0.9);
+}
+.oc-discard__top {
+  z-index: 2;
+}
+.oc-color {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: -26px;
+  translate: -50% 0;
+  padding: 1px 10px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: #fff;
+  background: var(--c);
+  box-shadow: 0 0 14px var(--c);
+  white-space: nowrap;
+}
+.oc-pending {
+  position: absolute;
+  z-index: 4;
+  right: -14px;
+  top: -12px;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font: italic 800 14px/1.3 var(--font-card);
+  color: #fff;
+  background: linear-gradient(#ff7a6b, #d6302b);
+  box-shadow: 0 4px 12px rgba(214, 48, 43, 0.5);
+  animation: oc-pulse 1.1s ease-in-out infinite;
+}
+.oc-dir {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 34px);
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--felt-ink-3);
+  white-space: nowrap;
+}
+
+/* ---------------- 底部：自己的手牌与按钮 ---------------- */
+.oc__dock {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+.oc__me {
+  flex: none;
+  padding-bottom: 6px;
+}
+.oc__hand {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: max(0px, calc(10% - 40px));
+}
+.oc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  min-height: 38px;
+  zoom: var(--k, 1);
+}
+.oc-actions .action-hint.is-alert {
+  color: #ffb3a8;
+  font-weight: 600;
+}
+.oc-log {
+  max-width: 46%;
+  padding: 3px 11px;
+  border-radius: 99px;
+  font-size: 12px;
+  color: var(--felt-ink-3);
+  background: var(--felt-glass);
+  box-shadow: inset 0 0 0 1px var(--felt-line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oc-hand {
+  position: relative;
+  height: calc(var(--ocw) * 1.72);
+}
+.oc-hand__card {
+  position: absolute;
+  bottom: 0;
+  transition:
+    transform 0.2s var(--ease),
+    filter 0.25s;
+  animation: occ-in 0.38s var(--ease-out) backwards;
+}
+.oc-hand__card.is-playable {
+  transform: translateY(-12%);
+}
+@media (hover: hover) {
+  .oc-hand__card.is-playable:hover {
+    transform: translateY(-20%);
+  }
+}
+.oc-hand__card.is-dim {
+  filter: brightness(0.68) saturate(0.7);
+}
+.oc-hand__card.is-drawn {
+  box-shadow:
+    0 0 0 3px var(--felt-accent),
+    0 0 22px rgba(231, 200, 134, 0.75),
+    0 0.3em 0.8em rgba(0, 0, 0, 0.25);
+}
+@keyframes occ-in {
+  from {
+    opacity: 0;
+    transform: translateY(45%) rotate(8deg);
+  }
+}
+
+/* 「一张！」按钮 */
+.oc-uno,
+.oc-catch {
+  height: 34px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 99px;
+  font: italic 850 15px/1 var(--font-card);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    translate 0.15s,
+    box-shadow 0.15s;
+}
+.oc-uno {
+  color: #2a1d05;
+  background: linear-gradient(180deg, #ffe58a, #f4b400);
+  box-shadow:
+    0 4px 0 #b97300,
+    0 8px 18px rgba(244, 180, 0, 0.35);
+  animation: oc-pulse 1.2s ease-in-out infinite;
+}
+.oc-uno:active,
+.oc-catch:active {
+  translate: 0 3px;
+}
+.oc-uno.is-on {
+  color: #5a3c00;
+  background: linear-gradient(180deg, #fff7d6, #ffe58a);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 18px rgba(255, 220, 120, 0.8);
+  animation: none;
+}
+.oc-uno.is-alert,
+.oc-catch {
+  color: #fff;
+  background: linear-gradient(180deg, #ff8a7a, #e8403a);
+  box-shadow:
+    0 4px 0 #a11d1f,
+    0 8px 18px rgba(232, 64, 58, 0.4);
+  animation: oc-pulse 0.8s ease-in-out infinite;
+}
+.oc-catch.is-mini {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  box-shadow: 0 3px 0 #a11d1f;
+}
+@keyframes oc-pulse {
+  50% {
+    scale: 1.06;
+  }
+}
+
+/* 选颜色 */
+.oc-picker {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: grid;
+  place-items: end center;
+  padding-bottom: calc(var(--ocw) * 1.9 + 40px);
+  background: rgba(0, 0, 0, 0.22);
+  animation: fade-in 0.15s;
+}
+.oc-picker__box {
+  padding: 14px 20px 12px;
+  border-radius: 20px;
+  text-align: center;
+  color: var(--felt-ink);
+  background: rgba(16, 18, 26, 0.94);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  animation: rise-in 0.2s var(--ease-out);
+}
+.oc-picker__title {
+  font-size: 13px;
+  color: var(--felt-ink-2);
+}
+.oc-picker__grid {
+  display: flex;
+  gap: 22px;
+  padding: 20px 14px 14px;
+}
+.oc-picker__btn {
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 14px;
+  rotate: 45deg;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 62%, #fff), var(--c) 60%);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.9),
+    0 8px 18px color-mix(in srgb, var(--c) 55%, transparent);
+  cursor: pointer;
+  transition: scale 0.15s var(--ease);
+}
+.oc-picker__btn span {
+  display: block;
+  rotate: -45deg;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.oc-picker__btn:hover {
+  scale: 1.1;
+}
+.oc-picker__cancel {
+  margin-top: 4px;
+  padding: 4px 12px;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: var(--felt-ink-3);
+  cursor: pointer;
+}
+
+/* 摸牌飞行 */
+.oc-flyers {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+.oc-flyer {
+  position: absolute;
+}
+
+/* 结算 */
+.oc-res {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+.oc-res .occ {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.oc-res__pts {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* ---------------- 矮屏（横屏手机） ---------------- */
+@media (max-height: 500px) {
+  .oc {
+    --ocw: calc(var(--cw) * 1.04);
+    --ocp: calc(var(--cw) * 0.86);
+    --ocf: 17px;
+    padding-bottom: 4px;
+  }
+  .oc__table {
+    inset: 40% 16% 2%;
+  }
+  .oc-opp {
+    gap: 2px;
+  }
+  .oc__center {
+    top: 72%;
+  }
+  .oc-dir,
+  .oc-pile__count {
+    display: none;
+  }
+  .oc-color {
+    bottom: -20px;
+    font-size: 10.5px;
+  }
+  .oc__dock {
+    gap: 10px;
+  }
+  .oc-actions {
+    min-height: 30px;
+    gap: 6px;
+  }
+  .oc-uno,
+  .oc-catch {
+    height: 28px;
+    padding: 0 13px;
+    font-size: 13px;
+  }
+  .oc-hand {
+    height: calc(var(--ocw) * 1.62);
+  }
+  .oc-picker {
+    padding-bottom: 60px;
+  }
+}

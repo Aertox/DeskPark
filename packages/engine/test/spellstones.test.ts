@@ -46,6 +46,17 @@ describe('魔法出包', () => {
     }
   });
 
+  it('石头的 id 只代表洗牌后的位置，不会泄露是哪种咒语', () => {
+    const spellOf = (st: State, id: number) =>
+      [...st.players.flatMap((p) => p.rack), ...st.pool, ...st.secret, ...st.removed].find(
+        (x) => x.id === id,
+      )!.spell;
+    const a = spellstones.setup({ players: players(4), options: {}, seed: 1 });
+    const b = spellstones.setup({ players: players(4), options: {}, seed: 2 });
+    const diff = Array.from({ length: 36 }, (_, id) => spellOf(a, id) !== spellOf(b, id));
+    expect(diff.filter(Boolean).length).toBeGreaterThan(15);
+  });
+
   it('视图：看得到别人的石头，看不到自己的；观战者看不到任何人的', () => {
     const st = spellstones.setup({ players: players(4), options: {}, seed: 3 });
     const v = spellstones.view(st, 1);

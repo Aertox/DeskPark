@@ -9,6 +9,7 @@ import { registerGame } from './core/registry';
 import { doudizhu } from './games/doudizhu';
 import { guandan } from './games/guandan';
 import { highcard } from './games/highcard';
+import { onecard } from './games/onecard';
 import { sichuan } from './games/sichuan';
 import { spellstones } from './games/spellstones';
 import { texas } from './games/texas';
@@ -19,9 +20,11 @@ export * as tx from './games/texas';
 export * as hc from './games/highcard';
 export * as sc from './games/sichuan';
 export * as ss from './games/spellstones';
+export * as oc from './games/onecard';
 export * as mj from './mahjong';
 
-export { doudizhu, guandan, texas, sichuan, spellstones, highcard };
+export { doudizhu, guandan, texas, sichuan, spellstones, onecard, highcard };
 
 // 内置玩法（顺序即大厅展示顺序）
-for (const g of [doudizhu, guandan, texas, sichuan, spellstones, highcard]) registerGame(g);
+for (const g of [doudizhu, guandan, texas, sichuan, spellstones, onecard, highcard])
+  registerGame(g);

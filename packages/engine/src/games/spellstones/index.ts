@@ -55,7 +55,8 @@ const byId = (a: SsStone, b: SsStone) => a.id - b.id;
 
 function deal(state: SsState): void {
   const rng = new Rng(state.rng);
-  const stones = rng.shuffle(createStones());
+  // 洗牌后按位置重新编号：id 不能对应固定的咒语，否则自己的石头会从 id 泄露
+  const stones = rng.shuffle(createStones()).map((x, i) => ({ ...x, id: i }));
   state.rng = rng.state;
   const n = state.players.length;
   state.removed = stones.splice(0, removedCount(n)).sort(byId);

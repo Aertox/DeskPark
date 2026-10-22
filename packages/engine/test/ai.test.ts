@@ -7,6 +7,7 @@ import {
   doudizhu,
   guandan,
   highcard,
+  onecard,
   sichuan,
   spellstones,
   texas,
@@ -83,6 +84,12 @@ describe('大模型接管：候选动作', () => {
   it('魔法出包', () => {
     for (let seed = 1; seed <= 6; seed++)
       expect(checkPrompts(spellstones, 2 + (seed % 4), {}, seed)).toBeGreaterThan(10);
+  });
+  it('喊一张', () => {
+    for (let seed = 1; seed <= 6; seed++)
+      expect(
+        checkPrompts(onecard, 2 + (seed % 7), { target: 0, stack: seed % 2 === 0 }, seed),
+      ).toBeGreaterThan(5);
   });
   it('比大小', () => {
     expect(checkPrompts(highcard, 4, { rounds: 1 }, 3)).toBeGreaterThan(5);

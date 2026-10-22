@@ -1,0 +1,327 @@
+/* ============================ 喊一张：牌面 ============================
+ * 1em = 牌宽 / 10，所有尺寸按 em 计，任意大小比例一致。
+ */
+.occ {
+  --w: var(--cw);
+  --c1: #ff8a7a;
+  --c2: #e8403a;
+  --c3: #9f1d1d;
+  --num: var(--c2);
+  --num-shadow: var(--c3);
+  position: relative;
+  flex: none;
+  display: block;
+  width: var(--w);
+  height: calc(var(--w) * 1.5);
+  padding: 0;
+  border: 0;
+  font-size: calc(var(--w) / 10);
+  border-radius: 0.95em;
+  background: linear-gradient(160deg, #fffdf8 0%, #f3eee4 100%);
+  box-shadow:
+    0 0.04em 0.08em rgba(0, 0, 0, 0.28),
+    0 0.3em 0.8em rgba(0, 0, 0, 0.2),
+    inset 0 0 0 0.05em rgba(0, 0, 0, 0.07);
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.occ.is-R {
+  --c1: #ff8f7e;
+  --c2: #e8403a;
+  --c3: #a11d1f;
+}
+.occ.is-Y {
+  --c1: #ffe489;
+  --c2: #f4b400;
+  --c3: #b97300;
+  --num: #eba300;
+  --num-shadow: #a56300;
+}
+.occ.is-G {
+  --c1: #84e2ad;
+  --c2: #22a861;
+  --c3: #0c6136;
+}
+.occ.is-B {
+  --c1: #85c3ff;
+  --c2: #2577da;
+  --c3: #133f8a;
+}
+.occ.is-W,
+.occ.is-back {
+  --c1: #4e5466;
+  --c2: #2a2d37;
+  --c3: #111217;
+}
+
+/* 彩色面板：渐变 + 点阵纹理 + 光泽 */
+.occ__panel {
+  position: absolute;
+  inset: 0.5em;
+  display: block;
+  overflow: hidden;
+  border-radius: 0.6em;
+  background:
+    radial-gradient(130% 75% at 18% 0%, var(--c1) 0%, transparent 62%),
+    linear-gradient(165deg, var(--c2) 30%, var(--c3) 100%);
+  box-shadow:
+    inset 0 0 0 0.06em rgba(255, 255, 255, 0.3),
+    inset 0 -0.7em 1.3em rgba(0, 0, 0, 0.2);
+}
+.occ__panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.16) 0.07em,
+    transparent 0.08em
+  );
+  background-size: 0.72em 0.72em;
+  -webkit-mask-image: linear-gradient(165deg, #000 0%, transparent 70%);
+  mask-image: linear-gradient(165deg, #000 0%, transparent 70%);
+}
+.occ__panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0.06) 26%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 78%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  pointer-events: none;
+}
+/* 内框细线 */
+.occ__frame {
+  position: absolute;
+  z-index: 1;
+  inset: 0.34em;
+  border-radius: 0.36em;
+  border: 0.05em solid rgba(255, 255, 255, 0.38);
+}
+
+/* 中央菱形宝石 */
+.occ__emblem {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: 7.9em;
+  height: 10.8em;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+}
+.occ__gem {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0.14em 0.22em rgba(0, 0, 0, 0.3));
+}
+.occ__gem-rim {
+  fill: #fffdf8;
+  stroke: #fffdf8;
+  stroke-width: 8;
+  stroke-linejoin: round;
+}
+.occ__gem-line {
+  fill: none;
+  stroke: var(--c2);
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+  opacity: 0.32;
+}
+.occ__gem-glass {
+  fill: rgba(255, 255, 255, 0);
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1.2;
+}
+.occ__gem-quad path:not(.occ__gem-glass) {
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.occ__big {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  color: var(--num);
+}
+.occ__num {
+  display: block;
+  font-family: var(--font-card);
+  font-style: italic;
+  font-weight: 850;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.occ__big .occ__num {
+  font-size: 5.7em;
+  margin-left: -0.04em;
+  text-shadow:
+    0.035em 0.045em 0 var(--num-shadow),
+    0 0.08em 0.12em rgba(0, 0, 0, 0.18);
+}
+.occ__big .occ__num.is-plus {
+  font-size: 4em;
+  margin-left: -0.08em;
+}
+.occ__num.is-u {
+  text-decoration: underline;
+  text-decoration-thickness: 0.075em;
+  text-underline-offset: 0.06em;
+}
+.occ__big .occ__icon {
+  width: 5.2em;
+  height: 5.2em;
+  filter: drop-shadow(0.05em 0.07em 0 var(--num-shadow));
+}
+/* 万能 +4：深色圆章压在四色宝石中央 */
+.occ.kind-wild4 .occ__big {
+  width: 4.3em;
+  height: 4.3em;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, #3b3f4d, #15161c);
+  box-shadow:
+    0 0 0 0.16em #fffdf8,
+    0 0.12em 0.3em rgba(0, 0, 0, 0.45);
+}
+.occ.kind-wild4 .occ__big .occ__num.is-plus {
+  font-size: 2.35em;
+  margin-left: -0.06em;
+  text-shadow: 0 0.06em 0.1em rgba(0, 0, 0, 0.5);
+}
+
+/* 角标 */
+.occ__idx {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  min-width: 2.2em;
+  height: 2.4em;
+  color: #fff;
+}
+.occ__idx.is-tl {
+  left: 0.42em;
+  top: 0.4em;
+}
+.occ__idx.is-br {
+  right: 0.42em;
+  bottom: 0.4em;
+  rotate: 180deg;
+}
+.occ__idx .occ__num {
+  font-size: 2.3em;
+  text-shadow:
+    0 0.05em 0 rgba(0, 0, 0, 0.28),
+    0 0 0.18em rgba(0, 0, 0, 0.14);
+}
+.occ__idx .occ__num.is-plus {
+  font-size: 1.8em;
+}
+.occ__idx .occ__icon {
+  width: 2.2em;
+  height: 2.2em;
+  filter: drop-shadow(0 0.06em 0 rgba(0, 0, 0, 0.28));
+}
+.occ__idx .occ__gem.is-mini {
+  position: static;
+  width: 1.55em;
+  height: 2.1em;
+  filter: drop-shadow(0 0.04em 0.05em rgba(0, 0, 0, 0.35));
+}
+.occ__icon {
+  display: block;
+  overflow: visible;
+}
+
+/* 万能牌：深色底，四角透出四种颜色 */
+.occ.is-W .occ__panel {
+  background:
+    radial-gradient(55% 40% at 0% 0%, rgba(232, 64, 58, 0.55), transparent 70%),
+    radial-gradient(55% 40% at 100% 0%, rgba(244, 180, 0, 0.5), transparent 70%),
+    radial-gradient(55% 40% at 100% 100%, rgba(34, 168, 97, 0.55), transparent 70%),
+    radial-gradient(55% 40% at 0% 100%, rgba(37, 119, 218, 0.6), transparent 70%),
+    linear-gradient(165deg, var(--c2) 20%, var(--c3) 100%);
+}
+
+/* 牌背：深色菱格纹 + 四色宝石 */
+.occ.is-back .occ__panel {
+  background:
+    repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.045) 0 0.06em, transparent 0.06em 1em),
+    repeating-linear-gradient(-60deg, rgba(255, 255, 255, 0.045) 0 0.06em, transparent 0.06em 1em),
+    radial-gradient(60% 45% at 50% 50%, rgba(140, 150, 255, 0.22), transparent 70%),
+    linear-gradient(165deg, #2f3342 0%, #15161d 100%);
+}
+.occ.is-back .occ__panel::before {
+  display: none;
+}
+.occ.is-back .occ__frame {
+  border-color: rgba(231, 200, 134, 0.45);
+}
+.occ.is-back .occ__emblem {
+  width: 5.2em;
+  height: 7.1em;
+}
+.occ.is-back .occ__emblem::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7.4em;
+  height: 7.4em;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 0.09em solid rgba(231, 200, 134, 0.55);
+  box-shadow:
+    0 0 0 0.32em rgba(231, 200, 134, 0.08),
+    inset 0 0 1.2em rgba(140, 150, 255, 0.25);
+}
+.occ.is-back .occ__gem-rim {
+  fill: rgba(255, 253, 248, 0.92);
+  stroke: rgba(255, 253, 248, 0.92);
+}
+
+/* 交互状态 */
+button.occ {
+  cursor: pointer;
+}
+button.occ:disabled {
+  cursor: default;
+}
+.occ:focus-visible {
+  outline: 2px solid var(--felt-accent);
+  outline-offset: 2px;
+}
+
+/* 大厅插画 */
+.occ-art {
+  position: relative;
+  width: 54px;
+  height: 81px;
+  margin-top: 6px;
+}
+.occ-art .occ {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 115%;
+  rotate: calc(var(--i) * 14deg);
+  translate: calc(var(--i) * 26px) calc(var(--i) * var(--i) * 4px);
+  transition: translate 0.35s var(--ease);
+}
+@media (hover: hover) {
+  .gtile:hover .occ-art .occ {
+    translate: calc(var(--i) * 32px) calc(var(--i) * var(--i) * 4px - 6px);
+  }
+}
