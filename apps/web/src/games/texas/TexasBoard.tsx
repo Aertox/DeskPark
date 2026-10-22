@@ -5,7 +5,7 @@ import { PlayingCard } from '../../components/PlayingCard';
 import { Avatar, Seat } from '../../components/Seat';
 import { Button, Sheet, toast } from '../../components/ui';
 import type { GameController } from '../../lib/controller';
-import { findCharacter, useCharacters } from '../../lib/characters';
+import { useFigureLookup } from '../../lib/characters';
 import { formatChips, signed } from '../../lib/format';
 import { playSound } from '../../lib/sound';
 import { useCompact, useTurnCue } from '../shared/trick';
@@ -50,7 +50,7 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
   const myTurn = !spectator && !!v.me;
   const [raiseOpen, setRaiseOpen] = useState(false);
   const compact = useCompact();
-  const characters = useCharacters();
+  const figureOf = useFigureLookup();
   const [raiseTo, setRaiseTo] = useState(0);
   useTurnCue(myTurn);
 
@@ -185,7 +185,7 @@ export default function TexasBoard({ ctl }: { ctl: Ctl }) {
           const { x, y: y0, a } = pos(s);
           // 全身立绘的头部会探出座位上沿，顶部座位下移，避免压到信息栏
           const y =
-            y0 < 20 && findCharacter(characters, ctl.players[s].avatar)
+            y0 < 20 && figureOf(ctl.players[s].avatar, ctl.players[s].name)
               ? y0 + (compact ? 9 : 13)
               : y0;
           const h = shown.get(s);

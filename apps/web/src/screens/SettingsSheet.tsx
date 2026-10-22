@@ -5,8 +5,9 @@ import type { AvatarTheme } from '../components/pixel/characters';
 import { CHARACTERS, THEME_NAME, getCharacter } from '../components/pixel/characters';
 import { CharacterSprite } from '../components/pixel/CharacterSprite';
 import { PixelAvatar } from '../components/pixel/PixelAvatar';
-import { figureHeight, useCharacters } from '../lib/characters';
-import { profile, setAvatar, settings } from '../lib/store';
+import type { VirtualCharacter } from '../lib/characters';
+import { figureHeight, findCharacter, useCharacters } from '../lib/characters';
+import { profile, settings } from '../lib/store';
 import type { FeltTheme } from '../lib/store';
 
 export const FELTS: { value: FeltTheme; label: string; color: string }[] = [
@@ -53,7 +54,7 @@ export function AvatarPicker() {
               <button
                 key={c.id}
                 className={p.avatar === c.id ? 'is-on' : ''}
-                onClick={() => setAvatar({ mode: 'pixel', pixel: c.id })}
+                onClick={() => profile.set({ avatar: c.id })}
                 aria-label={c.name}
                 title={c.name}
               >
@@ -67,68 +68,98 @@ export function AvatarPicker() {
   );
 }
 
-/** 虚拟角色选择：来自图片角色库 */
-export function CharacterPicker() {
+function FigureButton({ c, on, onPick }: { c: VirtualCharacter; on: boolean; onPick: () => void }) {
+  return (
+    <button
+      className={`is-vc ${on ? 'is-on' : ''}`}
+      onClick={onPick}
+      aria-label={c.name}
+      title={c.name}
+    >
+      <CharacterSprite character={c} height={figureHeight(c, 96)} seed={c.id} />
+      <span>{c.name}</span>
+    </button>
+  );
+}
+
+/** 虚拟形象选择：与像素头像一一对应的全身像 + 额外角色 */
+export function FigurePicker() {
   const p = profile.use();
   const list = useCharacters();
-  const groups = [...new Set(list.map((c) => c.group ?? '角色'))];
+  const byAvatar = new Map(list.filter((c) => c.avatar).map((c) => [c.avatar, c]));
+  const extras = list.filter((c) => !c.avatar);
   return (
     <div className="avatar-picker">
-      {groups.map((g) => (
-        <div key={g} className="avatar-picker__group">
-          <span className="avatar-picker__title">{g}</span>
-          <div className="avatar-picker__grid">
-            {list
-              .filter((c) => (c.group ?? '角色') === g)
-              .map((c) => (
-                <button
-                  key={c.id}
-                  className={`is-vc ${p.avatar === `vc:${c.id}` ? 'is-on' : ''}`}
-                  onClick={() => setAvatar({ mode: 'character', character: c.id })}
-                  aria-label={c.name}
-                  title={c.name}
-                >
-                  <CharacterSprite character={c} height={figureHeight(c, 104)} seed={c.id} />
-                  <span>{c.name}</span>
-                </button>
+      {(Object.keys(THEME_NAME) as AvatarTheme[]).map((theme) => {
+        const items = CHARACTERS.filter((a) => a.theme === theme && byAvatar.has(a.id));
+        if (!items.length) return null;
+        return (
+          <div key={theme} className="avatar-picker__group">
+            <span className="avatar-picker__title">{THEME_NAME[theme]}</span>
+            <div className="avatar-picker__grid">
+              {items.map((a) => (
+                <FigureButton
+                  key={a.id}
+                  c={byAvatar.get(a.id)!}
+                  on={p.avatar === a.id}
+                  onPick={() => profile.set({ avatar: a.id })}
+                />
               ))}
+            </div>
+          </div>
+        );
+      })}
+      {extras.length > 0 && (
+        <div className="avatar-picker__group">
+          <span className="avatar-picker__title">特别角色</span>
+          <div className="avatar-picker__grid">
+            {extras.map((c) => (
+              <FigureButton
+                key={c.id}
+                c={c}
+                on={p.avatar === `vc:${c.id}`}
+                onPick={() => profile.set({ avatar: `vc:${c.id}` })}
+              />
+            ))}
           </div>
         </div>
-      ))}
+      )}
     </div>
+  );
+}
+
+/** 头像 / 虚拟形象 模式切换（显示偏好，只影响自己看到的牌桌） */
+export function FigureModeSwitch() {
+  const s = settings.use();
+  const list = useCharacters();
+  if (!list.length) return null;
+  return (
+    <Segmented
+      value={s.figures ? 'figure' : 'pixel'}
+      onChange={(m) => settings.set({ figures: m === 'figure' })}
+      options={[
+        { value: 'pixel', label: '像素头像' },
+        { value: 'figure', label: '虚拟形象' },
+      ]}
+    />
   );
 }
 
 function AvatarSection() {
   const p = profile.use();
+  const s = settings.use();
   const list = useCharacters();
-  const mode = list.length && p.avatarMode === 'character' ? 'character' : 'pixel';
-  const current =
-    mode === 'character'
-      ? list.find((c) => `vc:${c.id}` === p.avatar)?.name
-      : getCharacter(p.avatar)?.name;
+  const figures = s.figures && list.length > 0;
+  const current = findCharacter(list, p.avatar)?.name ?? getCharacter(p.avatar)?.name;
   return (
     <div className="field field--stack">
       <div className="field__label">
         <span>形象</span>
         <small>{current ?? ''}</small>
       </div>
-      {list.length > 0 && (
-        <Segmented
-          value={mode}
-          onChange={(m) =>
-            setAvatar({
-              mode: m,
-              character: m === 'character' ? (p.character ?? list[0].id) : undefined,
-            })
-          }
-          options={[
-            { value: 'pixel', label: '像素头像' },
-            { value: 'character', label: '虚拟角色' },
-          ]}
-        />
-      )}
-      {mode === 'character' ? <CharacterPicker /> : <AvatarPicker />}
+      <FigureModeSwitch />
+      {figures && <p className="field__note">牌桌上所有人（包括电脑）都会以全身形象显示</p>}
+      {figures ? <FigurePicker /> : <AvatarPicker />}
     </div>
   );
 }
@@ -143,6 +174,7 @@ export function SettingsSheet({
   showProfile?: boolean;
 }) {
   const s = settings.use();
+  const hasFigures = useCharacters().length > 0;
   return (
     <Sheet open={open} onClose={onClose} title={showProfile ? '设置' : '外观'}>
       {showProfile && (
@@ -168,6 +200,11 @@ export function SettingsSheet({
           ))}
         </div>
       </Field>
+      {!showProfile && hasFigures && (
+        <Field label="虚拟形象" hint="牌桌上所有人以全身像素形象显示">
+          <Switch checked={s.figures} onChange={(v) => settings.set({ figures: v })} />
+        </Field>
+      )}
       <Field label="四色牌" hint="方块蓝色、梅花绿色">
         <Switch checked={s.fourColor} onChange={(v) => settings.set({ fourColor: v })} />
       </Field>

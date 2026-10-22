@@ -1,7 +1,7 @@
 import { Bot, WifiOff } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { figureHeight, findCharacter, useCharacters } from '../lib/characters';
+import { figureHeight, useFigure } from '../lib/characters';
 import type { PlayerInfo } from '../lib/controller';
 import { useCompact } from '../lib/media';
 import { CharacterSprite } from './pixel/CharacterSprite';
@@ -78,7 +78,7 @@ export function Seat({
   const px = compact ? Math.round(size * 0.7) : size;
   const cd = useCountdown(active ? deadline : undefined);
   const ringStyle = cd ? ({ '--p': cd.ratio } as CSSProperties) : undefined;
-  const vc = findCharacter(useCharacters(), player.avatar);
+  const vc = useFigure(player.avatar, player.name);
   const figH = vc ? figureHeight(vc, px * (compact || figureOverflow ? 1.9 : 2.4)) : 0;
   const marks = (
     <>

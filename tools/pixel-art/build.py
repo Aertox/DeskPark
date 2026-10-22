@@ -18,7 +18,16 @@ from kit import FH, FPS, FW, N  # noqa: E402
 from pix import Canvas, hexc, strip  # noqa: E402
 
 # 选择面板中的顺序
-ORDER = ['yunshang', 'qingfeng', 'suqin', 'baihu', 'nihong', 'lingshi', 'xiaoying', 'xingye']
+# 与像素头像一一对应的全身像（id 与头像相同）
+AVATAR_FIGURES = [
+    'cyber_hacker', 'cyber_ronin', 'cyber_dj', 'cyber_cat',
+    'xian_sword', 'xian_fox', 'xian_taoist', 'xian_elder', 'xian_fairy',
+    'anime_ninja', 'anime_magical', 'anime_catgirl', 'anime_samurai', 'anime_pilot',
+    'hero_pig', 'cute_panda', 'cute_dino', 'cute_frog', 'cute_ghost', 'cute_robot', 'cute_chick', 'cute_astronaut',
+]
+# 额外的虚拟角色
+EXTRAS = ['yunshang', 'qingfeng', 'suqin', 'baihu', 'nihong', 'lingshi', 'xiaoying', 'xingye']
+ORDER = AVATAR_FIGURES + EXTRAS
 
 ROOT = HERE.parents[1]
 OUT = ROOT / 'apps/web/public/characters'
@@ -65,6 +74,7 @@ def main(argv):
             'fps': meta.get('fps', FPS),
             'face': meta['face'],
             'bg': meta['bg'],
+            **({'avatar': meta['avatar']} if meta.get('avatar') else {}),
         })
     text = json.dumps({'version': 2, 'characters': entries}, ensure_ascii=False, indent=2)
     # 数字数组写成一行，与 Prettier 的格式一致

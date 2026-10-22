@@ -1,5 +1,7 @@
-import { CHARACTER_ID_PATTERN, CHARACTER_PREFIX } from '@park/protocol';
-import { useSyncExternalStore } from 'react';
+import { CHARACTER_ID_PATTERN, CHARACTER_PREFIX, isAvatarId } from '@park/protocol';
+import { useCallback, useSyncExternalStore } from 'react';
+import { characterForName, getCharacter } from '../components/pixel/characters';
+import { settings } from './store';
 
 /**
  * 虚拟角色库：图片放在 apps/web/public/characters/，由 manifest.json 列出。
@@ -20,6 +22,8 @@ export interface VirtualCharacter {
   fps: number;
   /** 小头像裁切区域：第 1 帧中的正方形 [x, y, 边长] */
   face: [number, number, number];
+  /** 若是某个像素头像的全身像，则为该头像 id；否则是可单独选择的额外角色 */
+  avatar?: string;
 }
 
 interface State {
@@ -81,6 +85,12 @@ export async function loadCharacters(): Promise<void> {
         frames,
         fps,
         face,
+        avatar:
+          typeof r.avatar === 'string' &&
+          !r.avatar.startsWith(CHARACTER_PREFIX) &&
+          isAvatarId(r.avatar)
+            ? r.avatar
+            : undefined,
       });
     }
     set({ status: 'ready', list });
@@ -111,4 +121,30 @@ export function figureHeight(c: VirtualCharacter, target: number): number {
   const k = Math.round((target * dpr) / c.frameH);
   const snapped = (k * c.frameH) / dpr;
   return k >= 2 && Math.abs(snapped - target) <= target * 0.15 ? snapped : target;
+}
+
+/** 某个玩家的全身像：额外角色直接取用；像素头像取对应的全身像；没有形象时按名字稳定挑一个 */
+export function figureFor(
+  list: VirtualCharacter[],
+  avatar: string | null | undefined,
+  name: string,
+): VirtualCharacter | undefined {
+  if (avatar?.startsWith(CHARACTER_PREFIX)) return findCharacter(list, avatar);
+  const id = getCharacter(avatar)?.id ?? characterForName(name).id;
+  return list.find((c) => c.avatar === id);
+}
+
+/** 返回查找函数：虚拟形象模式关闭时恒为 undefined */
+export function useFigureLookup() {
+  const list = useCharacters();
+  const { figures } = settings.use();
+  return useCallback(
+    (avatar: string | null | undefined, name: string) =>
+      figures ? figureFor(list, avatar, name) : undefined,
+    [list, figures],
+  );
+}
+
+export function useFigure(avatar: string | null | undefined, name: string) {
+  return useFigureLookup()(avatar, name);
 }
