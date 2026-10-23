@@ -44,13 +44,44 @@ export function vibrate(ms = 12): void {
   }
 }
 
+/**
+ * 复制文字到剪贴板。
+ * navigator.clipboard 只在安全页面（HTTPS / localhost）里存在；用 http 打开（例如局域网 IP、
+ * 没配证书的服务器）时它是 undefined，这时退回到隐藏文本框 + execCommand('copy')。
+ * 必须在点击事件里同步调用（不要先 await 别的东西），否则浏览器会拒绝复制。
+ */
 export async function copyText(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      /* 权限被拒等：再试旧办法 */
+    }
   }
+  return legacyCopy(text);
+}
+
+function legacyCopy(text: string): boolean {
+  const active = document.activeElement as HTMLElement | null;
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  // 放在可视区外；16px 字号避免 iOS 聚焦时放大页面
+  ta.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0;font-size:16px;';
+  document.body.appendChild(ta);
+  let ok = false;
+  try {
+    ta.focus({ preventScroll: true });
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    ok = document.execCommand('copy');
+  } catch {
+    /* 极少数浏览器会抛错：当作复制失败 */
+  }
+  ta.remove();
+  active?.focus?.({ preventScroll: true });
+  return ok;
 }
 
 export function randomToken(): string {

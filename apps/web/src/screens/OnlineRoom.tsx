@@ -3,7 +3,7 @@ import { Bot, Check, ChevronLeft, Copy, Crown, Link2, Plus, UserMinus, X } from 
 import { Suspense, useEffect, useState } from 'react';
 import { ChatPanel } from '../components/Chat';
 import { Avatar } from '../components/Seat';
-import { Button, IconButton } from '../components/ui';
+import { Button, IconButton, Sheet, toast } from '../components/ui';
 import { getGameUI } from '../games';
 import { useOnlineController } from '../lib/controller';
 import { online, useOnline } from '../lib/online';
@@ -83,14 +83,20 @@ function WaitingRoom() {
   const you = net.you!;
   const def = getGame(room.gameId)!;
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
+  /** 浏览器不允许自动复制时，把内容放进输入框让玩家手动复制 */
+  const [manual, setManual] = useState<{ what: 'code' | 'link'; text: string } | null>(null);
   const isHost = you.isHost;
   const filled = room.seats.filter((s) => s.kind !== 'empty').length;
 
   const copy = async (what: 'code' | 'link') => {
-    const ok = await copyText(what === 'code' ? room.code : roomLink(room.code));
+    const text = what === 'code' ? room.code : roomLink(room.code);
+    const ok = await copyText(text);
     if (ok) {
       setCopied(what);
+      toast(what === 'code' ? `已复制房间号 ${room.code}` : '已复制邀请链接，发给好友即可加入');
       setTimeout(() => setCopied(null), 1600);
+    } else {
+      setManual({ what, text });
     }
   };
 
@@ -257,6 +263,26 @@ function WaitingRoom() {
           </div>
         )}
       </footer>
+      <Sheet
+        open={!!manual}
+        onClose={() => setManual(null)}
+        title={manual?.what === 'code' ? '复制房间号' : '复制邀请链接'}
+        subtitle="浏览器不允许网页自动复制（通常是因为页面不是 HTTPS），请长按或选中下面的内容手动复制"
+        footer={
+          <Button variant="primary" block onClick={() => setManual(null)}>
+            好的
+          </Button>
+        }
+      >
+        <input
+          className="room__manual"
+          readOnly
+          value={manual?.text ?? ''}
+          autoFocus
+          onFocus={(e) => e.currentTarget.select()}
+          onClick={(e) => e.currentTarget.select()}
+        />
+      </Sheet>
     </div>
   );
 }

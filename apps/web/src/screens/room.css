@@ -77,6 +77,11 @@
   color: var(--felt-ink);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
 }
+/* 通用按钮的悬停样式会把底色换成浅色，这里的字是浅色的，要单独覆盖 */
+.room__share .btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--felt-ink);
+}
 
 .room__seats {
   display: grid;
@@ -246,4 +251,25 @@
   to {
     rotate: 360deg;
   }
+}
+
+/* 手动复制：浏览器不允许自动复制时 */
+.room__manual {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font: 500 14px/1.4 var(--font-card);
+  color: var(--ink);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  user-select: all;
+  -webkit-user-select: all;
+}
+.room__manual:focus {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 1.5px var(--accent),
+    0 0 0 3px var(--focus);
 }
