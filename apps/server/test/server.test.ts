@@ -1,3 +1,4 @@
+import { hi } from '@park/engine';
 import type { ClientMessage, ServerMessage } from '@park/protocol';
 import { AVATARS, CHAT_MAX_LENGTH, PROTOCOL_VERSION } from '@park/protocol';
 import { mkdtempSync, writeFileSync } from 'node:fs';
@@ -232,12 +233,15 @@ describe('联机服务器', () => {
     expect(view.players[1].hand).toBeNull();
     expect(view.players[1].devs).toBeNull();
     expect(JSON.stringify(view)).not.toContain('devDeck');
-    // 找一个满足距离规则的路口放村庄
-    const taken = (mine.view as { buildings: (unknown | null)[] }).buildings;
-    const at = taken.findIndex((b, i) => !b && i % 7 === 3);
+    // 用规则引擎找一个满足距离规则的路口（先手是随机的，电脑可能已经放过村庄）
+    const at = hi.settlementSpots(
+      mine.view as unknown as Parameters<typeof hi.settlementSpots>[0],
+      0,
+      true,
+    )[0];
     g.send({ t: 'act', action: { type: 'settle', at } });
     const after = await g.wait('game', (m) => m.version > mine.version);
-    expect((after.view as V).setupVertex === at || (after.view as V).turn !== 0).toBe(true);
+    expect((after.view as V).setupVertex).toBe(at);
     g.close();
   }, 25000);
 
