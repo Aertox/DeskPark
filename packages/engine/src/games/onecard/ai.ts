@@ -12,7 +12,7 @@ export function ocAiPrompt(view: OcView, seat: Seat, rng: Rng): AiPrompt<OcActio
   if (view.phase !== 'play' || view.turn !== seat || view.window) return null;
   const n = view.counts.length;
   const lines = [
-    '喊一张（四色接龙）：出与弃牌堆顶同色、同号或同符号的牌，万能牌任何时候都能出并指定颜色；先出完手牌的人获胜。' +
+    'UON（四色接龙）：出与弃牌堆顶同色、同号或同符号的牌，万能牌任何时候都能出并指定颜色；先出完手牌的人获胜。' +
       '跳过让下一位停一轮，反转改变方向，+2 让下一位摸 2 张，万能 +4 让下一位摸 4 张（手里有当前颜色时出 +4 可能被质疑）。',
     `你的手牌（${view.hand.length} 张）：${handText(view.hand)}`,
     `弃牌堆顶：${cardLabel(view.top)}，当前颜色：${view.color ? COLOR_NAME[view.color] : '任意'}。牌堆剩 ${view.pileCount} 张。`,

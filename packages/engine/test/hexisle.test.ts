@@ -56,7 +56,7 @@ function path(from: number, len: number): number[] {
   return edges;
 }
 
-describe('拓岛记', () => {
+describe('卡旦岛', () => {
   it('地图：19 块地形、18 个数字（6 / 8 不相邻）、9 个港口，强盗在沙漠', () => {
     for (let seed = 1; seed <= 30; seed++) {
       const st = hexisle.setup({ players: players(4), options: hexisle.defaultOptions, seed });

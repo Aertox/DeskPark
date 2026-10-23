@@ -30,7 +30,7 @@ export function hiAiPrompt(view: HiView, seat: Seat, rng: Rng): AiPrompt<HiActio
   if (view.turn !== seat) return null;
   const me = view.players[seat];
   const lines = [
-    '拓岛记（六边形拓荒）：用资源修路、建村庄（1 分）、升级城市（2 分）、买发展卡；最长道路与最大军队各 2 分，' +
+    '卡旦岛（六边形拓荒）：用资源修路、建村庄（1 分）、升级城市（2 分）、买发展卡；最长道路与最大军队各 2 分，' +
       `先到 ${view.options.target} 分获胜。村庄之间至少隔两段路。`,
     `你：${me.vpTotal ?? me.vp} 分，手牌 ${resText(me.hand)}，发展卡 ${me.devs?.map((d) => DEV_NAME[d.kind]).join('、') || '无'}，骑士 ${me.knights}，最长道路 ${me.roadLength}。`,
   ];

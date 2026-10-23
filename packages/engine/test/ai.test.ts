@@ -87,13 +87,13 @@ describe('大模型接管：候选动作', () => {
     for (let seed = 1; seed <= 6; seed++)
       expect(checkPrompts(spellstones, 2 + (seed % 4), {}, seed)).toBeGreaterThan(10);
   });
-  it('喊一张', () => {
+  it('UON', () => {
     for (let seed = 1; seed <= 6; seed++)
       expect(
         checkPrompts(onecard, 2 + (seed % 7), { target: 0, stack: seed % 2 === 0 }, seed),
       ).toBeGreaterThan(5);
   });
-  it('拓岛记', () => {
+  it('卡旦岛', () => {
     for (let seed = 1; seed <= 3; seed++)
       expect(
         checkPrompts(hexisle, 2 + (seed % 3), hexisle.defaultOptions, seed, 6000),

@@ -19,7 +19,7 @@ import {
 export * from './shared';
 
 /**
- * 喊一张：四色接龙出牌，规则参考经典的四色牌玩法（官方规则）。
+ * UON：四色接龙出牌，规则参考经典的四色牌玩法（官方规则）。
  *
  * - 108 张牌：红黄绿蓝各 0 一张、1–9 / 跳过 / 反转 / +2 各两张，另有万能牌、万能 +4 各四张。
  * - 每人 7 张。出与弃牌堆顶同色、同号或同符号的牌；万能牌任何时候都能出并指定颜色。
@@ -176,8 +176,8 @@ export const onecard: GameDefinition<OcState, OcAction, OcView, OcOptions> = {
   meta: {
     id: 'onecard',
     category: 'board',
-    name: '喊一张',
-    nameEn: 'Last One',
+    name: 'UON',
+    nameEn: 'UON',
     tagline: '同色同号接上去，只剩一张记得喊',
     minPlayers: 2,
     maxPlayers: 8,

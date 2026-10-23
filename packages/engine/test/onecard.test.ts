@@ -48,7 +48,7 @@ const run = (st: State, seat: number, action: OC.OcAction) => {
   return onecard.apply(st, seat, action);
 };
 
-describe('喊一张', () => {
+describe('UON', () => {
   it('108 张牌：四色 0 一张、1–9 / 跳过 / 反转 / +2 各两张，万能牌与 +4 各四张', () => {
     for (const count of [2, 4, 8]) {
       const st = onecard.setup({

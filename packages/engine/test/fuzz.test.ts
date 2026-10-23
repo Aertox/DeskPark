@@ -176,7 +176,7 @@ describe('畸形动作模糊测试（模拟恶意联机客户端）', () => {
     for (let seed = 1; seed <= 20; seed++)
       fuzz(spellstones, 2 + (seed % 4), {}, ['cast', 'stop', 'ready'], seed);
   });
-  it('喊一张', () => {
+  it('UON', () => {
     for (let seed = 1; seed <= 20; seed++)
       fuzz(
         onecard,
@@ -186,7 +186,7 @@ describe('畸形动作模糊测试（模拟恶意联机客户端）', () => {
         seed,
       );
   });
-  it('拓岛记', () => {
+  it('卡旦岛', () => {
     for (let seed = 1; seed <= 10; seed++)
       fuzz(
         hexisle,

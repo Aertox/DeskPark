@@ -54,7 +54,7 @@ export {
 } from './rules';
 
 /**
- * 拓岛记：开垦荒岛的资源经营游戏，规则参考经典的六边形拓荒桌游（基础版官方规则）。
+ * 卡旦岛：开垦荒岛的资源经营游戏，规则参考经典的六边形拓荒桌游（基础版官方规则）。
  *
  * - 19 块地形（森林、丘陵、牧场、麦田、山脉各若干与一块沙漠）随机摆放，6 / 8 不相邻；9 个港口。
  * - 开局蛇形顺序各放 2 个村庄和 2 条道路，第二个村庄旁的地形各给 1 张资源。
@@ -210,8 +210,8 @@ export const hexisle: GameDefinition<HiState, HiAction, HiView, HiOptions> = {
   meta: {
     id: 'hexisle',
     category: 'board',
-    name: '拓岛记',
-    nameEn: 'Hex Isles',
+    name: '卡旦岛',
+    nameEn: 'Kadan Isle',
     tagline: '开垦荒岛，修路建城，先到 10 分',
     minPlayers: 2,
     maxPlayers: 4,

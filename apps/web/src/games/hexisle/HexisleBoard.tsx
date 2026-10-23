@@ -81,7 +81,7 @@ function Stepper({
   );
 }
 
-/** 拓岛记牌桌 */
+/** 卡旦岛牌桌 */
 export default function HexisleBoard({ ctl }: { ctl: Ctl }) {
   const v = ctl.view!;
   const me = ctl.seat ?? 0;

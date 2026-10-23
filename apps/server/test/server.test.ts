@@ -191,7 +191,7 @@ describe('联机服务器', () => {
     e.close();
   }, 15000);
 
-  it('喊一张联机：只收到自己的手牌，可以摸牌', async () => {
+  it('UON 联机：只收到自己的手牌，可以摸牌', async () => {
     const f = new TestClient();
     await f.opened;
     f.send({ t: 'hello', token: 'token-oooooooooooooooo', name: '己', v: PROTOCOL_VERSION });
@@ -214,7 +214,7 @@ describe('联机服务器', () => {
     f.close();
   }, 15000);
 
-  it('拓岛记联机：只看得到自己的手牌与发展卡，可以开局摆放', async () => {
+  it('卡旦岛联机：只看得到自己的手牌与发展卡，可以开局摆放', async () => {
     const g = new TestClient();
     await g.opened;
     g.send({ t: 'hello', token: 'token-hhhhhhhhhhhhhhhh', name: '庚', v: PROTOCOL_VERSION });

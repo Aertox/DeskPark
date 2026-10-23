@@ -72,7 +72,7 @@ interface Flyer {
   delay: number;
 }
 
-/** 喊一张牌桌 */
+/** UON 牌桌 */
 export default function OneCardBoard({ ctl }: { ctl: Ctl }) {
   const v = ctl.view!;
   const me = ctl.seat ?? 0;
