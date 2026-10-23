@@ -4,6 +4,7 @@ import {
   Rng,
   SYSTEM_SEAT,
   doudizhu,
+  gemguild,
   guandan,
   hexisle,
   highcard,
@@ -49,6 +50,7 @@ const JUNK: unknown[] = [
 ];
 
 const RES = ['wood', 'brick', 'sheep', 'wheat', 'ore', 'gold'];
+const GG = ['white', 'blue', 'green', 'red', 'black', 'gold', 'pink'];
 
 /** 联机时恶意客户端可能发来的各种畸形动作 */
 function junkActions(types: string[], ids: number[], rng: Rng): unknown[] {
@@ -83,6 +85,16 @@ function junkActions(types: string[], ids: number[], rng: Rng): unknown[] {
       give: rng.next() < 0.5 ? pick(RES) : resMap(),
       get: rng.next() < 0.6 ? pick(RES) : field(),
       want: resMap(),
+      gems:
+        rng.next() < 0.5
+          ? [pick(GG), pick(GG), pick(GG)].slice(0, 1 + rng.int(3))
+          : rng.next() < 0.5
+            ? Object.fromEntries(
+                [...GG, 'gold'].map((g) => [g, rng.next() < 0.2 ? pick(JUNK) : rng.int(3)]),
+              )
+            : field(),
+      level: rng.next() < 0.6 ? rng.int(5) : field(),
+      id: rng.next() < 0.6 ? rng.int(12) : field(),
     });
   }
   return out;
@@ -196,6 +208,16 @@ describe('畸形动作模糊测试（模拟恶意联机客户端）', () => {
           'cancel',
           'end',
         ],
+        seed,
+      );
+  });
+  it('宝石商会', () => {
+    for (let seed = 1; seed <= 12; seed++)
+      fuzz(
+        gemguild,
+        2 + (seed % 3),
+        { target: 15 },
+        ['take', 'reserve', 'buy', 'discard', 'noble', 'pass'],
         seed,
       );
   });

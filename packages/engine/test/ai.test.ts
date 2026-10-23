@@ -5,6 +5,7 @@ import {
   SYSTEM_SEAT,
   Table,
   doudizhu,
+  gemguild,
   guandan,
   hexisle,
   highcard,
@@ -97,6 +98,10 @@ describe('大模型接管：候选动作', () => {
       expect(
         checkPrompts(hexisle, 2 + (seed % 3), hexisle.defaultOptions, seed, 6000),
       ).toBeGreaterThan(20);
+  });
+  it('宝石商会', () => {
+    for (let seed = 1; seed <= 4; seed++)
+      expect(checkPrompts(gemguild, 2 + (seed % 3), { target: 15 }, seed)).toBeGreaterThan(20);
   });
   it('比大小', () => {
     expect(checkPrompts(highcard, 4, { rounds: 1 }, 3)).toBeGreaterThan(5);

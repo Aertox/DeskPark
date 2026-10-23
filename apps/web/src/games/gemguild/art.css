@@ -1,0 +1,603 @@
+/* ============================ 宝石商会：牌面 ============================
+ * 1em = 牌宽 / 10，所有尺寸按 em 计。
+ */
+.gg-gem {
+  display: block;
+  overflow: visible;
+}
+
+/* ---------------- 发展卡 ---------------- */
+.ggc {
+  --w: 100px;
+  --metal-1: #f0d7a6;
+  --metal-2: #b07a3c;
+  --metal-3: #6e4518;
+  position: relative;
+  flex: none;
+  display: block;
+  width: var(--w);
+  height: calc(var(--w) * 1.39);
+  padding: 0;
+  border: 0;
+  font-size: calc(var(--w) / 10);
+  border-radius: 0.75em;
+  background: linear-gradient(145deg, var(--metal-1), var(--metal-2) 45%, var(--metal-3) 100%);
+  box-shadow:
+    0 0.05em 0.1em rgba(0, 0, 0, 0.4),
+    0 0.4em 1em rgba(0, 0, 0, 0.28);
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s,
+    filter 0.2s;
+}
+.ggc.lv-2 {
+  --metal-1: #ffffff;
+  --metal-2: #b9c2cd;
+  --metal-3: #5d6673;
+}
+.ggc.lv-3 {
+  --metal-1: #fff3c2;
+  --metal-2: #dca83a;
+  --metal-3: #7c4c08;
+}
+.ggc__frame {
+  position: absolute;
+  inset: 0.28em;
+  display: block;
+  overflow: hidden;
+  border-radius: 0.5em;
+  box-shadow:
+    inset 0 0 0 0.06em rgba(0, 0, 0, 0.35),
+    inset 0 0 0.8em rgba(0, 0, 0, 0.25);
+}
+.ggc__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* 顶部的乳白色牌头：声望 + 折扣宝石 */
+.ggc__band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2.7em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.45em 0 0.6em;
+  background: linear-gradient(180deg, rgba(255, 252, 244, 0.94), rgba(255, 249, 236, 0.72));
+  box-shadow:
+    0 0.06em 0 rgba(255, 255, 255, 0.6) inset,
+    0 0.1em 0.3em rgba(0, 0, 0, 0.18);
+  border-bottom: 0.06em solid rgba(140, 105, 50, 0.35);
+}
+.ggc__band::after {
+  content: '';
+  position: absolute;
+  left: 0.6em;
+  right: 0.6em;
+  bottom: 0.28em;
+  height: 0.06em;
+  background: linear-gradient(90deg, transparent, var(--metal-2), transparent);
+  opacity: 0.7;
+}
+.ggc__pts {
+  font-family: Georgia, 'Times New Roman', var(--font-display), serif;
+  font-size: 2.3em;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff9ea;
+  -webkit-text-stroke: 0.09em #4a2f0c;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0.05em 0 #4a2f0c,
+    0 0.1em 0.16em rgba(0, 0, 0, 0.35);
+}
+.ggc__bonus {
+  width: 2.2em;
+  height: 2.2em;
+  filter: drop-shadow(0 0.08em 0.1em rgba(0, 0, 0, 0.45));
+}
+/* 价格：左下角一列宝石圆片 */
+.ggc__cost {
+  position: absolute;
+  left: 0.35em;
+  bottom: 0.35em;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.16em;
+}
+.ggc__chip {
+  --c1: #fff;
+  --c2: #ccc;
+  --c3: #888;
+  display: grid;
+  place-items: center;
+  width: 1.85em;
+  height: 1.85em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--c1), var(--c2) 55%, var(--c3));
+  box-shadow:
+    0 0 0 0.1em rgba(255, 255, 255, 0.92),
+    0 0.08em 0.2em rgba(0, 0, 0, 0.45);
+}
+.ggc__chip b {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.2em;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 0.06em rgba(0, 0, 0, 0.55);
+  paint-order: stroke fill;
+}
+.ggc__chip.c-white {
+  --c1: #ffffff;
+  --c2: #e2e9f1;
+  --c3: #9aaabb;
+}
+.ggc__chip.c-white b {
+  color: #2e3a48;
+  -webkit-text-stroke: 0;
+}
+.ggc__chip.c-blue {
+  --c1: #8dbdff;
+  --c2: #2463d6;
+  --c3: #0a286b;
+}
+.ggc__chip.c-green {
+  --c1: #8df0bb;
+  --c2: #119652;
+  --c3: #063f26;
+}
+.ggc__chip.c-red {
+  --c1: #ffa0a8;
+  --c2: #d1253a;
+  --c3: #5a0912;
+}
+.ggc__chip.c-black {
+  --c1: #8f91ad;
+  --c2: #393a4a;
+  --c3: #0c0c11;
+}
+.ggc__lv {
+  position: absolute;
+  right: 0.5em;
+  bottom: 0.45em;
+  display: flex;
+  gap: 0.18em;
+}
+.ggc__lv i {
+  width: 0.45em;
+  height: 0.45em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6cf, #d9a031 60%, #7d4f0b);
+  box-shadow: 0 0 0 0.06em rgba(0, 0, 0, 0.35);
+}
+button.ggc {
+  cursor: pointer;
+}
+button.ggc:disabled {
+  cursor: default;
+}
+
+/* ---------------- 牌背 ---------------- */
+.ggk {
+  --w: 100px;
+  --b1: #2a7a52;
+  --b2: #0d2c1d;
+  position: relative;
+  flex: none;
+  display: block;
+  width: var(--w);
+  height: calc(var(--w) * 1.39);
+  padding: 0;
+  border: 0;
+  font-size: calc(var(--w) / 10);
+  border-radius: 0.75em;
+  background: linear-gradient(145deg, #f0d7a6, #b07a3c 45%, #6e4518);
+  box-shadow:
+    0 0.05em 0.1em rgba(0, 0, 0, 0.4),
+    0 0.4em 1em rgba(0, 0, 0, 0.28);
+}
+.ggk.lv-2 {
+  --b1: #a0702c;
+  --b2: #3d2507;
+}
+.ggk.lv-3 {
+  --b1: #3a4bb0;
+  --b2: #0f1440;
+}
+.ggk__frame {
+  position: absolute;
+  inset: 0.28em;
+  overflow: hidden;
+  border-radius: 0.5em;
+  background:
+    radial-gradient(70% 50% at 50% 42%, rgba(255, 255, 255, 0.18), transparent 70%),
+    linear-gradient(165deg, var(--b1), var(--b2));
+  box-shadow:
+    inset 0 0 0 0.12em rgba(231, 200, 134, 0.75),
+    inset 0 0 0 0.3em rgba(0, 0, 0, 0.15),
+    inset 0 0 0 0.36em rgba(231, 200, 134, 0.35);
+}
+.ggk__pattern {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 42%,
+    rgba(255, 255, 255, 0.05) 0 6deg,
+    transparent 6deg 12deg
+  );
+}
+.ggk__medal {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 6.8em;
+  height: 6.8em;
+  translate: -50% -50%;
+}
+.ggk__medal svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.ggk__ring {
+  fill: rgba(0, 0, 0, 0.18);
+  stroke: #e7c886;
+  stroke-width: 2.4;
+}
+.ggk__ring.is-thin {
+  fill: none;
+  stroke-width: 0.8;
+  opacity: 0.7;
+}
+.ggk__num {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  font-weight: 700;
+  fill: #f6dc9c;
+}
+.ggk__title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.1em;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1.05em;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: #f6dc9c;
+  text-shadow: 0 0.06em 0.1em rgba(0, 0, 0, 0.5);
+}
+.ggk__count {
+  position: absolute;
+  right: 0.5em;
+  top: 0.45em;
+  min-width: 2em;
+  padding: 0.1em 0.4em;
+  border-radius: 99px;
+  font-size: 1.05em;
+  font-weight: 700;
+  text-align: center;
+  color: #2a2116;
+  background: #f6dc9c;
+  box-shadow: 0 0.06em 0.15em rgba(0, 0, 0, 0.4);
+}
+.ggk.is-empty {
+  opacity: 0.3;
+  filter: grayscale(0.7);
+}
+button.ggk {
+  cursor: pointer;
+}
+button.ggk:disabled {
+  cursor: default;
+}
+
+/* ---------------- 贵族 ---------------- */
+.ggn {
+  --w: 90px;
+  position: relative;
+  flex: none;
+  display: block;
+  width: var(--w);
+  height: var(--w);
+  padding: 0;
+  border: 0;
+  font-size: calc(var(--w) / 10);
+  border-radius: 0.6em;
+  background:
+    radial-gradient(90% 80% at 70% 30%, #fffaf0, transparent 70%),
+    linear-gradient(160deg, #f5e9cf, #dcc392);
+  box-shadow:
+    inset 0 0 0 0.16em #c9a25a,
+    inset 0 0 0 0.3em rgba(255, 255, 255, 0.5),
+    inset 0 0 0 0.36em rgba(150, 110, 40, 0.4),
+    0 0.3em 0.8em rgba(0, 0, 0, 0.3);
+  color: #3a2a12;
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s;
+}
+.ggn__side {
+  position: absolute;
+  left: 0.5em;
+  top: 0.4em;
+  bottom: 0.5em;
+  width: 2.2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22em;
+}
+.ggn__pts {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.3em;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff9ea;
+  -webkit-text-stroke: 0.09em #4a2f0c;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0.05em 0 #4a2f0c,
+    0 0.1em 0.16em rgba(0, 0, 0, 0.3);
+}
+.ggn__need {
+  display: grid;
+  place-items: center;
+  width: 1.8em;
+  height: 2.1em;
+  border-radius: 0.3em;
+  background: linear-gradient(160deg, var(--c1), var(--c2) 60%, var(--c3));
+  box-shadow:
+    inset 0 0 0 0.08em rgba(255, 255, 255, 0.5),
+    0 0.06em 0.15em rgba(0, 0, 0, 0.35);
+}
+.ggn__need b {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.15em;
+  font-weight: 700;
+  color: #fff;
+  -webkit-text-stroke: 0.06em rgba(0, 0, 0, 0.5);
+  paint-order: stroke fill;
+}
+.ggn__need.g-white b {
+  color: #2e3a48;
+  -webkit-text-stroke: 0;
+}
+.ggn__crest {
+  position: absolute;
+  right: 0.35em;
+  top: 0.45em;
+  width: 6.4em;
+  height: 7.3em;
+  overflow: visible;
+  filter: drop-shadow(0 0.08em 0.12em rgba(0, 0, 0, 0.3));
+}
+.ggn__char {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  fill: #f8e2a0;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.35);
+  stroke-width: 0.8px;
+}
+.ggn__name {
+  position: absolute;
+  right: 0.5em;
+  bottom: 0.5em;
+  font-size: 0.95em;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  color: #6b4a1a;
+}
+button.ggn {
+  cursor: pointer;
+}
+
+/* 颜色变量（折扣小牌、贵族要求共用） */
+.g-white {
+  --c1: #ffffff;
+  --c2: #dfe7f0;
+  --c3: #93a4b6;
+}
+.g-blue {
+  --c1: #8dbdff;
+  --c2: #2463d6;
+  --c3: #0a286b;
+}
+.g-green {
+  --c1: #8df0bb;
+  --c2: #119652;
+  --c3: #063f26;
+}
+.g-red {
+  --c1: #ffa0a8;
+  --c2: #d1253a;
+  --c3: #5a0912;
+}
+.g-black {
+  --c1: #8f91ad;
+  --c2: #393a4a;
+  --c3: #0c0c11;
+}
+
+/* ---------------- 宝石筹码 ---------------- */
+.ggt {
+  --t: 46px;
+  --r1: #ffffff;
+  --r2: #b9c2cd;
+  --r3: #5d6673;
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--t);
+  height: var(--t);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  transition:
+    transform 0.18s var(--ease),
+    filter 0.2s,
+    opacity 0.2s;
+}
+.ggt__rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.55) 0 8deg, transparent 8deg 30deg),
+    conic-gradient(from 200deg, var(--r3), var(--r1), var(--r2), var(--r3), var(--r1), var(--r3));
+  box-shadow:
+    0 0.06rem 0.12rem rgba(0, 0, 0, 0.4),
+    0 0.2rem 0.5rem rgba(0, 0, 0, 0.25);
+}
+.ggt__face {
+  position: absolute;
+  inset: 12%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #3a3d48, #15161c);
+  box-shadow:
+    inset 0 0.1rem 0.3rem rgba(0, 0, 0, 0.6),
+    inset 0 -0.05rem 0.1rem rgba(255, 255, 255, 0.15);
+}
+.ggt__face .gg-gem {
+  width: 72%;
+  height: 72%;
+  filter: drop-shadow(0 0.05rem 0.08rem rgba(0, 0, 0, 0.5));
+}
+.ggt.t-white .ggt__face {
+  background: radial-gradient(circle at 40% 35%, #5a6878, #27303b);
+}
+.ggt.t-gold {
+  --r1: #fff3c2;
+  --r2: #dca83a;
+  --r3: #7c4c08;
+}
+.ggt.t-gold .ggt__face {
+  background: radial-gradient(circle at 40% 35%, #5a3f12, #251806);
+}
+.ggt__count {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 20px;
+  text-align: center;
+  color: #1d1e22;
+  background: #fffdf6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.ggt__sel {
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  translate: -50% 0;
+  padding: 0 6px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 750;
+  line-height: 18px;
+  color: #2a2116;
+  background: var(--felt-accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.ggt.is-selected {
+  transform: translateY(-4px);
+}
+.ggt.is-selected .ggt__rim {
+  box-shadow:
+    0 0 0 2.5px var(--felt-accent),
+    0 0 16px rgba(231, 200, 134, 0.6);
+}
+.ggt.is-dim {
+  opacity: 0.38;
+  filter: grayscale(0.6);
+}
+button.ggt {
+  cursor: pointer;
+}
+button.ggt:not(:disabled):hover {
+  transform: translateY(-3px);
+}
+button.ggt:disabled {
+  cursor: default;
+}
+
+/* 折扣小牌 */
+.ggbc {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 34px;
+  border-radius: 5px;
+  background: linear-gradient(160deg, var(--c1), var(--c2) 60%, var(--c3));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.ggbc .gg-gem {
+  width: 16px;
+  height: 16px;
+  margin-top: -9px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+.ggbc b {
+  position: absolute;
+  bottom: 1px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  -webkit-text-stroke: 0.7px rgba(0, 0, 0, 0.5);
+  paint-order: stroke fill;
+}
+.ggbc.g-white b {
+  color: #2e3a48;
+  -webkit-text-stroke: 0;
+}
+.ggbc.is-zero {
+  opacity: 0.32;
+  filter: grayscale(0.6);
+}
+
+/* 大厅插画 */
+.gg-art {
+  position: relative;
+  width: 58px;
+  height: 81px;
+  margin-top: 6px;
+}
+.gg-art .ggc {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 115%;
+  rotate: calc(var(--i) * 13deg);
+  translate: calc(var(--i) * 30px) calc(var(--i) * var(--i) * 4px);
+  transition: translate 0.35s var(--ease);
+}
+@media (hover: hover) {
+  .gtile:hover .gg-art .ggc {
+    translate: calc(var(--i) * 36px) calc(var(--i) * var(--i) * 4px - 6px);
+  }
+}

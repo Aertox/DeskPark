@@ -241,6 +241,33 @@ describe('联机服务器', () => {
     g.close();
   }, 25000);
 
+  it('宝石商会联机：盲抽预留的牌别人看不到，可以拿宝石', async () => {
+    const h = new TestClient();
+    await h.opened;
+    h.send({ t: 'hello', token: 'token-gggggggggggggggg', name: '辛', v: PROTOCOL_VERSION });
+    h.send({ t: 'create', gameId: 'gemguild', seats: 2 });
+    await h.wait('room');
+    h.send({ t: 'start' });
+    type V = {
+      turn: number;
+      phase: string;
+      players: { reserved: unknown[] }[];
+      bank: Record<string, number>;
+    };
+    const mine = await h.wait(
+      'game',
+      (m) => (m.view as V).turn === 0 && (m.view as V).phase === 'play',
+      15000,
+    );
+    expect(JSON.stringify(mine.view)).not.toContain('decks');
+    h.send({ t: 'act', action: { type: 'reserve', level: 3 } });
+    const after = await h.wait('game', (m) => m.version > mine.version);
+    const me = (after.view as V).players[0].reserved;
+    expect(me).toHaveLength(1);
+    expect(me[0]).not.toBeNull();
+    h.close();
+  }, 25000);
+
   it('房间聊天：广播、系统消息、历史记录、文本清理与限流', async () => {
     const a = new TestClient();
     const b = new TestClient();
