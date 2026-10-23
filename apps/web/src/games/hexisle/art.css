@@ -1,0 +1,264 @@
+/* ============================ 拓岛记：牌与小部件 ============================ */
+.hic {
+  --c1: #4d9a5a;
+  --c2: #23603a;
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 50px;
+  height: 70px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background:
+    radial-gradient(120% 70% at 25% 0%, rgba(255, 255, 255, 0.28), transparent 60%),
+    linear-gradient(165deg, var(--c1), var(--c2));
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.35),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.08),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition:
+    transform 0.18s var(--ease),
+    filter 0.2s,
+    box-shadow 0.2s;
+}
+.hic.res-wood {
+  --c1: #4d9a5a;
+  --c2: #1f5634;
+}
+.hic.res-brick {
+  --c1: #e2875a;
+  --c2: #9a4226;
+}
+.hic.res-sheep {
+  --c1: #a9d873;
+  --c2: #5f9a38;
+}
+.hic.res-wheat {
+  --c1: #f6d465;
+  --c2: #c8901b;
+}
+.hic.res-ore {
+  --c1: #a5b0bf;
+  --c2: #555f6e;
+}
+.hic__shine {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07) 0 2px,
+    transparent 2px 9px
+  );
+  pointer-events: none;
+}
+.hic__icon {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+.hic__name {
+  position: relative;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+.hic__count {
+  position: absolute;
+  right: 3px;
+  top: 3px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 750;
+  line-height: 18px;
+  text-align: center;
+  color: #1d1e22;
+  background: #fffdf6;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.hic.is-empty {
+  filter: grayscale(0.85) brightness(0.75);
+  opacity: 0.55;
+}
+.hic--sm {
+  width: 38px;
+  height: 52px;
+  border-radius: 7px;
+}
+.hic--sm .hic__icon {
+  width: 18px;
+  height: 18px;
+}
+.hic--sm .hic__name {
+  font-size: 9px;
+}
+.hic--sm .hic__count {
+  min-width: 15px;
+  height: 15px;
+  font-size: 10px;
+  line-height: 15px;
+}
+.hic--xs {
+  width: 20px;
+  height: 27px;
+  border-radius: 4px;
+}
+.hic--xs .hic__icon {
+  width: 13px;
+  height: 13px;
+}
+button.hic {
+  cursor: pointer;
+}
+button.hic:not(:disabled):hover {
+  transform: translateY(-3px);
+}
+button.hic:disabled {
+  cursor: default;
+}
+.hic.is-selected {
+  transform: translateY(-5px);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(255, 255, 255, 0.5),
+    0 0 0 2.5px var(--felt-accent),
+    0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+/* 发展卡 */
+.hid {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 50px;
+  height: 70px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  color: #f3d891;
+  background:
+    radial-gradient(90% 60% at 50% 30%, rgba(160, 120, 255, 0.35), transparent 70%),
+    linear-gradient(165deg, #4a3a7a, #221a40);
+  box-shadow:
+    inset 0 0 0 1.5px rgba(243, 216, 145, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s var(--ease);
+}
+.hid__frame {
+  position: absolute;
+  inset: 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(243, 216, 145, 0.25);
+}
+.hid__icon {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+.hid__name {
+  font-size: 10px;
+  font-weight: 650;
+  color: #fbeec6;
+  letter-spacing: 0.04em;
+}
+.hid__count {
+  position: absolute;
+  right: 4px;
+  top: 3px;
+  font-size: 10.5px;
+  font-weight: 750;
+  color: #fbeec6;
+}
+.hid.dev-knight {
+  background:
+    radial-gradient(90% 60% at 50% 30%, rgba(255, 120, 120, 0.28), transparent 70%),
+    linear-gradient(165deg, #5a3550, #2a1730);
+}
+.hid.dev-vp {
+  background:
+    radial-gradient(90% 60% at 50% 30%, rgba(255, 220, 120, 0.35), transparent 70%),
+    linear-gradient(165deg, #4d4120, #2a220e);
+}
+.hid.is-fresh {
+  opacity: 0.6;
+}
+button.hid {
+  cursor: pointer;
+}
+button.hid:not(:disabled):hover {
+  transform: translateY(-3px);
+}
+button.hid:disabled {
+  cursor: default;
+  filter: saturate(0.6) brightness(0.85);
+}
+
+/* 骰子 */
+.hi-die {
+  width: 30px;
+  height: 30px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+}
+.hi-die__face {
+  fill: #fffdf6;
+  stroke: rgba(0, 0, 0, 0.18);
+  stroke-width: 0.8;
+}
+.hi-die circle {
+  fill: #2a2a30;
+}
+.hi-die circle.is-red {
+  fill: #d8443c;
+}
+.hi-die.is-rolling {
+  animation: hi-roll 0.6s var(--ease-out);
+}
+@keyframes hi-roll {
+  0% {
+    transform: rotate(-260deg) scale(0.5);
+  }
+  70% {
+    transform: rotate(15deg) scale(1.08);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 数字圆片上的字 */
+.hi-num {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  fill: #2a2622;
+}
+.hi-num.is-hot {
+  fill: #c2302a;
+}
+
+/* 大厅插画 */
+.hi-art {
+  width: 150px;
+  height: 140px;
+  margin-top: 4px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
+  transition: transform 0.4s var(--ease);
+}
+@media (hover: hover) {
+  .gtile:hover .hi-art {
+    transform: rotate(-4deg) scale(1.04);
+  }
+}

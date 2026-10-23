@@ -21,6 +21,7 @@ describe('基础设施', () => {
       'sichuan',
       'spellstones',
       'onecard',
+      'hexisle',
       'highcard',
     ]);
     const ddz = listGames()[0];

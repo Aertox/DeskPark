@@ -2,6 +2,7 @@ import type { Card } from '@park/engine';
 import type { ComponentType } from 'react';
 import { lazy } from 'react';
 import type { GameController } from '../lib/controller';
+import { HexArt } from './hexisle/art';
 import { OneCardArt } from './onecard/cards';
 import { SpellArt } from './spellstones/spells';
 
@@ -80,6 +81,14 @@ export const GAME_UIS: GameUI[] = [
     showcase: [],
     Art: OneCardArt,
     people: '2–8 人',
+  },
+  {
+    id: 'hexisle',
+    Board: lazy(() => import('./hexisle/HexisleBoard')),
+    tint: ['#3487b8', '#1b4c70'],
+    showcase: [],
+    Art: HexArt,
+    people: '2–4 人',
   },
   {
     id: 'highcard',

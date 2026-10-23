@@ -6,6 +6,7 @@ import {
   Table,
   doudizhu,
   guandan,
+  hexisle,
   highcard,
   onecard,
   sichuan,
@@ -90,6 +91,12 @@ describe('大模型接管：候选动作', () => {
       expect(
         checkPrompts(onecard, 2 + (seed % 7), { target: 0, stack: seed % 2 === 0 }, seed),
       ).toBeGreaterThan(5);
+  });
+  it('拓岛记', () => {
+    for (let seed = 1; seed <= 3; seed++)
+      expect(
+        checkPrompts(hexisle, 2 + (seed % 3), hexisle.defaultOptions, seed, 6000),
+      ).toBeGreaterThan(20);
   });
   it('比大小', () => {
     expect(checkPrompts(highcard, 4, { rounds: 1 }, 3)).toBeGreaterThan(5);

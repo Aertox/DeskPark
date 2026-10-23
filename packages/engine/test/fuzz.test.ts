@@ -5,6 +5,7 @@ import {
   SYSTEM_SEAT,
   doudizhu,
   guandan,
+  hexisle,
   highcard,
   onecard,
   sichuan,
@@ -47,9 +48,17 @@ const JUNK: unknown[] = [
   [0, 0, 0],
 ];
 
+const RES = ['wood', 'brick', 'sheep', 'wheat', 'ore', 'gold'];
+
 /** 联机时恶意客户端可能发来的各种畸形动作 */
 function junkActions(types: string[], ids: number[], rng: Rng): unknown[] {
   const pick = <T>(a: T[]) => a[rng.int(a.length)];
+  const resMap = () =>
+    rng.next() < 0.3
+      ? pick(JUNK)
+      : Object.fromEntries(
+          RES.slice(0, 5).map((r) => [r, rng.next() < 0.2 ? pick(JUNK) : rng.int(3)]),
+        );
   const field = () => (rng.next() < 0.4 && ids.length ? pick(ids) : pick(JUNK));
   const out: unknown[] = [null, 42, 'play', [], {}];
   for (let i = 0; i < 24; i++) {
@@ -66,6 +75,14 @@ function junkActions(types: string[], ids: number[], rng: Rng): unknown[] {
       spell: rng.next() < 0.6 ? pick([1, 2, 3, 4, 5, 6, 7, 8]) : field(),
       color: rng.next() < 0.6 ? pick(['R', 'Y', 'G', 'B', 'X']) : field(),
       uno: rng.next() < 0.5 ? rng.next() < 0.5 : field(),
+      at: rng.next() < 0.6 ? rng.int(80) - 4 : field(),
+      hex: rng.next() < 0.6 ? rng.int(22) - 1 : field(),
+      victim: rng.next() < 0.6 ? rng.int(6) - 1 : field(),
+      kind: pick(['knight', 'road', 'plenty', 'monopoly', 'vp', 'xx']),
+      res: pick([['ore', 'ore'], ['wheat'], ['x'], 'ore', [], field()]),
+      give: rng.next() < 0.5 ? pick(RES) : resMap(),
+      get: rng.next() < 0.6 ? pick(RES) : field(),
+      want: resMap(),
     });
   }
   return out;
@@ -87,7 +104,8 @@ function fuzz(def: AnyGame, players: number, options: unknown, types: string[], 
     const seat = active[rng.int(active.length)];
     // 手里的牌 id（以及若干不存在的 id）
     const s = state as { hands?: { id: number }[][]; players?: { hand?: { id: number }[] }[] };
-    const hand = s.hands?.[seat] ?? s.players?.[seat]?.hand ?? [];
+    const raw = s.hands?.[seat] ?? s.players?.[seat]?.hand ?? [];
+    const hand = Array.isArray(raw) ? raw : [];
     const ids = [...hand.map((c) => c.id), 9999, -5];
     if (step % 3 === 0) {
       for (const a of junkActions(types, ids, rng)) {
@@ -153,6 +171,31 @@ describe('畸形动作模糊测试（模拟恶意联机客户端）', () => {
         2 + (seed % 7),
         { target: seed % 2 ? 0 : 250, stack: seed % 3 === 0 },
         ['play', 'draw', 'keep', 'challenge', 'uno', 'catch', 'pass', 'ready', 'close'],
+        seed,
+      );
+  });
+  it('拓岛记', () => {
+    for (let seed = 1; seed <= 10; seed++)
+      fuzz(
+        hexisle,
+        2 + (seed % 3),
+        { target: 10, friendly: seed % 2 === 0 },
+        [
+          'settle',
+          'road',
+          'city',
+          'roll',
+          'discard',
+          'robber',
+          'buy',
+          'dev',
+          'bank',
+          'offer',
+          'accept',
+          'reject',
+          'cancel',
+          'end',
+        ],
         seed,
       );
   });

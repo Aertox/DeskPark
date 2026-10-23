@@ -8,6 +8,7 @@ export * from './core/ai';
 import { registerGame } from './core/registry';
 import { doudizhu } from './games/doudizhu';
 import { guandan } from './games/guandan';
+import { hexisle } from './games/hexisle';
 import { highcard } from './games/highcard';
 import { onecard } from './games/onecard';
 import { sichuan } from './games/sichuan';
@@ -21,10 +22,11 @@ export * as hc from './games/highcard';
 export * as sc from './games/sichuan';
 export * as ss from './games/spellstones';
 export * as oc from './games/onecard';
+export * as hi from './games/hexisle';
 export * as mj from './mahjong';
 
-export { doudizhu, guandan, texas, sichuan, spellstones, onecard, highcard };
+export { doudizhu, guandan, texas, sichuan, spellstones, onecard, hexisle, highcard };
 
 // 内置玩法（顺序即大厅展示顺序）
-for (const g of [doudizhu, guandan, texas, sichuan, spellstones, onecard, highcard])
+for (const g of [doudizhu, guandan, texas, sichuan, spellstones, onecard, hexisle, highcard])
   registerGame(g);

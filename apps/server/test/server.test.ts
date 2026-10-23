@@ -213,6 +213,34 @@ describe('联机服务器', () => {
     f.close();
   }, 15000);
 
+  it('拓岛记联机：只看得到自己的手牌与发展卡，可以开局摆放', async () => {
+    const g = new TestClient();
+    await g.opened;
+    g.send({ t: 'hello', token: 'token-hhhhhhhhhhhhhhhh', name: '庚', v: PROTOCOL_VERSION });
+    g.send({ t: 'create', gameId: 'hexisle', seats: 3 });
+    await g.wait('room');
+    g.send({ t: 'start' });
+    type P = { hand: unknown; devs: unknown; cards: number };
+    type V = { turn: number; phase: string; setupVertex: number | null; players: P[] };
+    const mine = await g.wait(
+      'game',
+      (m) => (m.view as V).turn === 0 && (m.view as V).phase === 'setup',
+      15000,
+    );
+    const view = mine.view as V;
+    expect(view.players[0].hand).not.toBeNull();
+    expect(view.players[1].hand).toBeNull();
+    expect(view.players[1].devs).toBeNull();
+    expect(JSON.stringify(view)).not.toContain('devDeck');
+    // 找一个满足距离规则的路口放村庄
+    const taken = (mine.view as { buildings: (unknown | null)[] }).buildings;
+    const at = taken.findIndex((b, i) => !b && i % 7 === 3);
+    g.send({ t: 'act', action: { type: 'settle', at } });
+    const after = await g.wait('game', (m) => m.version > mine.version);
+    expect((after.view as V).setupVertex === at || (after.view as V).turn !== 0).toBe(true);
+    g.close();
+  }, 25000);
+
   it('房间聊天：广播、系统消息、历史记录、文本清理与限流', async () => {
     const a = new TestClient();
     const b = new TestClient();
