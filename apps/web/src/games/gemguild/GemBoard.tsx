@@ -39,6 +39,17 @@ function useBox() {
   return [ref, box] as const;
 }
 
+/**
+ * 牌宽只在变化超过 2px 时更新，并取整：防止布局在两个相差不到一像素的尺寸之间来回切换（画面抖动）。
+ */
+function useStableSize(target: number): number {
+  const [size, setSize] = useState(() => Math.round(target));
+  useEffect(() => {
+    if (Math.abs(target - size) >= 2) setSize(Math.round(target));
+  }, [target, size]);
+  return Math.abs(target - size) >= 2 ? Math.round(target) : size;
+}
+
 /** 持有的宝石与折扣：每种颜色一列（折扣牌在上，宝石在下） */
 function Holdings({ p, size }: { p: gg.GgPlayerView; size: string }) {
   return (
@@ -91,7 +102,7 @@ export default function GemBoard({ ctl }: { ctl: Ctl }) {
 
   // ---- 尺寸：按可用空间算牌宽 ----
   const [tableRef, box] = useBox();
-  const cw = Math.max(40, Math.min(200, box.w / 6.4, box.h / 5.5));
+  const cw = useStableSize(Math.max(40, Math.min(200, box.w / 6.4, box.h / 5.5)));
 
   // ---- 拿宝石：点供应区的筹码挑选 ----
   const [sel, setSel] = useState<Gem[]>([]);
@@ -398,49 +409,58 @@ export default function GemBoard({ ctl }: { ctl: Ctl }) {
                 className={`gg-opp ${v.turn === s && !over ? 'is-turn' : ''}`}
                 data-player={s}
               >
-                <div className="gg-opp__head">
-                  <Seat
-                    player={ctl.players[s]}
-                    active={v.turn === s && !over}
-                    deadline={ctl.deadlines[s]}
-                    size={compact ? 30 : 38}
-                    layout="row"
-                    sub={
-                      <span className="gg-opp__sub">
-                        <Layers size={11} />
-                        {p.cards.length} 张牌
-                      </span>
-                    }
-                  />
-                  <span className="gg-pts">
-                    <b className="num">{p.points}</b>
-                    <small>声望</small>
-                  </span>
-                </div>
-                <Holdings p={p} size={compact ? '17px' : '26px'} />
-                {(p.reserved.length > 0 || p.nobles.length > 0) && (
-                  <div className="gg-opp__extra">
-                    {p.reserved.map((c, i) =>
-                      c ? (
-                        <GemCard
-                          key={c.id}
-                          card={c}
-                          w="30px"
-                          onClick={() =>
-                            setFocus({ kind: 'card', card: c, reserved: true, owner: s })
-                          }
-                        />
-                      ) : (
-                        <GemCardBack key={`b${i}`} level={1} w="30px" title="盲抽预留的牌" />
-                      ),
-                    )}
-                    {p.nobles.map((n) => (
-                      <span key={n.id} className="gg-mini-noble" title={n.name}>
-                        <Crown size={12} />
-                      </span>
-                    ))}
+                <Seat
+                  player={ctl.players[s]}
+                  active={v.turn === s && !over}
+                  deadline={ctl.deadlines[s]}
+                  size={compact ? 26 : 34}
+                  className="gg-opp__seat"
+                  sub={
+                    <span className="gg-opp__sub">
+                      <Layers size={11} />
+                      {p.cards.length}
+                    </span>
+                  }
+                />
+                <div className="gg-opp__body">
+                  <div className="gg-opp__top">
+                    <span className="gg-opp__extra">
+                      {p.reserved.map((c, i) =>
+                        c ? (
+                          <GemCard
+                            key={c.id}
+                            card={c}
+                            w={compact ? '18px' : '24px'}
+                            onClick={() =>
+                              setFocus({ kind: 'card', card: c, reserved: true, owner: s })
+                            }
+                          />
+                        ) : (
+                          <GemCardBack
+                            key={`b${i}`}
+                            level={1}
+                            w={compact ? '18px' : '24px'}
+                            title="盲抽预留的牌"
+                          />
+                        ),
+                      )}
+                      {p.nobles.map((n) => (
+                        <span key={n.id} className="gg-mini-noble" title={n.name}>
+                          <Crown size={12} />
+                        </span>
+                      ))}
+                    </span>
+                    <span className="gg-pts">
+                      <b className="num">{p.points}</b>
+                      <small>声望</small>
+                    </span>
                   </div>
-                )}
+                  {/* 宝石大小随屏幕放大，但不超过面板宽度（容器查询单位） */}
+                  <Holdings
+                    p={p}
+                    size={compact ? 'min(17px, 14cqw)' : 'min(calc(26px * var(--k, 1)), 14cqw)'}
+                  />
+                </div>
               </div>
             );
           })}
@@ -479,14 +499,14 @@ export default function GemBoard({ ctl }: { ctl: Ctl }) {
               <small>声望</small>
             </span>
           </div>
-          <Holdings p={mine} size={compact ? '26px' : '34px'} />
+          <Holdings p={mine} size={compact ? '26px' : 'calc(34px * var(--k, 1))'} />
           <div className="gg-me__reserved">
             {mine.reserved.map((c) =>
               c ? (
                 <GemCard
                   key={c.id}
                   card={c}
-                  w={`${Math.max(42, cw * 0.62)}px`}
+                  w={compact ? '46px' : 'calc(64px * var(--k, 1))'}
                   className={canBuy(c) ? 'is-buyable' : ''}
                   onClick={() => setFocus({ kind: 'card', card: c, reserved: true, owner: me })}
                   attrs={{ 'data-card': c.id }}
@@ -494,7 +514,7 @@ export default function GemBoard({ ctl }: { ctl: Ctl }) {
               ) : null,
             )}
             {mine.nobles.map((n) => (
-              <NobleTile key={n.id} noble={n} w={`${Math.max(40, cw * 0.5)}px`} />
+              <NobleTile key={n.id} noble={n} w={compact ? '40px' : 'calc(56px * var(--k, 1))'} />
             ))}
           </div>
           <div className="gg-actions">
