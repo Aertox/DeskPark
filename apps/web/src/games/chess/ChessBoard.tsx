@@ -3,6 +3,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from '../../components/ui';
 import type { GameController } from '../../lib/controller';
 import { playSound } from '../../lib/sound';
+import { CoachPanel, useCoach } from '../shared/coach';
 import { DuelActions, DuelLayout, DuelResult, MoveList, PlayerCard } from '../shared/duel';
 import { GridBoard } from '../shared/grid';
 import { useTurnCue } from '../shared/trick';
@@ -89,6 +90,10 @@ export default function ChessBoard({ ctl }: { ctl: Ctl }) {
   useTurnCue(myTurn);
   const [flipped, setFlipped] = useState(false);
   const flip = (myColor === 'b') !== flipped;
+  const opp = spectator ? 1 : 1 - me;
+  const mineSeat = spectator ? 0 : me;
+  // 导师：只在和电脑下时出现
+  const coach = useCoach('chess', v, { eligible: !spectator && !!ctl.players[opp]?.isBot, myTurn });
 
   const center = (sq: number): [number, number] => {
     const f = sq & 7;
@@ -111,10 +116,21 @@ export default function ChessBoard({ ctl }: { ctl: Ctl }) {
     const err = ctl.act(a);
     if (err) toast(err, 'error');
   };
+  const commit = (m: { from: number; to: number; promo?: string }) =>
+    send({
+      type: 'move',
+      from: m.from,
+      to: m.to,
+      ...(m.promo ? { promo: m.promo as ch.ChPromo } : {}),
+    });
+  /** 选好一步：开着导师就先给导师看，否则直接走 */
+  const choose = (m: { from: number; to: number; promo?: ch.ChPromo }) => {
+    if (!coach.propose(m)) commit(m);
+  };
   const onMove = (from: number, to: number) => {
     const opts = v.legal.filter((m) => m.from === from && m.to === to);
     if (opts.some((m) => m.promo)) setPromo({ from, to });
-    else send({ type: 'move', from, to });
+    else choose({ from, to });
   };
 
   // 音效：吃子、将军、普通走子
@@ -138,8 +154,6 @@ export default function ChessBoard({ ctl }: { ctl: Ctl }) {
     return { by, diff: score('w') - score('b') };
   }, [v.moves]);
 
-  const opp = spectator ? 1 : 1 - me;
-  const mineSeat = spectator ? 0 : me;
   const colorOf = (s: number) => v.colors[s];
   const capturedRow = (s: number) => {
     const c = colorOf(s);
@@ -218,6 +232,7 @@ export default function ChessBoard({ ctl }: { ctl: Ctl }) {
         check={v.check}
         background={<ChessBg flip={flip} />}
         mark="square"
+        arrows={coach.active ? coach.arrows : undefined}
         overlay={
           <>
             {last?.check && !over && (
@@ -237,7 +252,7 @@ export default function ChessBoard({ ctl }: { ctl: Ctl }) {
                     type="button"
                     className="cb-promo__btn"
                     onClick={() => {
-                      send({ type: 'move', from: promo.from, to: promo.to, promo: t });
+                      choose({ from: promo.from, to: promo.to, promo: t });
                       setPromo(null);
                     }}
                   >
@@ -265,6 +280,7 @@ export default function ChessBoard({ ctl }: { ctl: Ctl }) {
         captured={capturedRow(opp)}
       />
       <div className={`duel-status ${status.cls}`}>{status.text}</div>
+      {coach.eligible && !over && <CoachPanel coach={coach} myTurn={myTurn} onCommit={commit} />}
       <MoveList moves={v.moves.map((m) => m.san)} />
       {!spectator && (
         <DuelActions

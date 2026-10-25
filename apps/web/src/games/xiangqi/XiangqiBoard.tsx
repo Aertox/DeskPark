@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from '../../components/ui';
 import type { GameController } from '../../lib/controller';
 import { playSound } from '../../lib/sound';
+import { CoachPanel, useCoach } from '../shared/coach';
 import { DuelActions, DuelLayout, DuelResult, MoveList, PlayerCard } from '../shared/duel';
 import { GridBoard } from '../shared/grid';
 import { useTurnCue } from '../shared/trick';
@@ -37,6 +38,13 @@ export default function XiangqiBoard({ ctl }: { ctl: Ctl }) {
   useTurnCue(myTurn);
   const [flipped, setFlipped] = useState(false);
   const flip = (myColor === 'b') !== flipped;
+  const opp = spectator ? 1 : 1 - me;
+  const mineSeat = spectator ? 0 : me;
+  // 导师：只在和电脑下时出现
+  const coach = useCoach('xiangqi', v, {
+    eligible: !spectator && !!ctl.players[opp]?.isBot,
+    myTurn,
+  });
 
   const center = (sq: number): [number, number] => {
     const f = sq % 9;
@@ -57,6 +65,8 @@ export default function XiangqiBoard({ ctl }: { ctl: Ctl }) {
     const err = ctl.act(a);
     if (err) toast(err, 'error');
   };
+  const commit = (m: { from: number; to: number }) =>
+    send({ type: 'move', from: m.from, to: m.to });
 
   const seen = useRef(v.moves.length);
   useEffect(() => {
@@ -76,8 +86,6 @@ export default function XiangqiBoard({ ctl }: { ctl: Ctl }) {
     return by;
   }, [v.moves]);
 
-  const opp = spectator ? 1 : 1 - me;
-  const mineSeat = spectator ? 0 : me;
   const colorOf = (s: number) => v.colors[s];
   const capturedRow = (s: number) => {
     const list = captured[colorOf(s)];
@@ -147,11 +155,14 @@ export default function XiangqiBoard({ ctl }: { ctl: Ctl }) {
         renderPiece={(p) => <XqPiece t={p.t} c={p.c} />}
         legal={myTurn ? v.legal : []}
         isMine={(p) => p.c === myColor}
-        onMove={(from, to) => send({ type: 'move', from, to })}
+        onMove={(from, to) => {
+          if (!coach.propose({ from, to })) commit({ from, to });
+        }}
         lastMove={last ? { from: last.from, to: last.to } : null}
         check={v.check}
         background={<XqBoardBg />}
         mark="point"
+        arrows={coach.active ? coach.arrows : undefined}
         overlay={
           last?.check && !over ? (
             <span key={v.moves.length} className="xb-flash">
@@ -173,6 +184,7 @@ export default function XiangqiBoard({ ctl }: { ctl: Ctl }) {
         captured={capturedRow(opp)}
       />
       <div className={`duel-status ${status.cls}`}>{status.text}</div>
+      {coach.eligible && !over && <CoachPanel coach={coach} myTurn={myTurn} onCommit={commit} />}
       <MoveList moves={v.moves.map((m) => m.text)} />
       {!spectator && (
         <DuelActions

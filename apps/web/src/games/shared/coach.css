@@ -1,0 +1,345 @@
+/* ============================ 棋类导师 ============================ */
+.coach-off {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: var(--radius);
+  text-align: left;
+  color: var(--felt-ink);
+  background: rgba(120, 190, 140, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(140, 220, 160, 0.3);
+  cursor: pointer;
+  transition: background 0.2s;
+  zoom: var(--k, 1);
+}
+.coach-off:hover {
+  background: rgba(120, 190, 140, 0.2);
+}
+.coach-off span {
+  display: flex;
+  flex-direction: column;
+}
+.coach-off b {
+  font-size: 13px;
+}
+.coach-off small {
+  font-size: 11.5px;
+  color: var(--felt-ink-2);
+}
+.coach {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 62%;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  background: rgba(255, 252, 244, 0.96);
+  color: var(--ink);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  zoom: var(--k, 1);
+  animation: rise-in 0.25s var(--ease-out);
+}
+.coach__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 8px 12px;
+  font-size: 13px;
+  color: #1f5c4f;
+  background: linear-gradient(180deg, #e6f2ea, #d9ebe0);
+  border-bottom: 1px solid rgba(31, 92, 79, 0.15);
+}
+.coach__src {
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  font-size: 10.5px;
+  color: #2f6b5c;
+  background: rgba(255, 255, 255, 0.7);
+}
+.coach__x {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  color: #4b6b62;
+  background: none;
+  cursor: pointer;
+}
+.coach__x:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.coach__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px 12px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.coach__body p {
+  margin: 0;
+}
+.coach__lead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+}
+.coach__lead.is-dim {
+  color: var(--ink-3);
+}
+.coach__warn {
+  color: #a3402f;
+  font-size: 12.5px;
+}
+.coach__spin {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(31, 92, 79, 0.2);
+  border-top-color: #1f5c4f;
+  animation: coach-spin 0.8s linear infinite;
+}
+@keyframes coach-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+.coach__verdict {
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-weight: 650;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.coach__verdict.is-best,
+.coach__verdict.is-good {
+  color: #145a37;
+  background: #d9f0e1;
+}
+.coach__verdict.is-ok {
+  color: #3f5a1c;
+  background: #eaf2d6;
+}
+.coach__verdict.is-warn {
+  color: #7a5310;
+  background: #f8ebc9;
+}
+.coach__verdict.is-bad {
+  color: #8f2418;
+  background: #f9dcd6;
+}
+.coach__verdict.is-hint {
+  color: #1d4f8a;
+  background: #dbe8f8;
+}
+.coach__eval {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.coach__eval span {
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #1f5c4f;
+  background: #e2ece8;
+}
+.coach__eval i {
+  font-style: normal;
+  color: var(--ink-3);
+}
+.coach__eval b {
+  font-weight: 650;
+  color: var(--ink);
+}
+.coach__eval b.is-best,
+.coach__eval b.is-good {
+  color: #1d7a48;
+}
+.coach__eval b.is-warn {
+  color: #9a6a12;
+}
+.coach__eval b.is-bad {
+  color: #b3321f;
+}
+.coach__points {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink);
+}
+.coach__points li + li {
+  margin-top: 3px;
+}
+.coach__line {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.coach__line span {
+  margin-right: 4px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #1f5c4f;
+  background: #e2ece8;
+}
+.coach__llm {
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: #33302a;
+  background: #f3ecdc;
+  box-shadow: inset 3px 0 0 #c9a25a;
+}
+.coach__llm.is-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-3);
+}
+.coach__dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.coach__dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c9a25a;
+  animation: think-dot 1.2s ease-in-out infinite;
+}
+.coach__dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.coach__dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.coach__qa {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.coach__q {
+  align-self: flex-end;
+  max-width: 90%;
+  padding: 5px 10px;
+  border-radius: 12px 12px 2px 12px;
+  color: #fff;
+  background: #1f5c4f;
+}
+.coach__a {
+  max-width: 95%;
+  padding: 6px 10px;
+  border-radius: 12px 12px 12px 2px;
+  background: #f3ecdc;
+}
+.coach__foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid rgba(31, 92, 79, 0.1);
+  background: rgba(240, 245, 240, 0.6);
+}
+.coach__ask {
+  display: flex;
+  gap: 6px;
+}
+.coach__ask input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 99px;
+  font-size: 12.5px;
+  color: var(--ink);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+.coach__ask input:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 1.5px #1f5c4f;
+}
+.coach__ask button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: #1f5c4f;
+  cursor: pointer;
+}
+.coach__ask button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.coach__actions {
+  display: flex;
+  gap: 6px;
+}
+.coach__actions .btn {
+  flex: 1;
+}
+/* 浅色卡片里的按钮 */
+.coach .btn--felt {
+  color: #1f5c4f;
+  background: #e8efe9;
+  box-shadow: inset 0 0 0 1px rgba(31, 92, 79, 0.2);
+}
+.coach .btn--felt:hover:not(:disabled) {
+  background: #dbe8df;
+}
+
+@media (max-height: 500px) {
+  /* 矮屏：导师开着时把着法列表让出来 */
+  .duel__side:has(.coach) .duel-moves {
+    display: none;
+  }
+  .coach {
+    flex: 1 1 0;
+    max-height: none;
+  }
+  .coach__body {
+    padding: 6px 9px 8px;
+    gap: 5px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .coach__head {
+    padding: 4px 8px;
+  }
+  .coach__foot {
+    padding: 5px 9px 6px;
+    gap: 5px;
+  }
+  .coach__ask input,
+  .coach__ask button {
+    height: 28px;
+  }
+  .coach__ask button {
+    width: 28px;
+  }
+  .coach-off {
+    padding: 5px 9px;
+  }
+  .coach-off small {
+    display: none;
+  }
+}

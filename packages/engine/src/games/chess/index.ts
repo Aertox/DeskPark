@@ -21,6 +21,7 @@ import type {
 export * from './shared';
 export { Board, fromFen, toFen, perft } from './board';
 export { toBoard, legalOf } from './convert';
+export { explainChess, analyzeChessLocal, threatened, threatNotes, toPacked } from './coach';
 
 /**
  * 国际象棋（FIDE 规则）：王车易位、吃过路兵、升变；将死、逼和、三次重复、五十步、子力不足。

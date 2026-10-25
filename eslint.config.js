@@ -4,7 +4,8 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**'] },
+  // public/engines：第三方棋类引擎的构建产物（GPL-3.0），原样分发，不做检查
+  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', 'apps/web/public/engines/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

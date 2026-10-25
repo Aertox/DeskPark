@@ -42,6 +42,8 @@ export interface GridBoardProps<P extends GridPiece> {
   className?: string;
   /** 落子时的提示动画（例如「将军」） */
   overlay?: ReactNode;
+  /** 箭头：导师标出的着法 */
+  arrows?: readonly { from: number; to: number; kind: 'try' | 'best' | 'reply' }[];
 }
 
 export function GridBoard<P extends GridPiece>({
@@ -61,6 +63,7 @@ export function GridBoard<P extends GridPiece>({
   mark,
   className = '',
   overlay,
+  arrows = [],
 }: GridBoardProps<P>) {
   const ref = useRef<HTMLDivElement>(null);
   const [sel, setSel] = useState<number | null>(null);
@@ -205,6 +208,45 @@ export function GridBoard<P extends GridPiece>({
           );
         })}
       </div>
+      {arrows.length > 0 && (
+        <svg className="gb__arrows" viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+          <defs>
+            {(['try', 'best', 'reply'] as const).map((k) => (
+              <marker
+                key={k}
+                id={`gb-head-${k}`}
+                viewBox="0 0 10 10"
+                refX="5"
+                refY="5"
+                markerWidth="3.2"
+                markerHeight="3.2"
+                orient="auto-start-reverse"
+              >
+                <path d="M0 0 10 5 0 10Z" className={`gb-arrow__head is-${k}`} />
+              </marker>
+            ))}
+          </defs>
+          {arrows.map((a, i) => {
+            const [x1, y1] = center(a.from);
+            const [x2, y2] = center(a.to);
+            const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+            // 从棋子边上出发（不挡住棋子上的字），停在目标格中心前一点，箭头尖刚好落在格子里
+            const s = Math.min(0.28, len / 4) / len;
+            const k = Math.max(s, (len - 0.32) / len);
+            return (
+              <line
+                key={`${a.kind}-${i}`}
+                x1={x1 + (x2 - x1) * s}
+                y1={y1 + (y2 - y1) * s}
+                x2={x1 + (x2 - x1) * k}
+                y2={y1 + (y2 - y1) * k}
+                className={`gb-arrow is-${a.kind}`}
+                markerEnd={`url(#gb-head-${a.kind})`}
+              />
+            );
+          })}
+        </svg>
+      )}
       <div className="gb__targets" aria-hidden="true">
         {targets.map((m) => (
           <span

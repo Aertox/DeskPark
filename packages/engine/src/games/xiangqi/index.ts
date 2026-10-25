@@ -19,6 +19,13 @@ import type {
 export * from './shared';
 export { Board, notation, perft } from './board';
 export { toBoard, legalOf } from './convert';
+export {
+  explainXiangqi,
+  analyzeXiangqiLocal,
+  xiangqiFen,
+  threatenedXq,
+  threatNotesXq,
+} from './coach';
 
 /**
  * 中国象棋：马蹩腿、象塞眼不过河、炮隔子打、兵过河横走、将帅不照面；

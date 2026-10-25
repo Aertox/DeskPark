@@ -22,6 +22,7 @@ const MIME: Record<string, string> = {
   '.gif': 'image/gif',
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
+  '.wasm': 'application/wasm',
   '.txt': 'text/plain; charset=utf-8',
 };
 
@@ -37,14 +38,23 @@ function defaultStaticDir(): string {
   return resolve(here, '../../web/dist');
 }
 
-/** 网页的安全响应头：只允许同源脚本；连接（AI 接口、联机服务器）不限来源 */
+/**
+ * 网页的安全响应头：只允许同源脚本；连接（AI 接口、联机服务器）不限来源。
+ * 跨域隔离（COOP + COEP）让棋类导师的多线程引擎（Fairy-Stockfish）可以使用 SharedArrayBuffer；
+ * 页面的资源都来自本站，不受影响。
+ */
 const SECURITY_HEADERS: Record<string, string> = {
   'x-content-type-options': 'nosniff',
+  'cross-origin-opener-policy': 'same-origin',
+  'cross-origin-embedder-policy': 'require-corp',
+  'cross-origin-resource-policy': 'same-origin',
   'referrer-policy': 'strict-origin-when-cross-origin',
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
   'content-security-policy': [
     "default-src 'self'",
-    "script-src 'self'",
+    // WebAssembly 引擎需要 wasm-unsafe-eval（只允许编译 wasm，不放开 eval）
+    "script-src 'self' 'wasm-unsafe-eval'",
+    "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
@@ -82,9 +92,15 @@ function serveStatic(root: string, req: IncomingMessage, res: ServerResponse): v
   }
   const ext = extname(target);
   const immutable = target.startsWith(join(root, 'assets') + sep);
+  // 导师用的棋类引擎（几 MB）：很少更新，缓存一周，免得每次打开都重新下载
+  const engine = target.startsWith(join(root, 'engines') + sep);
   res.writeHead(200, {
     'content-type': MIME[ext] ?? 'application/octet-stream',
-    'cache-control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache',
+    'cache-control': immutable
+      ? 'public, max-age=31536000, immutable'
+      : engine
+        ? 'public, max-age=604800'
+        : 'no-cache',
     ...SECURITY_HEADERS,
   });
   if (req.method === 'HEAD') {

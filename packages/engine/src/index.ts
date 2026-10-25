@@ -4,6 +4,7 @@ export * from './core/types';
 export * from './core/table';
 export * from './core/registry';
 export * from './core/ai';
+export * from './core/coach';
 
 import { registerGame } from './core/registry';
 import { chess } from './games/chess';

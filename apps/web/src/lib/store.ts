@@ -34,6 +34,8 @@ export interface Settings {
   cardCounter: boolean;
   /** 虚拟形象模式：牌桌上所有人（包括电脑）以全身像素立绘显示 */
   figures: boolean;
+  /** 棋类导师：和电脑下棋时，每一步先让导师看看 */
+  coach: boolean;
 }
 
 export const settings = createStore<Settings>('park.settings', {
@@ -43,6 +45,7 @@ export const settings = createStore<Settings>('park.settings', {
   theme: 'system',
   cardCounter: true,
   figures: false,
+  coach: false,
 });
 
 const NAMES = [
