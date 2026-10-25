@@ -266,6 +266,8 @@
   box-shadow: inset 0 0 0 1px var(--line-2);
   user-select: all;
   -webkit-user-select: all;
+  resize: none;
+  word-break: break-all;
 }
 .room__manual:focus {
   outline: none;

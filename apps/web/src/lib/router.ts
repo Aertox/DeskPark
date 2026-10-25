@@ -47,3 +47,14 @@ export function navigate(path: string, replace = false): void {
 export function roomLink(code: string): string {
   return `${location.origin}${location.pathname}#/room/${code}`;
 }
+
+/** 发给好友的邀请文字：谁邀请你玩什么、房间号、还差几人，链接单独一行（方便聊天软件识别） */
+export function inviteText(opts: {
+  from: string;
+  game: string;
+  code: string;
+  open: number;
+}): string {
+  const need = opts.open > 0 ? `，还差 ${opts.open} 人` : '';
+  return `${opts.from} 邀请你来闲亭玩「${opts.game}」（房间号 ${opts.code}${need}），点开链接就能加入：\n${roomLink(opts.code)}`;
+}

@@ -8,7 +8,8 @@ import { getGameUI } from '../games';
 import { useOnlineController } from '../lib/controller';
 import { online, useOnline } from '../lib/online';
 import { copyText } from '../lib/platform';
-import { navigate, roomLink } from '../lib/router';
+import { inviteText, navigate } from '../lib/router';
+import { profile } from '../lib/store';
 import { OptionsForm, PlayerCountField } from './SetupSheet';
 import { TableShell } from './TableShell';
 import './room.css';
@@ -89,11 +90,21 @@ function WaitingRoom() {
   const filled = room.seats.filter((s) => s.kind !== 'empty').length;
 
   const copy = async (what: 'code' | 'link') => {
-    const text = what === 'code' ? room.code : roomLink(room.code);
+    const myName =
+      (you.seat !== null ? room.seats[you.seat]?.name : undefined) ?? profile.get().name;
+    const text =
+      what === 'code'
+        ? room.code
+        : inviteText({
+            from: myName,
+            game: def.meta.name,
+            code: room.code,
+            open: room.seats.filter((s) => s.kind === 'empty').length,
+          });
     const ok = await copyText(text);
     if (ok) {
       setCopied(what);
-      toast(what === 'code' ? `已复制房间号 ${room.code}` : '已复制邀请链接，发给好友即可加入');
+      toast(what === 'code' ? `已复制房间号 ${room.code}` : '已复制邀请，发给好友就能加入');
       setTimeout(() => setCopied(null), 1600);
     } else {
       setManual({ what, text });
@@ -274,9 +285,10 @@ function WaitingRoom() {
           </Button>
         }
       >
-        <input
+        <textarea
           className="room__manual"
           readOnly
+          rows={manual?.what === 'link' ? 4 : 1}
           value={manual?.text ?? ''}
           autoFocus
           onFocus={(e) => e.currentTarget.select()}
