@@ -1,0 +1,157 @@
+/* ============================ 国际象棋 ============================ */
+.cb-frame {
+  position: relative;
+  padding: 1.6%;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #6e4a2c, #3f2814 60%, #2c1b0c);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 18px 50px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.cb-frame > .gb {
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+.cb-bg {
+  display: block;
+}
+.cb-light {
+  fill: #eedcbc;
+}
+.cb-dark {
+  fill: #b88b62;
+}
+.cb-coord {
+  font-family: var(--font-card);
+  font-size: 0.17px;
+  font-weight: 700;
+}
+.cb-coord.on-light {
+  fill: #a57a52;
+}
+.cb-coord.on-dark {
+  fill: #f2e3c8;
+}
+.cb .gb-piece > .cp {
+  filter: drop-shadow(0 0.08em 0.06em rgba(0, 0, 0, 0.35));
+  font-size: 12px;
+}
+.cb .gb-piece {
+  transform: translateY(-1%);
+}
+
+/* 将军提示 */
+.cb-flash {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  padding: 0.3em 1em;
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 5.5vmin, 44px);
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  text-indent: 0.25em;
+  color: #fff;
+  background: rgba(190, 40, 30, 0.88);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  animation: cb-flash 1.3s var(--ease-out) forwards;
+}
+@keyframes cb-flash {
+  0% {
+    opacity: 0;
+    scale: 0.6;
+  }
+  15% {
+    opacity: 1;
+    scale: 1.05;
+  }
+  70% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
+/* 升变 */
+.cb-promo {
+  position: absolute;
+  z-index: 9;
+  width: 12.5%;
+  display: flex;
+  background: #fffaf0;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.25),
+    0 14px 30px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: pop-in 0.2s var(--ease-out);
+}
+.cb-promo__btn {
+  aspect-ratio: 1;
+  padding: 6%;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.cb-promo__btn:hover {
+  background: #f1e2c4;
+}
+.cb-promo__btn .cp {
+  width: 100%;
+  height: 100%;
+}
+.cb-promo__x {
+  padding: 4px 0;
+  border: 0;
+  font-size: 11px;
+  color: #6b5a44;
+  background: #efe5d2;
+  cursor: pointer;
+}
+
+/* 侧栏 */
+.cb-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.cb-swatch.is-w {
+  background: #f6f0e4;
+}
+.cb-swatch.is-b {
+  background: #23201d;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.cb-cap {
+  width: 20px;
+  height: 20px;
+  margin-right: -6px;
+}
+.cb-cap .cp {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+.cb-lead {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--felt-accent);
+}
+@media (max-height: 500px) {
+  .cb-cap {
+    width: 15px;
+    height: 15px;
+    margin-right: -5px;
+  }
+}

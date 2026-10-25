@@ -272,6 +272,32 @@ describe('联机服务器', () => {
     h.close();
   }, 25000);
 
+  it('棋类联机：国际象棋与中国象棋都能开局走子，每步时限更长', async () => {
+    for (const [gameId, from, to] of [
+      ['chess', 12, 28],
+      ['xiangqi', 25, 22],
+    ] as const) {
+      const c = new TestClient();
+      await c.opened;
+      c.send({
+        t: 'hello',
+        token: `token-${gameId}-aaaaaaaaaaaa`,
+        name: '棋手',
+        v: PROTOCOL_VERSION,
+      });
+      c.send({ t: 'create', gameId, seats: 2 });
+      await c.wait('room');
+      c.send({ t: 'start' });
+      type V = { turn: number; legal: { from: number; to: number }[] };
+      const first = await c.wait('game', (m) => (m.view as V).turn === 0, 9000);
+      expect((first.view as V).legal.some((m) => m.from === from && m.to === to)).toBe(true);
+      c.send({ t: 'act', action: { type: 'move', from, to } });
+      const after = await c.wait('game', (m) => m.version > first.version);
+      expect((after.view as { moves: unknown[] }).moves.length).toBeGreaterThan(0);
+      c.close();
+    }
+  }, 30000);
+
   it('房间聊天：广播、系统消息、历史记录、文本清理与限流', async () => {
     const a = new TestClient();
     const b = new TestClient();

@@ -25,6 +25,7 @@ const REPO_URL = 'https://github.com/solitern/DeskPark';
 const CATEGORIES: { id: GameCategory; title: string; note?: string }[] = [
   { id: 'poker', title: '扑克' },
   { id: 'mahjong', title: '麻将' },
+  { id: 'chess', title: '棋类' },
   { id: 'board', title: '桌游' },
   { id: 'casual', title: '更多玩法', note: 'custom' },
 ];

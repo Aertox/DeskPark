@@ -3,6 +3,7 @@ import type { AnyGame } from '../src';
 import {
   Rng,
   SYSTEM_SEAT,
+  chess,
   doudizhu,
   gemguild,
   guandan,
@@ -12,6 +13,7 @@ import {
   sichuan,
   spellstones,
   texas,
+  xiangqi,
 } from '../src';
 
 /** 状态里不允许出现 NaN / Infinity（会让筹码、分数等永久损坏） */
@@ -95,6 +97,8 @@ function junkActions(types: string[], ids: number[], rng: Rng): unknown[] {
             : field(),
       level: rng.next() < 0.6 ? rng.int(5) : field(),
       id: rng.next() < 0.6 ? rng.int(12) : field(),
+      from: rng.next() < 0.7 ? rng.int(96) - 3 : field(),
+      promo: pick(['q', 'r', 'b', 'n', 'k', 'p', 'x']),
     });
   }
   return out;
@@ -220,6 +224,14 @@ describe('畸形动作模糊测试（模拟恶意联机客户端）', () => {
         ['take', 'reserve', 'buy', 'discard', 'noble', 'pass'],
         seed,
       );
+  });
+  it('国际象棋', () => {
+    for (let seed = 1; seed <= 3; seed++)
+      fuzz(chess, 2, { level: 1, side: seed % 2 ? 'w' : 'b' }, ['move', 'resign', 'undo'], seed);
+  });
+  it('中国象棋', () => {
+    for (let seed = 1; seed <= 3; seed++)
+      fuzz(xiangqi, 2, { level: 1, side: seed % 2 ? 'r' : 'b' }, ['move', 'resign', 'undo'], seed);
   });
   it('比大小：非出牌动作不能冒充「继续」', () => {
     for (let seed = 1; seed <= 15; seed++) fuzz(highcard, 4, { rounds: 2 }, ['choose'], seed);

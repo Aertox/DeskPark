@@ -1,0 +1,26 @@
+.cp {
+  display: block;
+  overflow: visible;
+}
+.cp-art {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-top: 8px;
+}
+.cp-art span {
+  width: 56px;
+  height: 56px;
+  translate: 0 calc(var(--i) * var(--i) * 4px);
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
+  transition: translate 0.35s var(--ease);
+}
+.cp-art span:nth-child(2) {
+  width: 68px;
+  height: 68px;
+}
+@media (hover: hover) {
+  .gtile:hover .cp-art span {
+    translate: 0 calc(var(--i) * var(--i) * 4px - 6px);
+  }
+}

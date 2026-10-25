@@ -1,0 +1,40 @@
+/* 棋子（大厅插画也会用到，所以放在这里） */
+.xp {
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 2px 2px rgba(60, 30, 5, 0.45));
+}
+.xp__char {
+  font-family: 'STKaiti', 'KaiTi', 'Kaiti SC', var(--font-display);
+  font-size: 46px;
+  font-weight: 800;
+  paint-order: stroke;
+  stroke: rgba(255, 245, 225, 0.55);
+  stroke-width: 1.2px;
+}
+.xp-art {
+  position: relative;
+  width: 150px;
+  height: 80px;
+  margin-top: 6px;
+}
+.xp-art span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64px;
+  height: 64px;
+  translate: calc(-50% + var(--i) * 54px) calc(-50% + var(--i) * var(--i) * 5px);
+  rotate: calc(var(--i) * 10deg);
+  transition: translate 0.35s var(--ease);
+}
+.xp-art span:nth-child(2) {
+  z-index: 1;
+  width: 74px;
+  height: 74px;
+}
+@media (hover: hover) {
+  .gtile:hover .xp-art span {
+    translate: calc(-50% + var(--i) * 60px) calc(-50% + var(--i) * var(--i) * 5px - 6px);
+  }
+}

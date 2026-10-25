@@ -207,7 +207,7 @@ class Room {
       connected: s.kind === 'bot' ? true : !!(s.playerId && this.hub.clientById(s.playerId)?.send),
     }));
     this.table = new Table(this.def, tableSeats, this.options, {
-      humanTimeoutMs: this.hub.config.turnTimeoutMs,
+      humanTimeoutMs: Math.max(this.hub.config.turnTimeoutMs, this.def.meta.turnTimeoutMs ?? 0),
       onError: (e) => this.hub.config.log?.('[table]', this.code, e),
     });
     this.matchNo++;

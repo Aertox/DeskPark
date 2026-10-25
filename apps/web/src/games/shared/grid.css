@@ -1,0 +1,123 @@
+/* ============================ 棋盘通用部件 ============================ */
+.gb {
+  position: relative;
+  width: 100%;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.gb__bg,
+.gb__marks,
+.gb__pieces,
+.gb__targets {
+  position: absolute;
+  inset: 0;
+}
+.gb__bg > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.gb__marks,
+.gb__targets {
+  pointer-events: none;
+}
+.gb-piece {
+  position: absolute;
+  z-index: 1;
+  transition:
+    left 0.24s cubic-bezier(0.25, 0.8, 0.3, 1),
+    top 0.24s cubic-bezier(0.25, 0.8, 0.3, 1);
+  pointer-events: none;
+}
+.gb-piece > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.gb.is-live .gb-piece.is-movable {
+  cursor: grab;
+}
+.gb-piece.is-drag {
+  z-index: 5;
+  transition: none;
+  scale: 1.12;
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.35));
+}
+.gb.is-live {
+  cursor: pointer;
+}
+
+/* 高亮：方格（国际象棋） */
+.gb-mark {
+  position: absolute;
+}
+.mark-square .gb-mark.is-last {
+  background: rgba(255, 214, 92, 0.42);
+}
+.mark-square .gb-mark.is-sel {
+  background: rgba(120, 190, 120, 0.5);
+}
+.mark-square .gb-mark.is-check {
+  background: radial-gradient(
+    circle,
+    rgba(255, 40, 30, 0.85) 0%,
+    rgba(230, 30, 20, 0.45) 40%,
+    transparent 72%
+  );
+}
+/* 高亮：交叉点（中国象棋）——四角括号 */
+.mark-point .gb-mark {
+  --c: rgba(40, 120, 220, 0.9);
+  background:
+    linear-gradient(var(--c), var(--c)) top left / 26% 6% no-repeat,
+    linear-gradient(var(--c), var(--c)) top left / 6% 26% no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / 26% 6% no-repeat,
+    linear-gradient(var(--c), var(--c)) top right / 6% 26% no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / 26% 6% no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom left / 6% 26% no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / 26% 6% no-repeat,
+    linear-gradient(var(--c), var(--c)) bottom right / 6% 26% no-repeat;
+  scale: 0.96;
+}
+.mark-point .gb-mark.is-sel {
+  --c: rgba(30, 150, 90, 0.95);
+}
+.mark-point .gb-mark.is-check {
+  --c: transparent;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3px rgba(230, 40, 30, 0.85),
+    0 0 18px 6px rgba(230, 40, 30, 0.55);
+  scale: 0.9;
+  animation: gb-check 1s ease-in-out infinite;
+}
+.mark-square .gb-mark.is-check {
+  animation: gb-check 1s ease-in-out infinite;
+}
+@keyframes gb-check {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* 可以走的位置：空位一个点，可吃的子一个圈 */
+.gb-target {
+  position: absolute;
+  display: grid;
+  place-items: center;
+}
+.gb-target::after {
+  content: '';
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: rgba(20, 40, 30, 0.32);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+.gb-target.is-capture::after {
+  width: 92%;
+  height: 92%;
+  background: none;
+  box-shadow: inset 0 0 0 calc(4px + 0.3vmin) rgba(20, 40, 30, 0.32);
+}

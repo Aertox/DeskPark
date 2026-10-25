@@ -2,10 +2,12 @@ import type { Card } from '@park/engine';
 import type { ComponentType } from 'react';
 import { lazy } from 'react';
 import type { GameController } from '../lib/controller';
+import { ChessArt } from './chess/pieces';
 import { GemGuildArt } from './gemguild/art';
 import { HexArt } from './hexisle/art';
 import { OneCardArt } from './onecard/cards';
 import { SpellArt } from './spellstones/spells';
+import { XiangqiArt } from './xiangqi/pieces';
 
 /**
  * 前端玩法注册表：每个玩法 = 引擎中的规则定义（按 id 关联）+ 一个牌桌界面组件 + 大厅展示信息。
@@ -66,6 +68,22 @@ export const GAME_UIS: GameUI[] = [
       { id: 3, suit: 'tiao', rank: 1 },
     ],
     people: '4 人 · 血战到底',
+  },
+  {
+    id: 'xiangqi',
+    Board: lazy(() => import('./xiangqi/XiangqiBoard')),
+    tint: ['#b0742f', '#5c3612'],
+    showcase: [],
+    Art: XiangqiArt,
+    people: '2 人',
+  },
+  {
+    id: 'chess',
+    Board: lazy(() => import('./chess/ChessBoard')),
+    tint: ['#5a6a7a', '#262f3a'],
+    showcase: [],
+    Art: ChessArt,
+    people: '2 人',
   },
   {
     id: 'spellstones',

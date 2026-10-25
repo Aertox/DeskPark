@@ -28,7 +28,7 @@ export type OptionField =
     };
 
 /** 玩法大类：大厅据此分组展示 */
-export type GameCategory = 'poker' | 'mahjong' | 'board' | 'casual';
+export type GameCategory = 'poker' | 'mahjong' | 'chess' | 'board' | 'casual';
 
 export interface GameMeta {
   id: string;
@@ -46,6 +46,8 @@ export interface GameMeta {
   experimental?: boolean;
   /** 电脑出牌的思考时间范围（毫秒） */
   botDelayMs?: [number, number];
+  /** 联机时真人每步的时限（毫秒），超时由电脑代为行动；不填则用服务器的默认值。棋类需要更长 */
+  turnTimeoutMs?: number;
 }
 
 export interface SetupContext<O> {

@@ -4,6 +4,7 @@ import {
   Rng,
   SYSTEM_SEAT,
   Table,
+  chess,
   doudizhu,
   gemguild,
   guandan,
@@ -13,6 +14,7 @@ import {
   sichuan,
   spellstones,
   texas,
+  xiangqi,
 } from '../src';
 
 /** 用规则电脑把整局跑一遍，每一步都检查大模型候选动作是否全部合法 */
@@ -102,6 +104,12 @@ describe('大模型接管：候选动作', () => {
   it('宝石商会', () => {
     for (let seed = 1; seed <= 4; seed++)
       expect(checkPrompts(gemguild, 2 + (seed % 3), { target: 15 }, seed)).toBeGreaterThan(20);
+  });
+  it('国际象棋', () => {
+    expect(checkPrompts(chess, 2, { level: 1, side: 'w' }, 2, 160)).toBeGreaterThan(20);
+  });
+  it('中国象棋', () => {
+    expect(checkPrompts(xiangqi, 2, { level: 1, side: 'r' }, 2, 160)).toBeGreaterThan(20);
   });
   it('比大小', () => {
     expect(checkPrompts(highcard, 4, { rounds: 1 }, 3)).toBeGreaterThan(5);

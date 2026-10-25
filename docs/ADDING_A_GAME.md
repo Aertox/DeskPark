@@ -147,7 +147,7 @@ export default function MyBoard({ ctl }: { ctl: GameController<MyView, MyAction>
 }
 ```
 
-大厅分组由引擎里的 `meta.category` 决定（`poker` / `mahjong` / `board` / `casual`）。不用扑克牌的玩法可以把 `showcase` 设为空数组，改用 `Art` 传入自定义的大厅插画组件，参考 `games/spellstones`（魔法出包）。
+大厅分组由引擎里的 `meta.category` 决定（`poker` / `mahjong` / `chess` / `board` / `casual`）。不用扑克牌的玩法可以把 `showcase` 设为空数组，改用 `Art` 传入自定义的大厅插画组件，参考 `games/spellstones`（魔法出包）。
 
 ## 检查清单
 

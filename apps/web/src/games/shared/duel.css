@@ -1,0 +1,175 @@
+/* ============================ 双人棋类布局 ============================ */
+.duel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px max(12px, 2vw) 12px;
+}
+.duel__arena {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.duel__row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.duel__board {
+  flex: none;
+}
+.duel__side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* 玩家卡片 */
+.duel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--felt-glass);
+  box-shadow: inset 0 0 0 1px var(--felt-line);
+  transition:
+    background 0.3s,
+    box-shadow 0.3s;
+}
+.duel-card.is-turn {
+  background: rgba(255, 240, 200, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 230, 160, 0.45),
+    0 0 18px rgba(255, 220, 140, 0.1);
+}
+.duel-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.duel-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.duel-card__note {
+  font-size: 12px;
+  color: var(--felt-ink-2);
+  white-space: nowrap;
+}
+.duel-card__captured {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1px;
+  min-height: 22px;
+}
+
+/* 中间：状态 + 着法 + 按钮 */
+.duel-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--felt-ink);
+  background: rgba(0, 0, 0, 0.14);
+  zoom: var(--k, 1);
+}
+.duel-status.is-mine {
+  color: #2a2116;
+  background: linear-gradient(180deg, #f4dc9c, #e2bc62);
+}
+.duel-status.is-alert {
+  color: #fff;
+  background: linear-gradient(180deg, #e8574a, #c13a2e);
+}
+.duel-moves {
+  flex: 1;
+  min-height: 60px;
+  margin: 0;
+  padding: 6px 4px;
+  overflow-y: auto;
+  list-style: none;
+  border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  zoom: var(--k, 1);
+}
+.duel-moves li {
+  display: grid;
+  grid-template-columns: 2.6em 1fr 1fr;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--felt-ink-2);
+}
+.duel-moves li:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.025);
+}
+.duel-moves__no {
+  color: var(--felt-ink-3);
+}
+.duel-moves .is-last {
+  color: var(--felt-ink);
+  font-weight: 650;
+}
+.duel-moves__empty {
+  display: block !important;
+  text-align: center;
+  color: var(--felt-ink-3) !important;
+  padding: 18px 0 !important;
+}
+.duel-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  zoom: var(--k, 1);
+}
+.duel-actions .btn {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 矮屏 */
+@media (max-height: 500px) {
+  .duel {
+    padding: 4px 10px 6px;
+  }
+  .duel__side {
+    gap: 5px;
+  }
+  .duel-card {
+    gap: 2px;
+    padding: 5px 8px;
+  }
+  .duel-card__captured {
+    min-height: 16px;
+  }
+  .duel-status {
+    min-height: 26px;
+    padding: 3px 10px;
+    font-size: 12px;
+  }
+  .duel-moves {
+    font-size: 11.5px;
+    padding: 3px 2px;
+  }
+  .duel-moves li {
+    padding: 1px 6px;
+  }
+  .duel-actions .btn {
+    height: 28px;
+    font-size: 12px;
+  }
+}
