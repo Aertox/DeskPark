@@ -12,7 +12,8 @@ import type { ScAction, ScView } from './index';
  * - 碰 / 杠：只在不拖慢向听时进行；能胡就胡。
  */
 
-function connectivity(tiles: Tile[], t: Tile): number {
+/** 一张牌和同门其他牌的关系：对子 2、连张 1、隔一张 0.5 */
+export function connectivity(tiles: Tile[], t: Tile): number {
   let s = 0;
   for (const o of tiles) {
     if (o.id === t.id || o.suit !== t.suit) continue;
@@ -24,12 +25,13 @@ function connectivity(tiles: Tile[], t: Tile): number {
   return s;
 }
 
-function suitWeakness(hand: Tile[], suit: MjSuit): number {
+/** 一门牌有多「弱」：张数越少、越散越弱（换三张、定缺都挑最弱的一门） */
+export function suitWeakness(hand: Tile[], suit: MjSuit): number {
   const ts = hand.filter((t) => t.suit === suit);
   return ts.length * 10 + ts.reduce((a, t) => a + connectivity(ts, t), 0);
 }
 
-function chooseExchange(hand: Tile[]): number[] {
+export function chooseExchange(hand: Tile[]): number[] {
   const suits = MJ_SUITS.filter((s) => hand.filter((t) => t.suit === s).length >= 3);
   const suit = [...suits].sort((a, b) => suitWeakness(hand, a) - suitWeakness(hand, b))[0];
   const ts = hand.filter((t) => t.suit === suit);
@@ -39,7 +41,7 @@ function chooseExchange(hand: Tile[]): number[] {
     .map((t) => t.id);
 }
 
-function chooseQue(hand: Tile[]): MjSuit {
+export function chooseQue(hand: Tile[]): MjSuit {
   return [...MJ_SUITS].sort((a, b) => suitWeakness(hand, a) - suitWeakness(hand, b))[0];
 }
 

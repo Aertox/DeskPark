@@ -1,6 +1,6 @@
 import type { mj as MJ } from '@park/engine';
 import { Rng, mj, sc } from '@park/engine';
-import { RotateCw } from 'lucide-react';
+import { GraduationCap, RotateCw } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MahjongTile, SuitBadge } from '../../components/MahjongTile';
@@ -9,7 +9,9 @@ import { Button, Sheet, toast } from '../../components/ui';
 import type { GameController } from '../../lib/controller';
 import { signed } from '../../lib/format';
 import { playSound } from '../../lib/sound';
+import { settings } from '../../lib/store';
 import { useTurnCue } from '../shared/trick';
+import { MahjongCoach } from './coach';
 import './sichuan.css';
 
 type Ctl = GameController<sc.ScView, sc.ScAction>;
@@ -99,6 +101,29 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
   const que = mine.que;
   const [sel, setSel] = useState<number[]>([]);
   const [rootRef, width] = useWidth<HTMLDivElement>();
+  const actRef = useRef<HTMLDivElement>(null);
+
+  // 导师：需要时打开，随时可以关；只用自己看得到的信息
+  const { mjCoach } = settings.use();
+  const coachOpen = mjCoach && !spectator;
+  const coach = useMemo(
+    () => (coachOpen ? sc.coachSichuan(v) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ctl.version, coachOpen],
+  );
+  const judge = useMemo(() => (coach ? sc.coachSelected(v, coach, sel) : null), [coach, sel, v]);
+  const coachTiles = new Set(
+    coach && ['discard', 'exchange', 'gang'].includes(coach.advice.action ?? '')
+      ? coach.advice.tiles
+      : [],
+  );
+  // 导师面板停在操作栏上方
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    const actEl = actRef.current;
+    if (root && actEl)
+      root.style.setProperty('--coach-bottom', `${root.clientHeight - actEl.offsetTop + 6}px`);
+  });
 
   const phaseKey = `${v.round}-${v.phase}-${v.players[me].handCount}-${v.drawn}`;
   useEffect(() => setSel([]), [phaseKey]);
@@ -205,10 +230,11 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
     }
   };
 
+  // 「推荐 / 提示」和导师的建议保持一致
   const recommend = () => {
-    const a = ctl.def.bot(v, me, new Rng(3)) as sc.ScAction;
-    if (a.type === 'exchange') setSel(a.tiles);
-    if (a.type === 'discard') setSel([a.tile]);
+    const c = coach ?? sc.coachSichuan(v);
+    if (c.stage === 'exchange') setSel(c.advice.tiles);
+    else if (c.stage === 'discard' && c.options[0]) setSel([c.options[0].tile]);
   };
 
   const queHint = useMemo(() => {
@@ -232,7 +258,7 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
     return (
       <div
         key={t.id}
-        className={`sc-handtile ${ting ? 'is-ting' : ''} ${tileClass(t)}`}
+        className={`sc-handtile ${ting ? 'is-ting' : ''} ${coachTiles.has(t.id) ? 'is-coach' : ''} ${tileClass(t)}`}
         onClick={() => onTile(t)}
       >
         <MahjongTile tile={t} selected={sel.includes(t.id)} que={t.suit === que} />
@@ -301,7 +327,11 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
       : null;
 
   return (
-    <div className="sc" ref={rootRef} style={{ '--tw': `${tw}px` } as CSSProperties}>
+    <div
+      className={`sc ${coach ? 'has-coach' : ''}`}
+      ref={rootRef}
+      style={{ '--tw': `${tw}px` } as CSSProperties}
+    >
       <div className="rotate-tip">
         <RotateCw size={12} /> 横屏体验更佳
       </div>
@@ -323,7 +353,37 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
             <b>{DIR_TEXT[v.exchangeDir]}</b>
           </span>
         )}
+        {!spectator && (
+          <button
+            type="button"
+            className={`chip sc-coach-chip ${coachOpen ? 'is-on' : ''}`}
+            onClick={() => settings.set({ mjCoach: !mjCoach })}
+            aria-pressed={coachOpen}
+            title={coachOpen ? '关闭导师' : '打开导师：帮你看看这一步怎么打、为什么'}
+          >
+            <GraduationCap size={14} />
+            导师
+          </button>
+        )}
       </div>
+
+      {coach && (
+        <div className="sc-coach-dock">
+          <MahjongCoach
+            view={v}
+            coach={coach}
+            judge={judge}
+            selected={sel}
+            onPick={(id) => {
+              if (L?.discard.includes(id)) {
+                setSel([id]);
+                playSound('select');
+              }
+            }}
+            onClose={() => settings.set({ mjCoach: false })}
+          />
+        </div>
+      )}
 
       <div className="sc-area is-top">{seatBlock(seatAt('top'))}</div>
       <div className="sc-area is-left">{seatBlock(seatAt('left'))}</div>
@@ -370,7 +430,7 @@ export default function SichuanBoard({ ctl }: { ctl: Ctl }) {
           ))}
       </div>
 
-      <div className="sc-act">
+      <div className="sc-act" ref={actRef}>
         <div className="sc-me">
           <Seat
             player={ctl.players[me]}

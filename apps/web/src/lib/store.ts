@@ -36,6 +36,8 @@ export interface Settings {
   figures: boolean;
   /** 棋类导师：和电脑下棋时，每一步先让导师看看 */
   coach: boolean;
+  /** 麻将导师面板：需要时打开，随时可以关 */
+  mjCoach: boolean;
 }
 
 export const settings = createStore<Settings>('park.settings', {
@@ -46,6 +48,7 @@ export const settings = createStore<Settings>('park.settings', {
   cardCounter: true,
   figures: false,
   coach: false,
+  mjCoach: false,
 });
 
 const NAMES = [

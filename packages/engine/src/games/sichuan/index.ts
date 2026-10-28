@@ -20,6 +20,7 @@ import type { MeldShape, WinScore } from './scoring';
 import { FAN_CAP, evaluateHand, scoreOf, scoreWin } from './scoring';
 
 export * from './scoring';
+export * from './coach';
 
 /**
  * 四川麻将 · 成都血战到底（规则版本 chengdu-xz-1）。

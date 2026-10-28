@@ -484,6 +484,231 @@
   width: 8px;
 }
 
+/* ---------- 导师 ---------- */
+.sc-coach-chip {
+  border: 0;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.sc-coach-chip:hover {
+  color: var(--felt-ink);
+  background: rgba(255, 255, 255, 0.12);
+}
+.sc-coach-chip.is-on {
+  color: #1f5c4f;
+  background: linear-gradient(180deg, #eef7f1, #d6eadf);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+/* 停靠在右侧、操作栏上方；不挡手牌和按钮 */
+.sc-coach-dock {
+  position: absolute;
+  z-index: 8;
+  top: 40px;
+  right: max(12px, 1.6vw);
+  bottom: var(--coach-bottom, 150px);
+  width: min(340px, 40vw);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+.sc-coach-dock .coach {
+  flex: 0 1 auto;
+  max-height: 100%;
+  zoom: 1;
+  pointer-events: auto;
+}
+.sc-coach.is-collapsed .coach__head {
+  border-bottom: 0;
+}
+.sc-coach__mini {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  color: #24453b;
+}
+.sc-coach__fold {
+  margin-left: auto;
+}
+.sc-coach__fold + .coach__x {
+  margin-left: 0;
+}
+.sc-coach__verdict {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sc-coach__tiles {
+  display: inline-flex;
+  gap: 2px;
+  flex: none;
+}
+.sc-coach__judge {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.sc-coach__judge i {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: 50%;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+.sc-coach__judge.is-best,
+.sc-coach__judge.is-good {
+  color: #145a37;
+  background: #e3f3e8;
+}
+.sc-coach__judge.is-best i,
+.sc-coach__judge.is-good i {
+  background: #1fa65a;
+}
+.sc-coach__judge.is-warn {
+  color: #7a5310;
+  background: #fbf0d4;
+}
+.sc-coach__judge.is-warn i {
+  background: #d09a2a;
+}
+.sc-coach__judge.is-bad {
+  color: #8f2418;
+  background: #fbe3de;
+}
+.sc-coach__judge.is-bad i {
+  background: #d24b39;
+}
+.sc-coach__opts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sc-coach__opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px 3px 4px;
+  border: 0;
+  border-radius: 8px;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  color: var(--ink-2);
+  background: rgba(0, 0, 0, 0.035);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sc-coach__opt:hover {
+  background: rgba(31, 92, 79, 0.08);
+}
+.sc-coach__opt > span {
+  flex: 1;
+  min-width: 0;
+}
+.sc-coach__opt.is-rec {
+  color: var(--ink);
+  font-weight: 600;
+  background: #e3f1e8;
+  box-shadow: inset 3px 0 0 #1fa65a;
+}
+.sc-coach__opt.is-sel {
+  box-shadow: inset 0 0 0 1.5px #3b82f6;
+}
+.sc-coach__opt.is-rec.is-sel {
+  box-shadow:
+    inset 3px 0 0 #1fa65a,
+    inset 0 0 0 1.5px #3b82f6;
+}
+.sc-coach__danger {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 99px;
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.sc-coach__danger.is-0 {
+  color: #1d7a48;
+  background: #dcf0e3;
+}
+.sc-coach__danger.is-1 {
+  color: #8a5d10;
+  background: #f8ebc9;
+}
+.sc-coach__danger.is-2 {
+  color: #a3271a;
+  background: #f9d9d3;
+}
+.sc-coach__explain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  border: 0;
+  border-radius: 99px;
+  font: inherit;
+  font-size: 12.5px;
+  color: #1f5c4f;
+  background: #e2ece8;
+  cursor: pointer;
+}
+.sc-coach__explain:hover {
+  background: #d3e4dc;
+}
+/* 宽屏：给导师留出一栏，牌桌整体往左让，不挡对手 */
+@media (min-width: 1100px) and (min-height: 600px) {
+  .sc.has-coach {
+    padding-right: calc(min(360px, 28vw) + max(12px, 1.6vw) + 12px);
+  }
+  .sc.has-coach .sc-coach-dock {
+    top: 44px;
+    bottom: 12px;
+    width: min(360px, 28vw);
+  }
+  /* 顶部信息挪到导师这一栏，免得和对家撞在一起 */
+  .sc.has-coach .sc-info {
+    left: auto;
+    right: max(12px, 1.6vw);
+    width: min(360px, 28vw);
+    justify-content: flex-start;
+  }
+}
+/* 手牌上导师推荐的牌：上方一道绿光（和听牌小圆点同一位置，推荐优先） */
+.sc-handtile.is-coach::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  left: 22%;
+  right: 22%;
+  top: calc(var(--tw) * -0.2);
+  height: 4px;
+  border-radius: 99px;
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.9);
+  pointer-events: none;
+}
+.sc-handtile.is-coach.is-ting::before {
+  display: none;
+}
+
 /* ---------- 矮屏 ---------- */
 @media (max-height: 500px) {
   .sc {
@@ -524,6 +749,16 @@
   .sc-seat.is-top .seat__meta {
     display: flex;
   }
+  .sc-coach-dock {
+    top: 4px;
+    width: min(300px, 44vw);
+  }
+  .sc-coach-dock .coach__body {
+    font-size: 12px;
+  }
+  .sc-coach__opt {
+    font-size: 11.5px;
+  }
 }
 @media (orientation: portrait) and (max-width: 600px) {
   .sc {
@@ -538,5 +773,11 @@
   .sc-ting {
     position: static;
     translate: none;
+  }
+  .sc-coach-dock {
+    top: 40%;
+    left: 8px;
+    right: 8px;
+    width: auto;
   }
 }
